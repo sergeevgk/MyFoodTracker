@@ -13,12 +13,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myfoodtracker.R
-import com.example.myfoodtracker.domain.model.FoodEntry
+import com.example.myfoodtracker.domain.model.MealEntry
 
-class TextEntriesAdapter(
-    private val onTextChanged: (String, String) -> Unit,
+class MealEntriesAdapter(
+    private val onTitleChanged: (String, String) -> Unit,
     private val onDeleteClicked: (String) -> Unit
-) : ListAdapter<FoodEntry, TextEntriesAdapter.ViewHolder>(FoodEntryDiffCallback()) {
+) : ListAdapter<MealEntry, MealEntriesAdapter.ViewHolder>(MealEntryDiffCallback()) {
 
     private var newlyAddedPosition: Int = -1
 
@@ -45,8 +45,8 @@ class TextEntriesAdapter(
         holder.textWatcher?.let { holder.editText.removeTextChangedListener(it) }
 
         // Bind text only if it has changed to prevent cursor jumping
-        if (holder.editText.text.toString() != item.text) {
-            holder.editText.setText(item.text)
+        if (holder.editText.text.toString() != item.title) {
+            holder.editText.setText(item.title)
         }
 
         // Set delete click
@@ -69,7 +69,7 @@ class TextEntriesAdapter(
                 if (latestPos != RecyclerView.NO_POSITION) {
                     val currentItem = getItem(latestPos)
                     if (currentItem != null) {
-                        onTextChanged(currentItem.id, s?.toString() ?: "")
+                        onTitleChanged(currentItem.id, s?.toString() ?: "")
                     }
                 }
             }
@@ -88,13 +88,16 @@ class TextEntriesAdapter(
         }
     }
 
-    private class FoodEntryDiffCallback : DiffUtil.ItemCallback<FoodEntry>() {
-        override fun areItemsTheSame(oldItem: FoodEntry, newItem: FoodEntry): Boolean {
+    private class MealEntryDiffCallback : DiffUtil.ItemCallback<MealEntry>() {
+        override fun areItemsTheSame(oldItem: MealEntry, newItem: MealEntry): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: FoodEntry, newItem: FoodEntry): Boolean {
-            return oldItem.text == newItem.text
+        override fun areContentsTheSame(oldItem: MealEntry, newItem: MealEntry): Boolean {
+            return oldItem.title == newItem.title &&
+                   oldItem.date == newItem.date &&
+                   oldItem.time == newItem.time &&
+                   oldItem.foods == newItem.foods
         }
     }
 }

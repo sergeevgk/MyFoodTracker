@@ -14,8 +14,8 @@ class MainFragment : Fragment() {
     private var _binding: FragmentFirstBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: FoodViewModel by viewModel()
-    private lateinit var adapter: TextEntriesAdapter
+    private val viewModel: MealViewModel by viewModel()
+    private lateinit var adapter: MealEntriesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,12 +29,12 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Initialize adapter
-        adapter = TextEntriesAdapter(
-            onTextChanged = { id, newText ->
-                viewModel.updateFoodEntry(id, newText)
+        adapter = MealEntriesAdapter(
+            onTitleChanged = { id, newTitle ->
+                viewModel.updateMealEntry(id, newTitle)
             },
             onDeleteClicked = { id ->
-                viewModel.deleteFoodEntry(id)
+                viewModel.deleteMealEntry(id)
             }
         )
 
@@ -43,11 +43,11 @@ class MainFragment : Fragment() {
 
         // Setup add button
         binding.buttonAdd.setOnClickListener {
-            viewModel.addFoodEntry()
+            viewModel.addMealEntry()
         }
 
         // Observe ViewModel state
-        viewModel.foodEntries.observe(viewLifecycleOwner) { entries ->
+        viewModel.mealEntries.observe(viewLifecycleOwner) { entries ->
             adapter.submitList(entries)
         }
 
@@ -60,7 +60,7 @@ class MainFragment : Fragment() {
         }
 
         // Load data initial
-        viewModel.loadFoodEntries()
+        viewModel.loadMealEntries()
     }
 
     override fun onDestroyView() {
