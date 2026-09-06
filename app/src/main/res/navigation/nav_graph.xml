@@ -3,11 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/MainFragment">
+    app:startDestination="@id/profileSetupFragment">
 
     <fragment
-        android:id="@+id/MainFragment"
-        android:name="com.example.myfoodtracker.presentation.MainFragment"
-        android:label="@string/my_food_tracker_label"
-        tools:layout="@layout/fragment_first" />
+        android:id="@+id/profileSetupFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.auth.ProfileSetupFragment"
+        android:label="ProfileSetupFragment" />
 </navigation>
