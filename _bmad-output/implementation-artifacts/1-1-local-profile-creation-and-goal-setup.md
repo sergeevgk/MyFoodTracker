@@ -15,7 +15,12 @@ so that I can manage my personal health tracking on-device with privacy.
 ## Acceptance Criteria
 
 1. **Given** a cold app launch with no existing profiles, **When** the user inputs a unique profile name, 4-digit passcode, and optional target values (leaving skipped targets blank), **Then** the profile is saved in local Room database (`users` and `user_daily_goals`) with blank goals stored as `null`. [Source: PRD FR-1, Addendum §1.1]
-2. **Given** profile setup screen, **When** the user attempts to submit with an empty username or a passcode fewer than 4 digits, **Then** the system rejects creation and highlights the invalid field with an explicit validation error message. [Source: PRD FR-1]
+2. **Given** profile setup screen, **When** the user attempts to submit with an invalid form input:
+   - Empty username,
+   - Duplicate username already existing in the database,
+   - Passcode containing non-digits or not exactly 4 digits,
+   - Non-blank target values that are malformed or outside valid operational ranges (calories: 0..10,000; macros: 0..1,000g; water: 0..20,000ml),
+   **Then** the system rejects creation and highlights the invalid field(s) with an explicit validation error message. [Source: PRD FR-1, Code Review P-1/P-4/P-5]
 3. **Given** profile setup screen, **When** the screen is displayed, **Then** a prominent medical disclaimer banner ("Targets are user-configured and not clinically audited") is rendered. [Source: PRD §10.1]
 4. **Given** profile creation submission, **When** data is persisted, **Then** the passcode is securely hashed (bcrypt/scrypt or salted SHA-256) before storing in the `passcode_hash` column in the `users` table. [Source: PRD §4.1, Addendum §1.1]
 
@@ -103,6 +108,17 @@ Gemini 3.6 Flash (High)
 - Created `fragment_profile_setup.xml` matching M3 design tokens and prominent medical disclaimer banner.
 - Created `ProfileSetupViewModel` and `ProfileSetupFragment` with View Binding lifecycle safety and field validation.
 - Added comprehensive unit tests for `CreateProfileUseCase`, `UserRepositoryImpl`, and `ProfileSetupViewModel`. All unit tests compiled and passed cleanly (100% success rate).
+- **Code Review Fixes (2026-09-12)**:
+  - **DN-1 (Option A)**: Aligned Room entities and domain models strictly with PRD Addendum §1.1 (`users` UUID string primary key & `created_at`; `user_daily_goals` `profile_id` as primary key & Double macro types).
+  - **P-1**: Added unique database index on `username` and domain validation in `CreateProfileUseCase` to prevent duplicate profile names.
+  - **P-2**: Wrapped multi-entity persistence in `@Transaction` DAO method and changed conflict strategy to `ABORT`.
+  - **P-3**: Guaranteed `user_daily_goals` row is always persisted with null target values even when all targets are skipped.
+  - **P-4**: Enforced exact 4-digit numeric passcode validation and implemented per-user cryptographically random salted SHA-256 passcode hashing.
+  - **P-5**: Added explicit boundary validation and UI error states in `ProfileSetupViewModel` for optional daily targets (calories 0..10,000; macros 0..1,000; water 0..20,000).
+
+### Deferred / Backlog Items
+- **P-6**: Fragment lifecycle safety: safeguard toast and context interactions using `viewLifecycleOwner` and `context?`.
+- **P-7**: Material Design 3 container card styling: update `fragment_profile_setup.xml` card to 0dp elevation and 1dp `#E2E8F0` hairline border in alignment with UX guidelines.
 
 ### File List
 - `_bmad-output/implementation-artifacts/1-1-local-profile-creation-and-goal-setup.md`
@@ -127,3 +143,4 @@ Gemini 3.6 Flash (High)
 
 ## Change Log
 - Implemented Story 1.1 Local Profile Creation & Goal Setup (Date: 2026-09-06)
+- Addressed Code Review Findings: DN-1 (Option A), P-1, P-2, P-3, P-4, P-5, and logged P-6 & P-7 into Backlog (Date: 2026-09-12)

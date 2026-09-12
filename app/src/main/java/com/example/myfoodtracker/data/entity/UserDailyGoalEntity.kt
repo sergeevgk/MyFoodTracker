@@ -3,7 +3,6 @@ package com.example.myfoodtracker.data.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -15,22 +14,20 @@ import androidx.room.PrimaryKey
             childColumns = ["profile_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ],
-    indices = [Index(value = ["profile_id"])]
+    ]
 )
 data class UserDailyGoalEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
     @ColumnInfo(name = "profile_id")
-    val profileId: Long,
-    @ColumnInfo(name = "calorie_target")
-    val calorieTarget: Int? = null,
-    @ColumnInfo(name = "protein_target_grams")
-    val proteinTargetGrams: Int? = null,
-    @ColumnInfo(name = "carb_target_grams")
-    val carbTargetGrams: Int? = null,
-    @ColumnInfo(name = "fat_target_grams")
-    val fatTargetGrams: Int? = null,
-    @ColumnInfo(name = "water_target_ml")
-    val waterTargetMl: Int? = null
+    val profileId: String,
+    @ColumnInfo(name = "target_calories")
+    val targetCalories: Double? = null,
+    @ColumnInfo(name = "target_protein_g")
+    val targetProteinG: Double? = null,
+    @ColumnInfo(name = "target_carbs_g")
+    val targetCarbsG: Double? = null,
+    @ColumnInfo(name = "target_fat_g")
+    val targetFatG: Double? = null,
+    @ColumnInfo(name = "target_water_ml")
+    val targetWaterMl: Int? = null
 )

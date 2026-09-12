@@ -1,12 +1,11 @@
 package com.example.myfoodtracker.presentation.ui.auth
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import com.example.myfoodtracker.databinding.FragmentProfileSetupBinding
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupState
@@ -37,21 +36,13 @@ class ProfileSetupFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.etUsername.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                binding.tilUsername.error = null
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        binding.etPasscode.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                binding.tilPasscode.error = null
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        binding.etUsername.doAfterTextChanged { binding.tilUsername.error = null }
+        binding.etPasscode.doAfterTextChanged { binding.tilPasscode.error = null }
+        binding.etCalorieTarget.doAfterTextChanged { binding.tilCalorieTarget.error = null }
+        binding.etProteinTarget.doAfterTextChanged { binding.tilProteinTarget.error = null }
+        binding.etCarbTarget.doAfterTextChanged { binding.tilCarbTarget.error = null }
+        binding.etFatTarget.doAfterTextChanged { binding.tilFatTarget.error = null }
+        binding.etWaterTarget.doAfterTextChanged { binding.tilWaterTarget.error = null }
 
         binding.btnCreateProfile.setOnClickListener {
             val username = binding.etUsername.text?.toString().orEmpty()
@@ -95,6 +86,11 @@ class ProfileSetupFragment : Fragment() {
                     binding.btnCreateProfile.isEnabled = true
                     binding.tilUsername.error = state.usernameError
                     binding.tilPasscode.error = state.passcodeError
+                    binding.tilCalorieTarget.error = state.calorieError
+                    binding.tilProteinTarget.error = state.proteinError
+                    binding.tilCarbTarget.error = state.carbError
+                    binding.tilFatTarget.error = state.fatError
+                    binding.tilWaterTarget.error = state.waterError
 
                     if (state.generalError != null) {
                         Toast.makeText(requireContext(), state.generalError, Toast.LENGTH_LONG).show()

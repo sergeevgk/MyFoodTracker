@@ -6,6 +6,7 @@ import com.example.myfoodtracker.domain.repository.UserRepository
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.util.UUID
 
 class CreateProfileUseCaseTest {
 
@@ -23,8 +24,8 @@ class CreateProfileUseCaseTest {
         val result = createProfileUseCase(
             username = "Georgii",
             passcode = "1234",
-            calorieTarget = 2000,
-            proteinTarget = 150
+            calorieTarget = 2000.0,
+            proteinTarget = 150.0
         )
 
         assertTrue(result.isSuccess)
@@ -32,11 +33,12 @@ class CreateProfileUseCaseTest {
         assertNotNull(profile)
         assertEquals("Georgii", profile?.username)
         assertNotEquals("1234", profile?.passcodeHash)
+        assertTrue(profile?.passcodeHash?.contains(":") == true)
         assertNotNull(profile?.dailyGoal)
-        assertEquals(2000, profile?.dailyGoal?.calorieTarget)
-        assertEquals(150, profile?.dailyGoal?.proteinTargetGrams)
-        assertNull(profile?.dailyGoal?.carbTargetGrams)
-        assertNull(profile?.dailyGoal?.waterTargetMl)
+        assertEquals(2000.0, profile?.dailyGoal?.targetCalories)
+        assertEquals(150.0, profile?.dailyGoal?.targetProteinG)
+        assertNull(profile?.dailyGoal?.targetCarbsG)
+        assertNull(profile?.dailyGoal?.targetWaterMl)
     }
 
     @Test
@@ -51,6 +53,15 @@ class CreateProfileUseCaseTest {
     }
 
     @Test
+    fun invoke_duplicateUsername_returnsFailure() {
+        createProfileUseCase(username = "Georgii", passcode = "1234")
+        val duplicateResult = createProfileUseCase(username = "Georgii", passcode = "5678")
+
+        assertTrue(duplicateResult.isFailure)
+        assertEquals("Username already taken", duplicateResult.exceptionOrNull()?.message)
+    }
+
+    @Test
     fun invoke_shortPasscode_returnsFailure() {
         val result = createProfileUseCase(
             username = "Georgii",
@@ -58,11 +69,33 @@ class CreateProfileUseCaseTest {
         )
 
         assertTrue(result.isFailure)
-        assertEquals("Passcode must be at least 4 digits", result.exceptionOrNull()?.message)
+        assertEquals("Passcode must be exactly 4 digits", result.exceptionOrNull()?.message)
     }
 
     @Test
-    fun invoke_noGoals_createsProfileWithNullGoal() {
+    fun invoke_longPasscode_returnsFailure() {
+        val result = createProfileUseCase(
+            username = "Georgii",
+            passcode = "12345"
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals("Passcode must be exactly 4 digits", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun invoke_nonNumericPasscode_returnsFailure() {
+        val result = createProfileUseCase(
+            username = "Georgii",
+            passcode = "abcd"
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals("Passcode must be exactly 4 digits", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun invoke_noGoals_createsProfileWithBlankGoals() {
         val result = createProfileUseCase(
             username = "Georgii",
             passcode = "1234"
@@ -71,20 +104,25 @@ class CreateProfileUseCaseTest {
         assertTrue(result.isSuccess)
         val profile = result.getOrNull()
         assertNotNull(profile)
-        assertNull(profile?.dailyGoal)
+        assertNotNull(profile?.dailyGoal)
+        assertNull(profile?.dailyGoal?.targetCalories)
+        assertNull(profile?.dailyGoal?.targetProteinG)
+        assertNull(profile?.dailyGoal?.targetCarbsG)
+        assertNull(profile?.dailyGoal?.targetFatG)
+        assertNull(profile?.dailyGoal?.targetWaterMl)
     }
 }
 
 class FakeUserRepository : UserRepository {
     private val profiles = mutableListOf<UserProfile>()
-    private var idCounter = 1L
 
-    override fun createProfile(username: String, passcodeHash: String, dailyGoal: DailyGoal?): UserProfile {
+    override fun createProfile(username: String, passcodeHash: String, dailyGoal: DailyGoal): UserProfile {
+        val userId = UUID.randomUUID().toString()
         val profile = UserProfile(
-            id = idCounter++,
+            id = userId,
             username = username,
             passcodeHash = passcodeHash,
-            dailyGoal = dailyGoal?.copy(profileId = idCounter - 1)
+            dailyGoal = dailyGoal.copy(profileId = userId)
         )
         profiles.add(profile)
         return profile
@@ -93,4 +131,8 @@ class FakeUserRepository : UserRepository {
     override fun getProfiles(): List<UserProfile> = profiles
 
     override fun hasProfiles(): Boolean = profiles.isNotEmpty()
+
+    override fun isUsernameTaken(username: String): Boolean {
+        return profiles.any { it.username.equals(username, ignoreCase = true) }
+    }
 }
