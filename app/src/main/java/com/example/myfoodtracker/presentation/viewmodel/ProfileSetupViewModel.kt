@@ -13,6 +13,11 @@ sealed class ProfileSetupState {
     data class Error(
         val usernameError: String? = null,
         val passcodeError: String? = null,
+        val calorieError: String? = null,
+        val proteinError: String? = null,
+        val carbError: String? = null,
+        val fatError: String? = null,
+        val waterError: String? = null,
         val generalError: String? = null
     ) : ProfileSetupState()
 }
@@ -37,30 +42,89 @@ class ProfileSetupViewModel(
         var hasValidationError = false
         var usernameErr: String? = null
         var passcodeErr: String? = null
+        var calorieErr: String? = null
+        var proteinErr: String? = null
+        var carbErr: String? = null
+        var fatErr: String? = null
+        var waterErr: String? = null
 
         if (trimmedUsername.isEmpty()) {
             usernameErr = "Username cannot be empty"
             hasValidationError = true
         }
 
-        if (passcode.length < 4) {
-            passcodeErr = "Passcode must be at least 4 digits"
+        if (passcode.length != 4 || !passcode.all { it.isDigit() }) {
+            passcodeErr = "Passcode must be exactly 4 digits"
             hasValidationError = true
+        }
+
+        var calorieTarget: Double? = null
+        if (!calorieTargetStr.isNullOrBlank()) {
+            val parsed = calorieTargetStr.trim().toDoubleOrNull()
+            if (parsed == null || parsed < 0.0 || parsed > 10000.0) {
+                calorieErr = "Calories must be a valid number between 0 and 10000"
+                hasValidationError = true
+            } else {
+                calorieTarget = parsed
+            }
+        }
+
+        var proteinTarget: Double? = null
+        if (!proteinTargetStr.isNullOrBlank()) {
+            val parsed = proteinTargetStr.trim().toDoubleOrNull()
+            if (parsed == null || parsed < 0.0 || parsed > 1000.0) {
+                proteinErr = "Protein must be a valid number between 0 and 1000"
+                hasValidationError = true
+            } else {
+                proteinTarget = parsed
+            }
+        }
+
+        var carbTarget: Double? = null
+        if (!carbTargetStr.isNullOrBlank()) {
+            val parsed = carbTargetStr.trim().toDoubleOrNull()
+            if (parsed == null || parsed < 0.0 || parsed > 1000.0) {
+                carbErr = "Carbs must be a valid number between 0 and 1000"
+                hasValidationError = true
+            } else {
+                carbTarget = parsed
+            }
+        }
+
+        var fatTarget: Double? = null
+        if (!fatTargetStr.isNullOrBlank()) {
+            val parsed = fatTargetStr.trim().toDoubleOrNull()
+            if (parsed == null || parsed < 0.0 || parsed > 1000.0) {
+                fatErr = "Fat must be a valid number between 0 and 1000"
+                hasValidationError = true
+            } else {
+                fatTarget = parsed
+            }
+        }
+
+        var waterTarget: Int? = null
+        if (!waterTargetStr.isNullOrBlank()) {
+            val parsed = waterTargetStr.trim().toIntOrNull()
+            if (parsed == null || parsed < 0 || parsed > 20000) {
+                waterErr = "Water must be a valid integer between 0 and 20000"
+                hasValidationError = true
+            } else {
+                waterTarget = parsed
+            }
         }
 
         if (hasValidationError) {
             _state.value = ProfileSetupState.Error(
                 usernameError = usernameErr,
-                passcodeError = passcodeErr
+                passcodeError = passcodeErr,
+                calorieError = calorieErr,
+                proteinError = proteinErr,
+                carbError = carbErr,
+                fatError = fatErr,
+                waterError = waterErr
             )
             return
         }
-
-        val calorieTarget = calorieTargetStr?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
-        val proteinTarget = proteinTargetStr?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
-        val carbTarget = carbTargetStr?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
-        val fatTarget = fatTargetStr?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
-        val waterTarget = waterTargetStr?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
 
         _state.value = ProfileSetupState.Loading
 

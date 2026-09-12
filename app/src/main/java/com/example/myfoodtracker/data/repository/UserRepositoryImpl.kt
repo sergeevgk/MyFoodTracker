@@ -7,6 +7,7 @@ import com.example.myfoodtracker.data.entity.UserProfileEntity
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.UserRepository
+import java.util.UUID
 
 class UserRepositoryImpl(
     private val userProfileDao: UserProfileDao
@@ -15,32 +16,31 @@ class UserRepositoryImpl(
     override fun createProfile(
         username: String,
         passcodeHash: String,
-        dailyGoal: DailyGoal?
+        dailyGoal: DailyGoal
     ): UserProfile {
+        val userId = UUID.randomUUID().toString()
         val userEntity = UserProfileEntity(
+            id = userId,
             username = username,
             passcodeHash = passcodeHash
         )
-        val userId = userProfileDao.insertUser(userEntity)
+        val goalEntity = UserDailyGoalEntity(
+            profileId = userId,
+            targetCalories = dailyGoal.targetCalories,
+            targetProteinG = dailyGoal.targetProteinG,
+            targetCarbsG = dailyGoal.targetCarbsG,
+            targetFatG = dailyGoal.targetFatG,
+            targetWaterMl = dailyGoal.targetWaterMl
+        )
 
-        val savedGoal = dailyGoal?.let { goal ->
-            val goalEntity = UserDailyGoalEntity(
-                profileId = userId,
-                calorieTarget = goal.calorieTarget,
-                proteinTargetGrams = goal.proteinTargetGrams,
-                carbTargetGrams = goal.carbTargetGrams,
-                fatTargetGrams = goal.fatTargetGrams,
-                waterTargetMl = goal.waterTargetMl
-            )
-            val goalId = userProfileDao.insertGoal(goalEntity)
-            goal.copy(id = goalId, profileId = userId)
-        }
+        userProfileDao.insertUserWithGoal(userEntity, goalEntity)
 
         return UserProfile(
             id = userId,
             username = username,
             passcodeHash = passcodeHash,
-            dailyGoal = savedGoal
+            createdAt = userEntity.createdAt,
+            dailyGoal = dailyGoal.copy(profileId = userId)
         )
     }
 
@@ -52,24 +52,28 @@ class UserRepositoryImpl(
         return userProfileDao.getUserCount() > 0
     }
 
+    override fun isUsernameTaken(username: String): Boolean {
+        return userProfileDao.isUsernameTaken(username)
+    }
+
     private fun UserWithGoal.toDomain(): UserProfile {
         return UserProfile(
             id = user.id,
             username = user.username,
             passcodeHash = user.passcodeHash,
+            createdAt = user.createdAt,
             dailyGoal = goal?.toDomain()
         )
     }
 
     private fun UserDailyGoalEntity.toDomain(): DailyGoal {
         return DailyGoal(
-            id = id,
             profileId = profileId,
-            calorieTarget = calorieTarget,
-            proteinTargetGrams = proteinTargetGrams,
-            carbTargetGrams = carbTargetGrams,
-            fatTargetGrams = fatTargetGrams,
-            waterTargetMl = waterTargetMl
+            targetCalories = targetCalories,
+            targetProteinG = targetProteinG,
+            targetCarbsG = targetCarbsG,
+            targetFatG = targetFatG,
+            targetWaterMl = targetWaterMl
         )
     }
 }

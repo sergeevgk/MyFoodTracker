@@ -23,55 +23,67 @@ class UserRepositoryImplTest {
     @Test
     fun createProfile_persistsUserAndGoalsCorrectly() {
         val dailyGoal = DailyGoal(
-            calorieTarget = 2200,
-            proteinTargetGrams = 180,
-            waterTargetMl = 3000
+            targetCalories = 2200.0,
+            targetProteinG = 180.0,
+            targetWaterMl = 3000
         )
 
         val profile = repository.createProfile("Georgii", "hashed_passcode_123", dailyGoal)
 
         assertNotNull(profile)
-        assertEquals(1L, profile.id)
+        assertTrue(profile.id.isNotEmpty())
         assertEquals("Georgii", profile.username)
         assertEquals("hashed_passcode_123", profile.passcodeHash)
         assertNotNull(profile.dailyGoal)
-        assertEquals(2200, profile.dailyGoal?.calorieTarget)
-        assertEquals(180, profile.dailyGoal?.proteinTargetGrams)
-        assertNull(profile.dailyGoal?.carbTargetGrams)
-        assertEquals(3000, profile.dailyGoal?.waterTargetMl)
+        assertEquals(profile.id, profile.dailyGoal?.profileId)
+        assertEquals(2200.0, profile.dailyGoal?.targetCalories)
+        assertEquals(180.0, profile.dailyGoal?.targetProteinG)
+        assertNull(profile.dailyGoal?.targetCarbsG)
+        assertEquals(3000, profile.dailyGoal?.targetWaterMl)
 
         assertTrue(repository.hasProfiles())
         assertEquals(1, repository.getProfiles().size)
     }
 
     @Test
-    fun createProfile_withoutGoals_persistsUserWithNullGoal() {
-        val profile = repository.createProfile("Georgii", "hashed_passcode_123", null)
+    fun createProfile_withBlankGoals_persistsGoalsWithNullTargets() {
+        val profile = repository.createProfile("Georgii", "hashed_passcode_123", DailyGoal())
 
         assertNotNull(profile)
         assertEquals("Georgii", profile.username)
-        assertNull(profile.dailyGoal)
+        assertNotNull(profile.dailyGoal)
+        assertEquals(profile.id, profile.dailyGoal?.profileId)
+        assertNull(profile.dailyGoal?.targetCalories)
+        assertNull(profile.dailyGoal?.targetProteinG)
+    }
+
+    @Test
+    fun isUsernameTaken_returnsCorrectValue() {
+        assertFalse(repository.isUsernameTaken("Georgii"))
+
+        repository.createProfile("Georgii", "hashed_passcode_123", DailyGoal())
+
+        assertTrue(repository.isUsernameTaken("Georgii"))
+        assertTrue(repository.isUsernameTaken("georgii"))
+        assertFalse(repository.isUsernameTaken("Alex"))
     }
 }
 
 class FakeUserProfileDao : UserProfileDao {
     private val users = mutableListOf<UserProfileEntity>()
     private val goals = mutableListOf<UserDailyGoalEntity>()
-    private var userIdCounter = 1L
-    private var goalIdCounter = 1L
 
-    override fun insertUser(user: UserProfileEntity): Long {
-        val id = userIdCounter++
-        val entity = user.copy(id = id)
-        users.add(entity)
-        return id
+    override fun insertUser(user: UserProfileEntity) {
+        users.add(user)
     }
 
-    override fun insertGoal(goal: UserDailyGoalEntity): Long {
-        val id = goalIdCounter++
-        val entity = goal.copy(id = id)
-        goals.add(entity)
-        return id
+    override fun insertGoal(goal: UserDailyGoalEntity) {
+        goals.add(goal)
+    }
+
+    override fun insertUserWithGoal(user: UserProfileEntity, goal: UserDailyGoalEntity) {
+        insertUser(user)
+        insertGoal(goal)
     }
 
     override fun getUsersWithGoals(): List<UserWithGoal> {
@@ -82,4 +94,8 @@ class FakeUserProfileDao : UserProfileDao {
     }
 
     override fun getUserCount(): Int = users.size
+
+    override fun isUsernameTaken(username: String): Boolean {
+        return users.any { it.username.equals(username, ignoreCase = true) }
+    }
 }

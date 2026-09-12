@@ -1,7 +1,7 @@
 package com.example.myfoodtracker.data.dao
 
-import androidx.room.Embedded
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -21,11 +21,17 @@ data class UserWithGoal(
 
 @Dao
 interface UserProfileDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUser(user: UserProfileEntity): Long
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    fun insertUser(user: UserProfileEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertGoal(goal: UserDailyGoalEntity): Long
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    fun insertGoal(goal: UserDailyGoalEntity)
+
+    @Transaction
+    fun insertUserWithGoal(user: UserProfileEntity, goal: UserDailyGoalEntity) {
+        insertUser(user)
+        insertGoal(goal)
+    }
 
     @Transaction
     @Query("SELECT * FROM users")
@@ -33,4 +39,7 @@ interface UserProfileDao {
 
     @Query("SELECT COUNT(*) FROM users")
     fun getUserCount(): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(username) = LOWER(:username))")
+    fun isUsernameTaken(username: String): Boolean
 }
