@@ -13,5 +13,6 @@ data class DashboardUiState(
     val username: String = "",
     val profileId: String = "",
     val dailySummary: DailySummary = DailySummary(),
-    val dailyGoal: DailyGoal? = null
+    val dailyGoal: DailyGoal? = null,
+    val waterTotalMl: Int = 0
 )

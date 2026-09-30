@@ -5,9 +5,13 @@ import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.model.UserProfile
+import com.example.myfoodtracker.domain.model.WaterLog
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
+import com.example.myfoodtracker.domain.repository.WaterRepository
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
+import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import org.junit.Assert.*
 import org.junit.Before
@@ -24,8 +28,11 @@ class DashboardViewModelTest {
 
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeMealRepository: FakeMealRepository
+    private lateinit var fakeWaterRepository: FakeWaterRepository
     private lateinit var logoutUseCase: LogoutUseCase
     private lateinit var getMealEntriesByDateUseCase: GetMealEntriesByDateUseCase
+    private lateinit var getWaterTotalUseCase: GetWaterTotalUseCase
+    private lateinit var logWaterUseCase: LogWaterUseCase
     private lateinit var viewModel: DashboardViewModel
 
     private val testUser = UserProfile(
@@ -40,13 +47,18 @@ class DashboardViewModelTest {
         fakeSessionRepository = FakeSessionRepository()
         fakeSessionRepository.setActiveProfile(testUser)
         fakeMealRepository = FakeMealRepository()
+        fakeWaterRepository = FakeWaterRepository(fakeSessionRepository)
         logoutUseCase = LogoutUseCase(fakeSessionRepository)
         getMealEntriesByDateUseCase = GetMealEntriesByDateUseCase(fakeMealRepository)
+        getWaterTotalUseCase = GetWaterTotalUseCase(fakeWaterRepository)
+        logWaterUseCase = LogWaterUseCase(fakeWaterRepository)
 
         viewModel = DashboardViewModel(
             sessionRepository = fakeSessionRepository,
             logoutUseCase = logoutUseCase,
-            getMealEntriesByDateUseCase = getMealEntriesByDateUseCase
+            getMealEntriesByDateUseCase = getMealEntriesByDateUseCase,
+            getWaterTotalUseCase = getWaterTotalUseCase,
+            logWaterUseCase = logWaterUseCase
         )
     }
 
@@ -243,6 +255,69 @@ class DashboardViewModelTest {
         assertNull(state.dailyGoal)
     }
 
+    @Test
+    fun selectDate_populatesWaterTotalMlFromStubbedWater() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        fakeWaterRepository.amountsByDate["user-1|2026-09-15"] = mutableListOf(250, 250)
+
+        viewModel.selectDate(targetDate)
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(500, state!!.waterTotalMl)
+    }
+
+    @Test
+    fun logWaterPlus250_inserts250ForActiveDateAndUpdatesState() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        viewModel.selectDate(targetDate)
+        assertEquals(0, viewModel.uiState.value?.waterTotalMl)
+
+        viewModel.logWaterPlus250()
+
+        assertEquals(250, viewModel.uiState.value?.waterTotalMl)
+
+        viewModel.logWaterPlus250()
+
+        assertEquals(500, viewModel.uiState.value?.waterTotalMl)
+    }
+
+    @Test
+    fun selectDate_reloadsWaterTotalPerDate_notStale() {
+        fakeWaterRepository.amountsByDate["user-1|2026-09-15"] = mutableListOf(500)
+        viewModel.selectDate(LocalDate.of(2026, 9, 15))
+        assertEquals(500, viewModel.uiState.value?.waterTotalMl)
+
+        viewModel.selectDate(LocalDate.of(2026, 9, 16))
+
+        assertEquals(0, viewModel.uiState.value?.waterTotalMl)
+    }
+
+    @Test
+    fun water_withNullProfile_emitsZeroAndNoCrash() {
+        fakeSessionRepository.clearSession()
+        viewModel.selectDate(LocalDate.now())
+
+        assertEquals(0, viewModel.uiState.value?.waterTotalMl)
+
+        viewModel.logWaterPlus250()
+
+        assertEquals(0, viewModel.uiState.value?.waterTotalMl)
+    }
+
+    @Test
+    fun logWater_withSkippedWaterTarget_stillLogsTotal() {
+        fakeSessionRepository.setActiveProfile(testUser.copy(dailyGoal = DailyGoal(targetWaterMl = null)))
+        viewModel.selectDate(LocalDate.of(2026, 9, 15))
+
+        viewModel.logWaterPlus250()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(250, state!!.waterTotalMl)
+        assertNull(state.dailyGoal?.targetWaterMl)
+    }
+
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
 
@@ -265,5 +340,29 @@ class DashboardViewModelTest {
         override fun addMealEntry(): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
+    }
+
+    private class FakeWaterRepository(
+        private val sessionRepository: SessionRepository
+    ) : WaterRepository {
+        val amountsByDate = mutableMapOf<String, MutableList<Int>>()
+
+        override fun getWaterLogs(date: String): List<WaterLog> {
+            val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+            return (amountsByDate["$profileId|$date"] ?: emptyList()).mapIndexed { index, amount ->
+                WaterLog(id = "water-$index", profileId = profileId, date = date, amountMl = amount)
+            }
+        }
+
+        override fun getWaterTotalMl(date: String): Int {
+            val profileId = sessionRepository.getActiveProfileId() ?: return 0
+            return amountsByDate["$profileId|$date"]?.sum() ?: 0
+        }
+
+        override fun logWater(amountMl: Int, date: String): Int {
+            val profileId = sessionRepository.getActiveProfileId() ?: return 0
+            amountsByDate.getOrPut("$profileId|$date") { mutableListOf() }.add(amountMl)
+            return getWaterTotalMl(date)
+        }
     }
 }

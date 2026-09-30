@@ -318,6 +318,77 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Quick Water Log Widget Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_water_widget"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#E1F5FE"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tv_water_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Hydration"
+                    android:textColor="#2D3748"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_water_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFeatureSettings="tnum"
+                    android:text="0 ml"
+                    android:textColor="#0288D1"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    tools:text="1,250 / 2,000 ml" />
+
+                <TextView
+                    android:id="@+id/tv_water_target"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFeatureSettings="tnum"
+                    android:textColor="#718096"
+                    android:textSize="14sp"
+                    tools:text="62% of daily goal" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_water"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="8dp"
+                    app:indicatorColor="#0288D1"
+                    app:trackColor="#B3E5FC" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add_water_250"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:minWidth="48dp"
+                    android:minHeight="48dp"
+                    android:text="+250ml"
+                    android:textColor="#FFFFFF"
+                    app:backgroundTint="#0288D1"
+                    android:contentDescription="+250 milliliters water" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Week-View Navigation Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
