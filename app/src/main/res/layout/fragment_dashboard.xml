@@ -103,6 +103,221 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Macro Progress Header Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_macro_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tv_macro_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="Daily Progress"
+                    android:textColor="#2D3748"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <!-- Calories block -->
+                <TextView
+                    android:id="@+id/tv_calories_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFeatureSettings="tnum"
+                    android:textColor="#1B4D3E"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    tools:text="1,450 kcal" />
+
+                <TextView
+                    android:id="@+id/tv_calories_target"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:fontFeatureSettings="tnum"
+                    android:textColor="#718096"
+                    android:textSize="14sp"
+                    tools:text="of 2,000 kcal" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_calories"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginBottom="16dp"
+                    app:indicatorColor="#1B4D3E"
+                    app:trackColor="#E2E8F0" />
+
+                <!-- Protein row -->
+                <LinearLayout
+                    android:id="@+id/layout_protein_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Protein"
+                            android:textColor="#718096"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_protein_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#2D3748"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="30g" />
+
+                        <TextView
+                            android:id="@+id/tv_protein_target"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#718096"
+                            android:textSize="12sp"
+                            tools:text=" / 120g" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progress_protein"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="4dp"
+                        app:indicatorColor="#2D6A4F"
+                        app:trackColor="#E2E8F0" />
+
+                </LinearLayout>
+
+                <!-- Carbs row -->
+                <LinearLayout
+                    android:id="@+id/layout_carbs_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Carbs"
+                            android:textColor="#718096"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_carbs_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#2D3748"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="45g" />
+
+                        <TextView
+                            android:id="@+id/tv_carbs_target"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#718096"
+                            android:textSize="12sp"
+                            tools:text=" / 200g" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progress_carbs"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="4dp"
+                        app:indicatorColor="#E9C46A"
+                        app:trackColor="#E2E8F0" />
+
+                </LinearLayout>
+
+                <!-- Fat row -->
+                <LinearLayout
+                    android:id="@+id/layout_fat_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Fat"
+                            android:textColor="#718096"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tv_fat_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#2D3748"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="12g" />
+
+                        <TextView
+                            android:id="@+id/tv_fat_target"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFeatureSettings="tnum"
+                            android:textColor="#718096"
+                            android:textSize="12sp"
+                            tools:text=" / 65g" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progress_fat"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="4dp"
+                        app:indicatorColor="#E76F51"
+                        app:trackColor="#E2E8F0" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Week-View Navigation Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

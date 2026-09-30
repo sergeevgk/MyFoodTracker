@@ -14,3 +14,8 @@
 - **D-2: Hardcoded hex colors without central color resources** - Colors like `#1B4D3E`, `#718096`, and `#E2E8F0` are parsed inline in adapters and layouts instead of referencing Android `@color/` resources, which is an existing codebase pattern across multiple features. [WeekDayAdapter.kt:43]
 - **D-3: No accessibility announcements on active date change** - Dynamic calendar and week navigation changes are not announced to screen readers (`announceForAccessibility` or live region). [DashboardFragment.kt:85]
 
+## Deferred from: code review of 2-2-macro-progress-header-card-and-dynamic-target-display (2026-09-30)
+
+- **D-1: Hardcoded light-theme colors in layout XML** - Macro progress header card and rows use hardcoded hex values (`#FFFFFF`, `#E2E8F0`, `#2D3748`, `#1B4D3E`, etc.) instead of theme attributes or `values-night` resources. Pre-existing codebase pattern previously deferred in Story 2.1 (D-2). [fragment_dashboard.xml:211]
+- **D-2: Hardcoded UI string literals without `@string/` resources** - Title, nutrient labels, and format templates are defined directly as string literals rather than localized string resources, matching an existing project-wide pattern. [fragment_dashboard.xml:228, DashboardFragment.kt:117]
+
