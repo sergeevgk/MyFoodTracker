@@ -2,6 +2,7 @@ package com.example.myfoodtracker.presentation.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.myfoodtracker.domain.model.DailyGoal
+import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.MealRepository
@@ -159,6 +160,87 @@ class DashboardViewModelTest {
         assertNotNull(state)
         assertEquals("", state!!.username)
         assertEquals("", state.profileId)
+    }
+
+    @Test
+    fun selectDate_populatesDailySummaryTotalsFromFoods() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        fakeMealRepository.entriesByDate["2026-09-15"] = listOf(
+            MealEntry(
+                id = "meal-1",
+                title = "Breakfast",
+                date = "2026-09-15",
+                time = "08:00",
+                foods = listOf(
+                    Food(name = "Eggs", weight = 100.0, calories = 155.0, carbs = 1.1, fat = 11.0, protein = 13.0, fiber = 0.0),
+                    Food(name = "Toast", weight = 50.0, calories = 130.0, carbs = 25.0, fat = 2.0, protein = 4.0, fiber = 1.0)
+                )
+            ),
+            MealEntry(
+                id = "meal-2",
+                title = "Lunch",
+                date = "2026-09-15",
+                time = "13:00",
+                foods = listOf(
+                    Food(name = "Chicken", weight = 100.0, calories = 165.0, carbs = 0.0, fat = 3.6, protein = 31.0, fiber = 0.0)
+                )
+            )
+        )
+
+        viewModel.selectDate(targetDate)
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(450.0, state!!.dailySummary.totalCalories, 0.001)
+        assertEquals(48.0, state.dailySummary.totalProteinG, 0.001)
+        assertEquals(26.1, state.dailySummary.totalCarbsG, 0.001)
+        assertEquals(16.6, state.dailySummary.totalFatG, 0.001)
+    }
+
+    @Test
+    fun selectDate_exposesDailyGoalFromActiveProfile() {
+        val goal = DailyGoal(
+            profileId = "user-1",
+            targetCalories = 2000.0,
+            targetProteinG = 120.0,
+            targetCarbsG = null,
+            targetFatG = 65.0,
+            targetWaterMl = 2000
+        )
+        fakeSessionRepository.setActiveProfile(testUser.copy(dailyGoal = goal))
+
+        viewModel.selectDate(LocalDate.of(2026, 9, 15))
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(2000.0, state!!.dailyGoal?.targetCalories ?: 0.0, 0.001)
+        assertEquals(120.0, state.dailyGoal?.targetProteinG ?: 0.0, 0.001)
+        assertNull(state.dailyGoal?.targetCarbsG)
+        assertEquals(65.0, state.dailyGoal?.targetFatG ?: 0.0, 0.001)
+    }
+
+    @Test
+    fun selectDate_withNoMeals_emitsZeroDailySummary() {
+        val targetDate = LocalDate.of(2026, 10, 1)
+        viewModel.selectDate(targetDate)
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(0.0, state!!.dailySummary.totalCalories, 0.001)
+        assertEquals(0.0, state.dailySummary.totalProteinG, 0.001)
+        assertEquals(0.0, state.dailySummary.totalCarbsG, 0.001)
+        assertEquals(0.0, state.dailySummary.totalFatG, 0.001)
+    }
+
+    @Test
+    fun selectDate_withNullProfile_emitsEmptySummaryAndNullGoal() {
+        fakeSessionRepository.clearSession()
+        viewModel.selectDate(LocalDate.now())
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(0.0, state!!.dailySummary.totalCalories, 0.001)
+        assertNull(state.dailyGoal)
     }
 
     private class FakeSessionRepository : SessionRepository {

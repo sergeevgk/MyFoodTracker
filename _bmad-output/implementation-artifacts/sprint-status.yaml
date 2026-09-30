@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-09-06T20:24:40+02:00
-last_updated: 2026-09-30T18:57:00+02:00
+last_updated: 2026-09-30T19:48:00+02:00
 project: MyFoodTracker
 project_key: NOKEY
 tracking_system: file-system
@@ -54,7 +54,7 @@ development_status:
   epic-1-retrospective: optional
   epic-2: in-progress
   2-1-week-view-navigation-and-month-calendar-picker: in-progress
-  2-2-macro-progress-header-card-and-dynamic-target-display: backlog
+  2-2-macro-progress-header-card-and-dynamic-target-display: done
   2-3-quick-water-logging-plus-250ml: backlog
   2-4-quick-add-calorie-and-macro-logging: backlog
   2-5-swipe-to-delete-intake-logs-with-undo: backlog

@@ -3,6 +3,7 @@ package com.example.myfoodtracker.presentation.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.myfoodtracker.domain.model.DailySummary
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
@@ -43,6 +44,8 @@ class DashboardViewModel(
 
         val weekDays = buildWeekDays(date)
         val mealEntries = getMealEntriesByDateUseCase(date.toString())
+        val summary = DailySummary.summarize(mealEntries)
+        val goal = profile?.dailyGoal
 
         _uiState.value = DashboardUiState(
             activeDate = date,
@@ -50,7 +53,9 @@ class DashboardViewModel(
             weekDays = weekDays,
             mealEntries = mealEntries,
             username = username,
-            profileId = profileId
+            profileId = profileId,
+            dailySummary = summary,
+            dailyGoal = goal
         )
     }
 
