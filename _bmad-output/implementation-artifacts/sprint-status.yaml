@@ -41,16 +41,16 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-09-06T20:24:40+02:00
-last_updated: 2026-09-06T20:29:40+02:00
+last_updated: 2026-09-20T18:14:00+02:00
 project: MyFoodTracker
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: in-progress
-  1-1-local-profile-creation-and-goal-setup: review
-  1-2-passcode-authentication-and-startup-profile-lock: backlog
+  epic-1: done
+  1-1-local-profile-creation-and-goal-setup: done
+  1-2-passcode-authentication-and-startup-profile-lock: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-week-view-navigation-and-month-calendar-picker: backlog

@@ -4,7 +4,7 @@ baseline_commit: 25d002438462d692b19a44109246e97a1c2fbcb8
 
 # Story 1.1: Local Profile Creation & Goal Setup
 
-Status: review
+Status: done
 
 ## Story
 
@@ -84,10 +84,10 @@ Layouts created in `app/src/main/res/layout/`:
 
 ### References
 
-- [PRD Vision & Profile Requirements](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/prd.md#41-local-user-profiles)
-- [PRD Addendum Schema Specifications](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/addendum.md#11-table-specifications)
-- [Architecture Spine Rules](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/architecture/architecture-MyFoodTracker-2026-09-06/ARCHITECTURE-SPINE.md#invariants--rules)
-- [UX Visual Identity Tokens](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/ux-designs/ux-MyFoodTracker-2026-09-06/DESIGN.md#colors)
+- [PRD Vision & Profile Requirements](_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/prd.md#41-local-user-profiles)
+- [PRD Addendum Schema Specifications](_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/addendum.md#11-table-specifications)
+- [Architecture Spine Rules](_bmad-output/planning-artifacts/architecture/architecture-MyFoodTracker-2026-09-06/ARCHITECTURE-SPINE.md#invariants--rules)
+- [UX Visual Identity Tokens](_bmad-output/planning-artifacts/ux-designs/ux-MyFoodTracker-2026-09-06/DESIGN.md#colors)
 
 ## Dev Agent Record
 

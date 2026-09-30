@@ -7,6 +7,7 @@ import com.example.myfoodtracker.data.entity.UserProfileEntity
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.UserRepository
+import com.example.myfoodtracker.domain.security.PasscodeHasher
 import java.util.UUID
 
 class UserRepositoryImpl(
@@ -46,6 +47,15 @@ class UserRepositoryImpl(
 
     override fun getProfiles(): List<UserProfile> {
         return userProfileDao.getUsersWithGoals().map { it.toDomain() }
+    }
+
+    override fun getProfileById(id: String): UserProfile? {
+        return userProfileDao.getUserById(id)?.toDomain()
+    }
+
+    override fun verifyPasscode(profileId: String, passcode: String): Boolean {
+        val user = getProfileById(profileId) ?: return false
+        return PasscodeHasher.verifyPasscode(passcode, user.passcodeHash)
     }
 
     override fun hasProfiles(): Boolean {

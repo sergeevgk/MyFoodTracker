@@ -7,9 +7,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.FragmentProfileSetupBinding
+import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupState
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ProfileSetupFragment : Fragment() {
@@ -18,6 +22,7 @@ class ProfileSetupFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ProfileSetupViewModel by viewModel()
+    private val sessionRepository: SessionRepository by inject()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,11 +81,15 @@ class ProfileSetupFragment : Fragment() {
                 }
                 is ProfileSetupState.Success -> {
                     binding.btnCreateProfile.isEnabled = true
+                    sessionRepository.setActiveProfile(state.userProfile)
                     Toast.makeText(
                         requireContext(),
                         "Profile '${state.userProfile.username}' created successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
+                    if (findNavController().currentDestination?.id == R.id.profileSetupFragment) {
+                        findNavController().navigate(R.id.action_profileSetupFragment_to_dashboardFragment)
+                    }
                 }
                 is ProfileSetupState.Error -> {
                     binding.btnCreateProfile.isEnabled = true

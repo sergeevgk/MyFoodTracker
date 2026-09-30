@@ -44,7 +44,7 @@ By focusing on offline performance and instant feedback, the application lowers 
 
 ## Success Criteria
 
-- **Learning Goal**: Complete implementation must strictly follow [project-context.md](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/project-context.md) conventions (Room synchronous DB access, Koin DI, domain mapping, decoupled layers).
+- **Learning Goal**: Complete implementation must strictly follow [project-context.md](_bmad-output/project-context.md) conventions (Room synchronous DB access, Koin DI, domain mapping, decoupled layers).
 - **Speed**: Search results return and logs save in under `50 ms` using local indexing.
 - **Offline Independence**: `100%` of MVP functionality must work without cellular reception or internet connectivity.
 - **Usability**: Log a meal in `<15` seconds (Open app → Search → Enter weight → Save).

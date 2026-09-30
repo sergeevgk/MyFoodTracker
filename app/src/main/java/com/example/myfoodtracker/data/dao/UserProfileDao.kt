@@ -37,6 +37,10 @@ interface UserProfileDao {
     @Query("SELECT * FROM users")
     fun getUsersWithGoals(): List<UserWithGoal>
 
+    @Transaction
+    @Query("SELECT * FROM users WHERE id = :id")
+    fun getUserById(id: String): UserWithGoal?
+
     @Query("SELECT COUNT(*) FROM users")
     fun getUserCount(): Int
 

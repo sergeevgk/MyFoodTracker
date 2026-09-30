@@ -10,7 +10,7 @@ updated: 2026-08-08
 ## 0. Document Purpose
 This PRD outlines the requirements for MyFoodTracker, a lightweight, privacy-first mobile application designed to help users log food and water intake, track macronutrients, and monitor history offline. It is written for developers and stakeholders to align on features, user journeys, functional constraints, and success criteria. 
 
-As a primary development reference project, this PRD aligns with the technical boundaries defined in [project-context.md](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/project-context.md). Detailed technical designs and DB schema definitions are decoupled from this document and reside in the [addendum.md](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/addendum.md).
+As a primary development reference project, this PRD aligns with the technical boundaries defined in [project-context.md](_bmad-output/project-context.md). Detailed technical designs and DB schema definitions are decoupled from this document and reside in the [addendum.md](_bmad-output/planning-artifacts/prds/prd-MyFoodTracker-2026-08-08/addendum.md).
 
 ## 1. Vision
 MyFoodTracker provides a fast, offline-first, ad-free, and subscription-free utility for digital sovereignty in personal nutrition tracking. The app stores all user profiles and intake data locally on-device. By eliminating network-dependent autocomplete API calls and commercial trackers, MyFoodTracker guarantees instant feedback and absolute privacy, offering a direct contrast to bloated commercial health platforms.

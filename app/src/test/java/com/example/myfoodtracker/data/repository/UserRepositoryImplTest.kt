@@ -67,6 +67,32 @@ class UserRepositoryImplTest {
         assertTrue(repository.isUsernameTaken("georgii"))
         assertFalse(repository.isUsernameTaken("Alex"))
     }
+
+    @Test
+    fun getProfileById_existingUser_returnsProfile() {
+        val created = repository.createProfile("Georgii", "hashed_123", DailyGoal(targetCalories = 2000.0))
+        val fetched = repository.getProfileById(created.id)
+
+        assertNotNull(fetched)
+        assertEquals(created.id, fetched?.id)
+        assertEquals("Georgii", fetched?.username)
+        assertEquals(2000.0, fetched?.dailyGoal?.targetCalories)
+    }
+
+    @Test
+    fun getProfileById_nonExistentUser_returnsNull() {
+        assertNull(repository.getProfileById("unknown-id"))
+    }
+
+    @Test
+    fun verifyPasscode_matchesAgainstPasscodeHasher() {
+        val hashedPasscode = com.example.myfoodtracker.domain.security.PasscodeHasher.hashPasscode("1234")
+        val created = repository.createProfile("Georgii", hashedPasscode, DailyGoal())
+
+        assertTrue(repository.verifyPasscode(created.id, "1234"))
+        assertFalse(repository.verifyPasscode(created.id, "0000"))
+        assertFalse(repository.verifyPasscode("non-existent-id", "1234"))
+    }
 }
 
 class FakeUserProfileDao : UserProfileDao {
@@ -91,6 +117,12 @@ class FakeUserProfileDao : UserProfileDao {
             val goal = goals.firstOrNull { it.profileId == user.id }
             UserWithGoal(user, goal)
         }
+    }
+
+    override fun getUserById(id: String): UserWithGoal? {
+        val user = users.firstOrNull { it.id == id } ?: return null
+        val goal = goals.firstOrNull { it.profileId == id }
+        return UserWithGoal(user, goal)
     }
 
     override fun getUserCount(): Int = users.size

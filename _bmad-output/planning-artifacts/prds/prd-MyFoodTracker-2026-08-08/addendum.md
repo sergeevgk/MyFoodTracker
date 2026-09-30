@@ -1,6 +1,6 @@
 # PRD Addendum: Technical Specifications & DB Design
 
-This addendum captures technical architecture guidelines, database models, and performance engineering details for MyFoodTracker. These choices are informed by [project-context.md](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/project-context.md) conventions.
+This addendum captures technical architecture guidelines, database models, and performance engineering details for MyFoodTracker. These choices are informed by [project-context.md](_bmad-output/project-context.md) conventions.
 
 ---
 

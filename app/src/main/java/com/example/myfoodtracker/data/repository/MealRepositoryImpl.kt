@@ -7,22 +7,29 @@ import com.example.myfoodtracker.data.db.MealWithFoods
 import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.MealRepository
+import com.example.myfoodtracker.domain.repository.SessionRepository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
+class MealRepositoryImpl(
+    private val mealDao: MealDao,
+    private val sessionRepository: SessionRepository
+) : MealRepository {
 
     override fun getMealEntries(): List<MealEntry> {
-        return mealDao.getAllMealsWithFoods().map { it.toDomain() }
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        return mealDao.getMealsWithFoodsByProfileId(profileId).map { it.toDomain() }
     }
 
     override fun addMealEntry(): List<MealEntry> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
         val currentDate = LocalDate.now().toString()
         val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
         val meal = MealEntryEntity(
             id = UUID.randomUUID().toString(),
+            profileId = profileId,
             title = "",
             date = currentDate,
             time = currentTime
@@ -32,12 +39,14 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
     }
 
     override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> {
-        mealDao.updateMealTitle(id, newTitle)
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        mealDao.updateMealTitle(id, profileId, newTitle)
         return getMealEntries()
     }
 
     override fun deleteMealEntry(id: String): List<MealEntry> {
-        mealDao.deleteMeal(id)
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        mealDao.deleteMeal(id, profileId)
         return getMealEntries()
     }
 
