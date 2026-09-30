@@ -5,6 +5,10 @@ import androidx.room.*
 @Dao
 interface MealDao {
     @Transaction
+    @Query("SELECT * FROM meals WHERE profile_id = :profileId AND date = :date")
+    fun getMealsWithFoodsByProfileIdAndDate(profileId: String, date: String): List<MealWithFoods>
+
+    @Transaction
     @Query("SELECT * FROM meals WHERE profile_id = :profileId")
     fun getMealsWithFoodsByProfileId(profileId: String): List<MealWithFoods>
 
