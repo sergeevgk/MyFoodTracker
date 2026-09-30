@@ -5,6 +5,10 @@ import androidx.room.*
 @Dao
 interface MealDao {
     @Transaction
+    @Query("SELECT * FROM meals WHERE profile_id = :profileId")
+    fun getMealsWithFoodsByProfileId(profileId: String): List<MealWithFoods>
+
+    @Transaction
     @Query("SELECT * FROM meals")
     fun getAllMealsWithFoods(): List<MealWithFoods>
 
@@ -14,9 +18,10 @@ interface MealDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFoods(foods: List<FoodEntity>)
 
-    @Query("UPDATE meals SET title = :title WHERE id = :id")
-    fun updateMealTitle(id: String, title: String)
+    @Query("UPDATE meals SET title = :title WHERE id = :id AND profile_id = :profileId")
+    fun updateMealTitle(id: String, profileId: String, title: String)
 
-    @Query("DELETE FROM meals WHERE id = :id")
-    fun deleteMeal(id: String)
+    @Query("DELETE FROM meals WHERE id = :id AND profile_id = :profileId")
+    fun deleteMeal(id: String, profileId: String)
 }
+

@@ -13,7 +13,7 @@ updated: 2026-09-06
 
 MyFoodTracker is built as a single-device, multi-surface Android application (optimizing for mobile phones and tablet/foldable layouts). It uses Android Material Design 3 guidelines (with Jetpack Compose / View Binding UI parity). 
 
-Visual identity tokens, colors, shapes, and typography are governed by [DESIGN.md](file:///c:/Users/Xenae/Documents/source/repos/AndroidStudioProjects/MyFoodTracker/_bmad-output/planning-artifacts/ux-designs/ux-MyFoodTracker-2026-09-06/DESIGN.md). This document owns information architecture, component behavior, interaction rules, state treatments, and key user flows.
+Visual identity tokens, colors, shapes, and typography are governed by [DESIGN.md](_bmad-output/planning-artifacts/ux-designs/ux-MyFoodTracker-2026-09-06/DESIGN.md). This document owns information architecture, component behavior, interaction rules, state treatments, and key user flows.
 
 ---
 

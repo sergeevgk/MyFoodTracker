@@ -3,10 +3,42 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/profileSetupFragment">
+    app:startDestination="@id/passcodeAuthFragment">
+
+    <fragment
+        android:id="@+id/passcodeAuthFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.auth.PasscodeAuthFragment"
+        android:label="Unlock Profile">
+        <action
+            android:id="@+id/action_passcodeAuthFragment_to_profileSetupFragment"
+            app:destination="@id/profileSetupFragment" />
+        <action
+            android:id="@+id/action_passcodeAuthFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment"
+            app:popUpTo="@id/passcodeAuthFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileSetupFragment"
         android:name="com.example.myfoodtracker.presentation.ui.auth.ProfileSetupFragment"
-        android:label="ProfileSetupFragment" />
+        android:label="Create Profile">
+        <action
+            android:id="@+id/action_profileSetupFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment"
+            app:popUpTo="@id/passcodeAuthFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.dashboard.DashboardFragment"
+        android:label="Dashboard">
+        <action
+            android:id="@+id/action_dashboardFragment_to_passcodeAuthFragment"
+            app:destination="@id/passcodeAuthFragment"
+            app:popUpTo="@id/dashboardFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
 </navigation>

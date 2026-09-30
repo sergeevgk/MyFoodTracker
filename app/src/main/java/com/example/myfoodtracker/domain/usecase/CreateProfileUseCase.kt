@@ -3,8 +3,7 @@ package com.example.myfoodtracker.domain.usecase
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.UserRepository
-import java.security.MessageDigest
-import java.security.SecureRandom
+import com.example.myfoodtracker.domain.security.PasscodeHasher
 
 class CreateProfileUseCase(
     private val userRepository: UserRepository
@@ -29,7 +28,7 @@ class CreateProfileUseCase(
             return Result.failure(IllegalArgumentException("Username already taken"))
         }
 
-        val passcodeHash = hashPasscode(passcode)
+        val passcodeHash = PasscodeHasher.hashPasscode(passcode)
 
         val dailyGoal = DailyGoal(
             targetCalories = calorieTarget,
@@ -41,17 +40,5 @@ class CreateProfileUseCase(
 
         val createdProfile = userRepository.createProfile(trimmedUsername, passcodeHash, dailyGoal)
         return Result.success(createdProfile)
-    }
-
-    private fun hashPasscode(passcode: String): String {
-        val random = SecureRandom()
-        val saltBytes = ByteArray(16)
-        random.nextBytes(saltBytes)
-        val saltHex = saltBytes.joinToString("") { "%02x".format(it) }
-
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest((saltHex + passcode).toByteArray(Charsets.UTF_8))
-        val hashHex = digest.joinToString("") { "%02x".format(it) }
-        return "$saltHex:$hashHex"
     }
 }

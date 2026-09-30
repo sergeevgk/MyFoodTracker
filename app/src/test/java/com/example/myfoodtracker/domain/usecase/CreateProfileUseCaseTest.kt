@@ -130,6 +130,15 @@ class FakeUserRepository : UserRepository {
 
     override fun getProfiles(): List<UserProfile> = profiles
 
+    override fun getProfileById(id: String): UserProfile? {
+        return profiles.find { it.id == id }
+    }
+
+    override fun verifyPasscode(profileId: String, passcode: String): Boolean {
+        val profile = getProfileById(profileId) ?: return false
+        return com.example.myfoodtracker.domain.security.PasscodeHasher.verifyPasscode(passcode, profile.passcodeHash)
+    }
+
     override fun hasProfiles(): Boolean = profiles.isNotEmpty()
 
     override fun isUsernameTaken(username: String): Boolean {
