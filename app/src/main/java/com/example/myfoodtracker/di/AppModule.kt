@@ -8,12 +8,16 @@ import com.example.myfoodtracker.data.repository.UserRepositoryImpl
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.repository.UserRepository
+import com.example.myfoodtracker.domain.repository.WaterRepository
+import com.example.myfoodtracker.data.repository.WaterRepositoryImpl
 import com.example.myfoodtracker.domain.usecase.AddMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.CreateProfileUseCase
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesUseCase
+import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
@@ -37,11 +41,13 @@ val appModule = module {
     }
     single { get<AppDatabase>().mealDao() }
     single { get<AppDatabase>().userProfileDao() }
+    single { get<AppDatabase>().waterLogDao() }
 
     // Repositories
     single<SessionRepository> { SessionRepositoryImpl() }
     single<MealRepository> { MealRepositoryImpl(get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
+    single<WaterRepository> { WaterRepositoryImpl(get(), get()) }
 
     // Use Cases
     factory { GetMealEntriesUseCase(get()) }
@@ -52,10 +58,12 @@ val appModule = module {
     factory { CreateProfileUseCase(get()) }
     factory { AuthenticateUserUseCase(get(), get()) }
     factory { LogoutUseCase(get()) }
+    factory { LogWaterUseCase(get()) }
+    factory { GetWaterTotalUseCase(get()) }
 
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get()) }
-    viewModel { DashboardViewModel(get(), get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get(), get(), get()) }
 }

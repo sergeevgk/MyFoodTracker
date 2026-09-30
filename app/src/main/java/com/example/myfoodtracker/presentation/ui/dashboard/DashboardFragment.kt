@@ -83,6 +83,20 @@ class DashboardFragment : Fragment() {
             viewModel.logout()
             findNavController().navigate(R.id.action_dashboardFragment_to_passcodeAuthFragment)
         }
+
+        binding.btnAddWater250.setOnClickListener {
+            viewModel.logWaterPlus250()
+            playWaterTapFeedback()
+            val total = viewModel.uiState.value?.waterTotalMl ?: 0
+            val target = viewModel.uiState.value?.dailyGoal?.targetWaterMl
+            val message = if (target != null && target > 0) {
+                "+250 milliliters water added. Total: $total milliliters of $target milliliters"
+            } else {
+                "+250 milliliters water added. Total: $total milliliters"
+            }
+            @Suppress("DEPRECATION")
+            binding.cardWaterWidget.announceForAccessibility(message)
+        }
     }
 
     private fun observeViewModel() {
@@ -103,6 +117,7 @@ class DashboardFragment : Fragment() {
             }
 
             bindMacroHeader(state)
+            bindWaterWidget(state)
         }
     }
 
@@ -189,6 +204,64 @@ class DashboardFragment : Fragment() {
         } else {
             row.visibility = View.GONE
         }
+    }
+
+    private fun bindWaterWidget(state: DashboardUiState) {
+        val total = state.waterTotalMl
+        val target = state.dailyGoal?.targetWaterMl
+        val locale = Locale.getDefault()
+
+        if (target != null && target > 0) {
+            val consumed = String.format(locale, "%,d", total)
+            val targetStr = String.format(locale, "%,d", target)
+            val percent = ((total.toDouble() / target) * 100).toInt()
+            binding.tvWaterValue.text = "$consumed / $targetStr ml"
+            binding.tvWaterTarget.text = "$percent% of daily goal"
+            binding.tvWaterTarget.visibility = View.VISIBLE
+            binding.progressWater.visibility = View.VISIBLE
+            binding.progressWater.setProgress(
+                ((total.toDouble() / target).coerceIn(0.0, 1.0) * 100).toInt()
+            )
+            binding.cardWaterWidget.contentDescription =
+                "Water: $consumed of $targetStr milliliters consumed, $percent percent"
+        } else {
+            val consumed = String.format(locale, "%,d", total)
+            binding.tvWaterValue.text = "$consumed ml"
+            binding.tvWaterTarget.visibility = View.GONE
+            binding.progressWater.visibility = View.GONE
+            binding.cardWaterWidget.contentDescription =
+                "Water: $consumed milliliters consumed, no target set"
+        }
+    }
+
+    private fun playWaterTapFeedback() {
+        if (!isAdded) return
+        binding.progressWater.animate()
+            .scaleX(1.06f)
+            .scaleY(1.06f)
+            .setDuration(90)
+            .withEndAction {
+                if (!isAdded) return@withEndAction
+                binding.progressWater.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(120)
+                    .start()
+            }
+            .start()
+        binding.tvWaterValue.animate()
+            .scaleX(1.15f)
+            .scaleY(1.15f)
+            .setDuration(90)
+            .withEndAction {
+                if (!isAdded) return@withEndAction
+                binding.tvWaterValue.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(120)
+                    .start()
+            }
+            .start()
     }
 
     private fun showDatePicker(activeDate: LocalDate) {

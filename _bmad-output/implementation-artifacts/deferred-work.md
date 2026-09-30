@@ -19,3 +19,7 @@
 - **D-1: Hardcoded light-theme colors in layout XML** - Macro progress header card and rows use hardcoded hex values (`#FFFFFF`, `#E2E8F0`, `#2D3748`, `#1B4D3E`, etc.) instead of theme attributes or `values-night` resources. Pre-existing codebase pattern previously deferred in Story 2.1 (D-2). [fragment_dashboard.xml:211]
 - **D-2: Hardcoded UI string literals without `@string/` resources** - Title, nutrient labels, and format templates are defined directly as string literals rather than localized string resources, matching an existing project-wide pattern. [fragment_dashboard.xml:228, DashboardFragment.kt:117]
 
+## Deferred from: code review of 2-3-quick-water-logging-plus-250ml (2026-09-30)
+
+- **D-1: Instant tactile / haptic feedback on quick-add water button** - Tap does not trigger haptic feedback (`performHapticFeedback(KEYBOARD_TAP)`). Deferred by user decision as post-MVP tactile polish. [DashboardFragment.kt:89]
+
