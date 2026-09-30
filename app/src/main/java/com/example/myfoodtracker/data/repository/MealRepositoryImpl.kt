@@ -23,6 +23,11 @@ class MealRepositoryImpl(
         return mealDao.getMealsWithFoodsByProfileId(profileId).map { it.toDomain() }
     }
 
+    override fun getMealEntriesByDate(date: String): List<MealEntry> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        return mealDao.getMealsWithFoodsByProfileIdAndDate(profileId, date).map { it.toDomain() }
+    }
+
     override fun addMealEntry(): List<MealEntry> {
         val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
         val currentDate = LocalDate.now().toString()

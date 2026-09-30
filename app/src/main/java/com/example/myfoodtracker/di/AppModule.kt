@@ -12,10 +12,12 @@ import com.example.myfoodtracker.domain.usecase.AddMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.CreateProfileUseCase
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
+import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
+import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -43,6 +45,7 @@ val appModule = module {
 
     // Use Cases
     factory { GetMealEntriesUseCase(get()) }
+    factory { GetMealEntriesByDateUseCase(get()) }
     factory { AddMealEntryUseCase(get()) }
     factory { UpdateMealEntryUseCase(get()) }
     factory { DeleteMealEntryUseCase(get()) }
@@ -54,4 +57,5 @@ val appModule = module {
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get()) }
 }

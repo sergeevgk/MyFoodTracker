@@ -11,8 +11,187 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
+        <!-- Top Header Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/tv_dashboard_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:text="Dashboard"
+                        android:textColor="#1B4D3E"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Calendar Picker Button -->
+                        <ImageButton
+                            android:id="@+id/ib_calendar_picker"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Select date from month calendar"
+                            android:padding="12dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_calendar_today"
+                            app:tint="#1B4D3E" />
+
+                        <!-- Logout Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_logout"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="4dp"
+                            android:text="Log Out"
+                            android:textColor="#BA1A1A"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- Welcome Banner -->
+                <TextView
+                    android:id="@+id/tv_welcome_banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Welcome!"
+                    android:textColor="#2D3748"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <!-- Active Profile Info -->
+                <TextView
+                    android:id="@+id/tv_active_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Active Profile ID: "
+                    android:textColor="#718096"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Week-View Navigation Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
+
+                <!-- Navigation Controls Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageButton
+                        android:id="@+id/btn_prev_week"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Previous week"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_chevron_left"
+                        app:tint="#1B4D3E" />
+
+                    <TextView
+                        android:id="@+id/tv_active_date_header"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textColor="#1B4D3E"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        tools:text="Wednesday, Sep 30, 2026" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_today"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:text="Today"
+                        android:textSize="13sp"
+                        app:cornerRadius="24dp" />
+
+                    <ImageButton
+                        android:id="@+id/btn_next_week"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Next week"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#1B4D3E" />
+
+                </LinearLayout>
+
+                <!-- Horizontal 7-Day Strip -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_week_days"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/item_week_day" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Meals Section Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -25,50 +204,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/tvDashboardTitle"
+                    android:id="@+id/tv_meals_section_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Dashboard"
-                    android:textColor="#1B4D3E"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <!-- Welcome Banner -->
-                <TextView
-                    android:id="@+id/tvWelcomeBanner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Welcome!"
+                    android:text="Logged Meals"
                     android:textColor="#2D3748"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="12dp" />
 
-                <!-- Active Profile Info -->
+                <!-- Empty Meals State -->
                 <TextView
-                    android:id="@+id/tvActiveProfile"
+                    android:id="@+id/tv_empty_meals"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Active Profile ID: "
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="No items logged for this date"
                     android:textColor="#718096"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="24dp" />
+                    android:textSize="14sp" />
 
-                <!-- Logout Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLogout"
+                <!-- Meal Entries Container -->
+                <LinearLayout
+                    android:id="@+id/layout_meal_entries"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="Log Out"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="#1B4D3E"
-                    app:cornerRadius="28dp" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/tv_meal_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#2D3748"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

@@ -119,6 +119,60 @@ class MealRepositoryImplTest {
         assertEquals(0, repository.getMealEntries().size)
     }
 
+    @Test
+    fun getMealEntriesByDate_noActiveSession_returnsEmptyList() {
+        fakeSessionRepository.clearSession()
+        val entries = repository.getMealEntriesByDate("2026-09-30")
+        assertTrue(entries.isEmpty())
+    }
+
+    @Test
+    fun getMealEntriesByDate_filtersByProfileIdAndDate() {
+        fakeSessionRepository.setActiveProfile(user1)
+        val today = "2026-09-30"
+        val yesterday = "2026-09-29"
+
+        fakeMealDao.insertMeal(
+            MealEntryEntity(
+                id = "meal-1",
+                profileId = "user-1",
+                title = "User 1 Today Meal",
+                date = today,
+                time = "08:00"
+            )
+        )
+        fakeMealDao.insertMeal(
+            MealEntryEntity(
+                id = "meal-2",
+                profileId = "user-1",
+                title = "User 1 Yesterday Meal",
+                date = yesterday,
+                time = "12:00"
+            )
+        )
+        fakeMealDao.insertMeal(
+            MealEntryEntity(
+                id = "meal-3",
+                profileId = "user-2",
+                title = "User 2 Today Meal",
+                date = today,
+                time = "18:00"
+            )
+        )
+
+        val todayEntries = repository.getMealEntriesByDate(today)
+        assertEquals(1, todayEntries.size)
+        assertEquals("meal-1", todayEntries[0].id)
+        assertEquals("User 1 Today Meal", todayEntries[0].title)
+
+        val yesterdayEntries = repository.getMealEntriesByDate(yesterday)
+        assertEquals(1, yesterdayEntries.size)
+        assertEquals("meal-2", yesterdayEntries[0].id)
+
+        val emptyDateEntries = repository.getMealEntriesByDate("2026-10-01")
+        assertTrue(emptyDateEntries.isEmpty())
+    }
+
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
 
@@ -132,6 +186,13 @@ class MealRepositoryImplTest {
     private class FakeMealDao : MealDao {
         val meals = mutableListOf<MealEntryEntity>()
         val foods = mutableListOf<FoodEntity>()
+
+        override fun getMealsWithFoodsByProfileIdAndDate(profileId: String, date: String): List<MealWithFoods> {
+            return meals.filter { it.profileId == profileId && it.date == date }.map { meal ->
+                val associatedFoods = foods.filter { it.mealId == meal.id }
+                MealWithFoods(meal, associatedFoods)
+            }
+        }
 
         override fun getMealsWithFoodsByProfileId(profileId: String): List<MealWithFoods> {
             return meals.filter { it.profileId == profileId }.map { meal ->
