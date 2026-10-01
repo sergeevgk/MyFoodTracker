@@ -173,6 +173,70 @@ class MealRepositoryImplTest {
         assertTrue(emptyDateEntries.isEmpty())
     }
 
+    @Test
+    fun logQuickAdd_withActiveSession_createsMealWithSlotTitleAndFood() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        val entries = repository.logQuickAdd("Office lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+
+        assertEquals(1, entries.size)
+        assertEquals(1, fakeMealDao.meals.size)
+        assertEquals(1, fakeMealDao.foods.size)
+        assertEquals("LUNCH", fakeMealDao.meals[0].title)
+        assertEquals("2026-09-30", fakeMealDao.meals[0].date)
+        assertEquals("user-1", fakeMealDao.meals[0].profileId)
+        assertEquals("Office lunch", fakeMealDao.foods[0].name)
+        assertEquals(500.0, fakeMealDao.foods[0].calories, 0.001)
+        assertEquals(20.0, fakeMealDao.foods[0].protein, 0.001)
+        assertEquals(45.0, fakeMealDao.foods[0].carbs, 0.001)
+        assertEquals(15.0, fakeMealDao.foods[0].fat, 0.001)
+        assertEquals("LUNCH", entries[0].title)
+    }
+
+    @Test
+    fun logQuickAdd_historicalDate_writesToGivenDateNotToday() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        repository.logQuickAdd("Old dinner", 700.0, 30.0, 60.0, 20.0, "DINNER", "2026-09-01")
+
+        assertEquals("2026-09-01", fakeMealDao.meals[0].date)
+        assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
+        assertEquals(1, repository.getMealEntriesByDate("2026-09-01").size)
+    }
+
+    @Test
+    fun logQuickAdd_profileIsolation_otherUserSeesNothing() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+
+        fakeSessionRepository.setActiveProfile(user2)
+
+        assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
+    }
+
+    @Test
+    fun logQuickAdd_noActiveSession_writesNothingAndReturnsEmpty() {
+        fakeSessionRepository.clearSession()
+
+        val entries = repository.logQuickAdd("Snack", 100.0, 1.0, 1.0, 1.0, "SNACK", "2026-09-30")
+
+        assertTrue(entries.isEmpty())
+        assertTrue(fakeMealDao.meals.isEmpty())
+        assertTrue(fakeMealDao.foods.isEmpty())
+    }
+
+    @Test
+    fun logQuickAdd_dateIsolation_eachDateHasOwnEntries() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        repository.logQuickAdd("Snack", 100.0, 1.0, 10.0, 5.0, "SNACK", "2026-09-29")
+
+        assertEquals(1, repository.getMealEntriesByDate("2026-09-30").size)
+        assertEquals(1, repository.getMealEntriesByDate("2026-09-29").size)
+        assertEquals("LUNCH", repository.getMealEntriesByDate("2026-09-30")[0].title)
+        assertEquals("SNACK", repository.getMealEntriesByDate("2026-09-29")[0].title)
+    }
+
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
 

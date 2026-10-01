@@ -11,6 +11,7 @@ import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.repository.WaterRepository
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import org.junit.Assert.*
@@ -33,6 +34,7 @@ class DashboardViewModelTest {
     private lateinit var getMealEntriesByDateUseCase: GetMealEntriesByDateUseCase
     private lateinit var getWaterTotalUseCase: GetWaterTotalUseCase
     private lateinit var logWaterUseCase: LogWaterUseCase
+    private lateinit var logQuickAddUseCase: LogQuickAddUseCase
     private lateinit var viewModel: DashboardViewModel
 
     private val testUser = UserProfile(
@@ -46,19 +48,21 @@ class DashboardViewModelTest {
     fun setUp() {
         fakeSessionRepository = FakeSessionRepository()
         fakeSessionRepository.setActiveProfile(testUser)
-        fakeMealRepository = FakeMealRepository()
+        fakeMealRepository = FakeMealRepository(fakeSessionRepository)
         fakeWaterRepository = FakeWaterRepository(fakeSessionRepository)
         logoutUseCase = LogoutUseCase(fakeSessionRepository)
         getMealEntriesByDateUseCase = GetMealEntriesByDateUseCase(fakeMealRepository)
         getWaterTotalUseCase = GetWaterTotalUseCase(fakeWaterRepository)
         logWaterUseCase = LogWaterUseCase(fakeWaterRepository)
+        logQuickAddUseCase = LogQuickAddUseCase(fakeMealRepository)
 
         viewModel = DashboardViewModel(
             sessionRepository = fakeSessionRepository,
             logoutUseCase = logoutUseCase,
             getMealEntriesByDateUseCase = getMealEntriesByDateUseCase,
             getWaterTotalUseCase = getWaterTotalUseCase,
-            logWaterUseCase = logWaterUseCase
+            logWaterUseCase = logWaterUseCase,
+            logQuickAddUseCase = logQuickAddUseCase
         )
     }
 
@@ -318,6 +322,63 @@ class DashboardViewModelTest {
         assertNull(state.dailyGoal?.targetWaterMl)
     }
 
+    @Test
+    fun logQuickAdd_insertsForActiveDateAndUpdatesSummary() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        viewModel.selectDate(targetDate)
+        assertEquals(0, viewModel.uiState.value?.mealEntries?.size)
+
+        viewModel.logQuickAdd("Office lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(1, state!!.mealEntries.size)
+        assertEquals("LUNCH", state.mealEntries[0].title)
+        assertEquals("2026-09-15", state.mealEntries[0].date)
+        assertEquals(500.0, state.dailySummary.totalCalories, 0.001)
+        assertEquals(20.0, state.dailySummary.totalProteinG, 0.001)
+    }
+
+    @Test
+    fun logQuickAdd_onHistoricalDate_writesToSelectedDate() {
+        val pastDate = LocalDate.of(2026, 9, 1)
+        viewModel.selectDate(pastDate)
+
+        viewModel.logQuickAdd("Old dinner", 700.0, 30.0, 60.0, 20.0, "DINNER")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(pastDate, state!!.activeDate)
+        assertEquals(1, state.mealEntries.size)
+        assertEquals("2026-09-01", state.mealEntries[0].date)
+        assertTrue((fakeMealRepository.entriesByDate[LocalDate.now().toString()] ?: emptyList()).isEmpty())
+    }
+
+    @Test
+    fun logQuickAdd_withBlankName_stateUnchangedAndNoCrash() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        viewModel.selectDate(targetDate)
+
+        viewModel.logQuickAdd("   ", 500.0, 20.0, 45.0, 15.0, "LUNCH")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+        assertEquals(0.0, state.dailySummary.totalCalories, 0.001)
+    }
+
+    @Test
+    fun logQuickAdd_withNullProfile_noCrashAndMealsEmpty() {
+        fakeSessionRepository.clearSession()
+        viewModel.selectDate(LocalDate.now())
+
+        viewModel.logQuickAdd("Snack", 100.0, 1.0, 1.0, 1.0, "SNACK")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+    }
+
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
 
@@ -328,7 +389,9 @@ class DashboardViewModelTest {
         override fun isLoggedIn(): Boolean = current.get() != null
     }
 
-    private class FakeMealRepository : MealRepository {
+    private class FakeMealRepository(
+        private val sessionRepository: SessionRepository
+    ) : MealRepository {
         val entriesByDate = mutableMapOf<String, List<MealEntry>>()
 
         override fun getMealEntries(): List<MealEntry> = emptyList()
@@ -340,6 +403,37 @@ class DashboardViewModelTest {
         override fun addMealEntry(): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
+
+        override fun logQuickAdd(
+            name: String,
+            calories: Double,
+            proteinG: Double,
+            carbsG: Double,
+            fatG: Double,
+            mealSlot: String,
+            date: String
+        ): List<MealEntry> {
+            sessionRepository.getActiveProfileId() ?: return getMealEntriesByDate(date)
+            val entry = MealEntry(
+                id = java.util.UUID.randomUUID().toString(),
+                title = mealSlot,
+                date = date,
+                time = "12:00",
+                foods = listOf(
+                    Food(
+                        name = name,
+                        weight = 0.0,
+                        calories = calories,
+                        carbs = carbsG,
+                        fat = fatG,
+                        protein = proteinG,
+                        fiber = 0.0
+                    )
+                )
+            )
+            entriesByDate[date] = getMealEntriesByDate(date) + entry
+            return getMealEntriesByDate(date)
+        }
     }
 
     private class FakeWaterRepository(

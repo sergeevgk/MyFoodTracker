@@ -7,6 +7,7 @@ import com.example.myfoodtracker.domain.model.DailySummary
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
@@ -22,7 +23,8 @@ class DashboardViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val getMealEntriesByDateUseCase: GetMealEntriesByDateUseCase,
     private val getWaterTotalUseCase: GetWaterTotalUseCase,
-    private val logWaterUseCase: LogWaterUseCase
+    private val logWaterUseCase: LogWaterUseCase,
+    private val logQuickAddUseCase: LogQuickAddUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData<DashboardUiState>()
@@ -83,6 +85,23 @@ class DashboardViewModel(
         val date = _uiState.value?.activeDate ?: LocalDate.now()
         val total = logWaterUseCase(250, date.toString())
         _uiState.value = _uiState.value?.copy(waterTotalMl = total)
+    }
+
+    fun logQuickAdd(
+        name: String,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        mealSlot: String
+    ) {
+        val date = _uiState.value?.activeDate ?: LocalDate.now()
+        try {
+            logQuickAddUseCase(name, calories, proteinG, carbsG, fatG, mealSlot, date.toString())
+        } catch (e: IllegalArgumentException) {
+            return
+        }
+        selectDate(date)
     }
 
     fun logout() {

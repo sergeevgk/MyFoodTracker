@@ -51,5 +51,15 @@ class GetMealEntriesByDateUseCaseTest {
         override fun addMealEntry(): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
+
+        override fun logQuickAdd(
+            name: String,
+            calories: Double,
+            proteinG: Double,
+            carbsG: Double,
+            fatG: Double,
+            mealSlot: String,
+            date: String
+        ): List<MealEntry> = emptyList()
     }
 }

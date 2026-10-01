@@ -8,4 +8,13 @@ interface MealRepository {
     fun addMealEntry(): List<MealEntry>
     fun updateMealEntry(id: String, newTitle: String): List<MealEntry>
     fun deleteMealEntry(id: String): List<MealEntry>
+    fun logQuickAdd(
+        name: String,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        mealSlot: String,
+        date: String
+    ): List<MealEntry>
 }
