@@ -55,6 +55,41 @@ class MealRepositoryImpl(
         return getMealEntries()
     }
 
+    override fun logQuickAdd(
+        name: String,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        mealSlot: String,
+        date: String
+    ): List<MealEntry> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return getMealEntriesByDate(date)
+        val slot = mealSlot.trim().uppercase()
+        require(slot in setOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")) { "Invalid meal slot" }
+        val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+        val meal = MealEntryEntity(
+            id = UUID.randomUUID().toString(),
+            profileId = profileId,
+            title = slot,
+            date = date,
+            time = currentTime
+        )
+        mealDao.insertMeal(meal)
+        val food = FoodEntity(
+            mealId = meal.id,
+            name = name.trim(),
+            weight = 0.0,
+            calories = calories,
+            carbs = carbsG,
+            fat = fatG,
+            protein = proteinG,
+            fiber = 0.0
+        )
+        mealDao.insertFoods(listOf(food))
+        return getMealEntriesByDate(date)
+    }
+
     // Mapping Helpers
     private fun MealWithFoods.toDomain(): MealEntry {
         return MealEntry(

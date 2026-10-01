@@ -23,3 +23,8 @@
 
 - **D-1: Instant tactile / haptic feedback on quick-add water button** - Tap does not trigger haptic feedback (`performHapticFeedback(KEYBOARD_TAP)`). Deferred by user decision as post-MVP tactile polish. [DashboardFragment.kt:89]
 
+## Deferred from: code review of 2-4-quick-add-calorie-and-macro-logging (2026-10-01)
+
+- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods`** - `MealRepositoryImpl.logQuickAdd` performs two separate DAO operations sequentially without an atomic Room `@Transaction`. Pre-existing DAO design where inserting a meal and its foods are separate methods; wrapping in an atomic transaction method in `MealDao` should be addressed when DAO transactions are overhauled. [MealRepositoryImpl.kt:55]
+- **D-2: Hardcoded light-theme colors and string literals without central resources** - `dialog_quick_add_log.xml` and `DashboardFragment.kt` use hardcoded hex values (`#FFFFFF`, `#1B4D3E`, `#2D3748`, `#718096`) and string literals without `@color/` or `@string/` resources. Continues pre-existing project-wide pattern tracked under Story 2.1 (D-2) and Story 2.2 (D-1/D-2). [dialog_quick_add_log.xml:6, DashboardFragment.kt:185]
+

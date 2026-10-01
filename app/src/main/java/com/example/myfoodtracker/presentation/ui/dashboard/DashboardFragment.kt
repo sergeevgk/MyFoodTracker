@@ -4,15 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.myfoodtracker.R
+import com.example.myfoodtracker.databinding.DialogQuickAddLogBinding
 import com.example.myfoodtracker.databinding.FragmentDashboardBinding
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -82,6 +85,10 @@ class DashboardFragment : Fragment() {
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
             findNavController().navigate(R.id.action_dashboardFragment_to_passcodeAuthFragment)
+        }
+
+        binding.btnQuickAdd.setOnClickListener {
+            showQuickAddDialog()
         }
 
         binding.btnAddWater250.setOnClickListener {
@@ -262,6 +269,71 @@ class DashboardFragment : Fragment() {
                     .start()
             }
             .start()
+    }
+
+    private fun showQuickAddDialog() {
+        if (!isAdded) return
+        val dialogBinding = DialogQuickAddLogBinding.inflate(layoutInflater)
+        val slots = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
+        dialogBinding.spinnerMealSlot.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, slots)
+        )
+        dialogBinding.spinnerMealSlot.setText("BREAKFAST", false)
+        dialogBinding.etQuickAddName.requestFocus()
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Quick Add")
+            .setView(dialogBinding.root)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Save", null)
+            .show()
+
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val name = dialogBinding.etQuickAddName.text?.toString().orEmpty()
+            var valid = true
+            if (name.isBlank()) {
+                dialogBinding.tilQuickAddName.error = "Enter a name"
+                valid = false
+            } else {
+                dialogBinding.tilQuickAddName.error = null
+            }
+
+            val calories = parseQuickAddMacro(dialogBinding.etQuickAddCalories.text?.toString(), dialogBinding.tilQuickAddCalories)
+            val protein = parseQuickAddMacro(dialogBinding.etQuickAddProtein.text?.toString(), dialogBinding.tilQuickAddProtein)
+            val carbs = parseQuickAddMacro(dialogBinding.etQuickAddCarbs.text?.toString(), dialogBinding.tilQuickAddCarbs)
+            val fat = parseQuickAddMacro(dialogBinding.etQuickAddFat.text?.toString(), dialogBinding.tilQuickAddFat)
+            if (!valid || calories == null || protein == null || carbs == null || fat == null) return@setOnClickListener
+
+            val slot = dialogBinding.spinnerMealSlot.text?.toString()?.trim()?.uppercase() ?: "BREAKFAST"
+            if (slot !in slots) {
+                dialogBinding.tilMealSlot.error = "Select a meal slot"
+                return@setOnClickListener
+            }
+            dialogBinding.tilMealSlot.error = null
+
+            viewModel.logQuickAdd(name.trim(), calories, protein, carbs, fat, slot)
+            dialog.dismiss()
+            if (!isAdded) return@setOnClickListener
+            binding.root.announceForAccessibility("Logged ${name.trim()}, ${calories.toInt()} kilocalories to $slot")
+        }
+    }
+
+    private fun parseQuickAddMacro(
+        raw: String?,
+        layout: com.google.android.material.textfield.TextInputLayout
+    ): Double? {
+        val trimmed = raw?.trim().orEmpty()
+        if (trimmed.isEmpty()) {
+            layout.error = null
+            return 0.0
+        }
+        val value = trimmed.toDoubleOrNull()
+        if (value == null || !value.isFinite() || value < 0) {
+            layout.error = "Enter 0 or more"
+            return null
+        }
+        layout.error = null
+        return value
     }
 
     private fun showDatePicker(activeDate: LocalDate) {
