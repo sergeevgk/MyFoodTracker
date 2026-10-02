@@ -34,6 +34,8 @@ class AuthenticateUserUseCaseTest {
 
     @Test
     fun invoke_validPasscode_authenticatesAndSetsActiveSession() {
+        fakeSessionRepository.seedRememberedProfile(existingProfile.id)
+
         val result = authenticateUserUseCase(existingProfile.id, "1234")
 
         assertTrue(result.isSuccess)
@@ -43,6 +45,28 @@ class AuthenticateUserUseCaseTest {
         assertEquals(existingProfile.id, fakeSessionRepository.getActiveProfileId())
         assertEquals(existingProfile, fakeSessionRepository.getActiveProfile())
         assertTrue(fakeSessionRepository.isLoggedIn())
+        assertNull(fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun invoke_validPasscode_withRememberDeviceTrue_persistsRememberedProfile() {
+        val result = authenticateUserUseCase(existingProfile.id, "1234", rememberDevice = true)
+
+        assertTrue(result.isSuccess)
+        assertEquals(existingProfile.id, fakeSessionRepository.getActiveProfileId())
+        assertEquals(existingProfile.id, fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun invoke_validPasscode_withRememberDeviceFalse_clearsRememberedProfile() {
+        fakeSessionRepository.setActiveProfile(existingProfile, rememberDevice = true)
+        assertEquals(existingProfile.id, fakeSessionRepository.getRememberedProfileId())
+
+        val result = authenticateUserUseCase(existingProfile.id, "1234", rememberDevice = false)
+
+        assertTrue(result.isSuccess)
+        assertEquals(existingProfile.id, fakeSessionRepository.getActiveProfileId())
+        assertNull(fakeSessionRepository.getRememberedProfileId())
     }
 
     @Test
@@ -92,13 +116,15 @@ class AuthenticateUserUseCaseTest {
 
     @Test
     fun logoutUseCase_clearsActiveSession() {
-        fakeSessionRepository.setActiveProfile(existingProfile)
+        fakeSessionRepository.setActiveProfile(existingProfile, rememberDevice = true)
         assertTrue(fakeSessionRepository.isLoggedIn())
+        assertEquals(existingProfile.id, fakeSessionRepository.getRememberedProfileId())
 
         logoutUseCase()
 
         assertNull(fakeSessionRepository.getActiveProfile())
         assertNull(fakeSessionRepository.getActiveProfileId())
+        assertNull(fakeSessionRepository.getRememberedProfileId())
         assertFalse(fakeSessionRepository.isLoggedIn())
     }
 }
@@ -138,17 +164,31 @@ class FakeAuthUserRepository : UserRepository {
 
 class FakeSessionRepository : SessionRepository {
     private var activeProfile: UserProfile? = null
+    private var rememberedProfileId: String? = null
 
     override fun getActiveProfile(): UserProfile? = activeProfile
 
     override fun getActiveProfileId(): String? = activeProfile?.id
 
-    override fun setActiveProfile(profile: UserProfile) {
+    override fun setActiveProfile(profile: UserProfile, rememberDevice: Boolean) {
         activeProfile = profile
+        rememberedProfileId = if (rememberDevice) profile.id else null
+    }
+
+    override fun getRememberedProfileId(): String? = rememberedProfileId
+
+    /** Test-only seed: sets the persisted ID without activating an in-memory session. */
+    fun seedRememberedProfile(profileId: String) {
+        rememberedProfileId = profileId
+    }
+
+    override fun forgetRememberedProfile() {
+        rememberedProfileId = null
     }
 
     override fun clearSession() {
         activeProfile = null
+        rememberedProfileId = null
     }
 
     override fun isLoggedIn(): Boolean = activeProfile != null

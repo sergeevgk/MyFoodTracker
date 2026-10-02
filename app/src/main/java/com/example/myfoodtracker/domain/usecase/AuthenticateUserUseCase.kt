@@ -8,20 +8,28 @@ class AuthenticateUserUseCase(
     private val userRepository: UserRepository,
     private val sessionRepository: SessionRepository
 ) {
-    operator fun invoke(profileId: String, passcode: String): Result<UserProfile> = runCatching {
-        if (passcode.length != 4 || !passcode.all { it.isDigit() }) {
-            throw IllegalArgumentException("Incorrect passcode")
+    operator fun invoke(profileId: String, passcode: String, rememberDevice: Boolean = false): Result<UserProfile> {
+        val result = runCatching {
+            if (passcode.length != 4 || !passcode.all { it.isDigit() }) {
+                throw IllegalArgumentException("Incorrect passcode")
+            }
+
+            val profile = userRepository.getProfileById(profileId)
+                ?: throw IllegalArgumentException("Profile not found")
+
+            val isPasscodeValid = userRepository.verifyPasscode(profileId, passcode)
+            if (!isPasscodeValid) {
+                throw IllegalArgumentException("Incorrect passcode")
+            }
+
+            profile
         }
 
-        val profile = userRepository.getProfileById(profileId)
-            ?: throw IllegalArgumentException("Profile not found")
-
-        val isPasscodeValid = userRepository.verifyPasscode(profileId, passcode)
-        if (!isPasscodeValid) {
-            throw IllegalArgumentException("Incorrect passcode")
+        // Session activation is best-effort: a storage failure must not turn a valid
+        // passcode into an authentication failure.
+        result.getOrNull()?.let { profile ->
+            runCatching { sessionRepository.setActiveProfile(profile, rememberDevice) }
         }
-
-        sessionRepository.setActiveProfile(profile)
-        profile
+        return result
     }
 }

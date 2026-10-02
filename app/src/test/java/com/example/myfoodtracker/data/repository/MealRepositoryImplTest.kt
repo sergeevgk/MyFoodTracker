@@ -315,11 +315,22 @@ class MealRepositoryImplTest {
 
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
+        private var rememberedId: String? = null
 
         override fun getActiveProfile(): UserProfile? = current.get()
         override fun getActiveProfileId(): String? = current.get()?.id
-        override fun setActiveProfile(profile: UserProfile) { current.set(profile) }
-        override fun clearSession() { current.set(null) }
+        override fun setActiveProfile(profile: UserProfile, rememberDevice: Boolean) {
+            current.set(profile)
+            rememberedId = if (rememberDevice) profile.id else null
+        }
+        override fun getRememberedProfileId(): String? = rememberedId
+        override fun forgetRememberedProfile() {
+            rememberedId = null
+        }
+        override fun clearSession() {
+            current.set(null)
+            rememberedId = null
+        }
         override fun isLoggedIn(): Boolean = current.get() != null
     }
 

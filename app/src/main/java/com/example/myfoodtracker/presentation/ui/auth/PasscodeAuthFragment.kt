@@ -54,7 +54,8 @@ class PasscodeAuthFragment : Fragment() {
 
         binding.btnUnlock.setOnClickListener {
             val passcode = binding.etPasscode.text?.toString().orEmpty()
-            viewModel.authenticate(passcode)
+            val rememberDevice = binding.cbRememberDevice.isChecked
+            viewModel.authenticate(passcode, rememberDevice)
         }
 
         binding.btnAddNewProfile.setOnClickListener {
@@ -66,6 +67,7 @@ class PasscodeAuthFragment : Fragment() {
                 val selected = currentProfiles[position]
                 viewModel.selectProfile(selected.id)
                 binding.etPasscode.text?.clear()
+                binding.cbRememberDevice.isChecked = false
             }
         }
     }
@@ -115,6 +117,7 @@ class PasscodeAuthFragment : Fragment() {
                 is PasscodeAuthState.Authenticated -> {
                     binding.progressBar.visibility = View.GONE
                     binding.etPasscode.text?.clear()
+                    binding.cbRememberDevice.isChecked = false
                     if (findNavController().currentDestination?.id == R.id.passcodeAuthFragment) {
                         findNavController().navigate(R.id.action_passcodeAuthFragment_to_dashboardFragment)
                     }

@@ -52,6 +52,7 @@
     <string name="auth_subtitle_passcode">Select profile and enter your 4-digit passcode</string>
     <string name="auth_hint_profile">Select Profile</string>
     <string name="auth_hint_passcode">4-Digit Passcode</string>
+    <string name="auth_cb_remember_device">Remember user for this device</string>
 
     <!-- Profile setup screen -->
     <string name="profile_title_create">Create Local Profile</string>
