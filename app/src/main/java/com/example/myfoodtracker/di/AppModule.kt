@@ -20,6 +20,7 @@ import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
+import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
@@ -62,10 +63,11 @@ val appModule = module {
     factory { LogWaterUseCase(get()) }
     factory { GetWaterTotalUseCase(get()) }
     factory { LogQuickAddUseCase(get()) }
+    factory { RestoreMealEntryUseCase(get()) }
 
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get()) }
-    viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 }

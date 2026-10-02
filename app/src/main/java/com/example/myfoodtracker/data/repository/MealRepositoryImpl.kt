@@ -90,6 +90,33 @@ class MealRepositoryImpl(
         return getMealEntriesByDate(date)
     }
 
+    override fun restoreMealEntry(entry: MealEntry): List<MealEntry> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        // Parent first (FK order), same id so REPLACE re-inserts the deleted row exactly.
+        val meal = MealEntryEntity(
+            id = entry.id,
+            profileId = profileId,
+            title = entry.title,
+            date = entry.date,
+            time = entry.time
+        )
+        mealDao.insertMeal(meal)
+        val foods = entry.foods.map {
+            FoodEntity(
+                mealId = entry.id,
+                name = it.name,
+                weight = it.weight,
+                calories = it.calories,
+                carbs = it.carbs,
+                fat = it.fat,
+                protein = it.protein,
+                fiber = it.fiber
+            )
+        }
+        mealDao.insertFoods(foods)
+        return getMealEntriesByDate(entry.date)
+    }
+
     // Mapping Helpers
     private fun MealWithFoods.toDomain(): MealEntry {
         return MealEntry(

@@ -549,6 +549,17 @@
                         android:textColor="#2D3748"
                         android:textSize="14sp" />
 
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_meal_entries"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:clipToPadding="false"
+                        android:contentDescription="Logged meal entries"
+                        android:nestedScrollingEnabled="false"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        tools:listitem="@layout/item_meal_log" />
+
                 </LinearLayout>
 
             </LinearLayout>

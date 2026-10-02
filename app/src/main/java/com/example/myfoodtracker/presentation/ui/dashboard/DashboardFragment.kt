@@ -6,17 +6,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.ColorDrawable
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.DialogQuickAddLogBinding
 import com.example.myfoodtracker.databinding.FragmentDashboardBinding
+import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.Instant
@@ -33,6 +41,14 @@ class DashboardFragment : Fragment() {
     private val viewModel: DashboardViewModel by viewModel()
 
     private lateinit var weekDayAdapter: WeekDayAdapter
+    private lateinit var mealLogAdapter: MealLogAdapter
+
+    private val swipeDeleteBackground = ColorDrawable(Color.parseColor("#BA1A1A"))
+    private val swipeDeletePaint = Paint().apply {
+        color = Color.WHITE
+        textAlign = Paint.Align.RIGHT
+        isAntiAlias = true
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,6 +78,55 @@ class DashboardFragment : Fragment() {
             viewModel.selectDate(selectedDate)
         }
         binding.rvWeekDays.adapter = weekDayAdapter
+
+        mealLogAdapter = MealLogAdapter()
+        binding.rvMealEntries.adapter = mealLogAdapter
+        binding.rvMealEntries.isNestedScrollingEnabled = false
+
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+                val entry = mealLogAdapter.currentList.getOrNull(position) ?: return
+                viewModel.deleteMealEntry(entry.id)
+                showUndoSnackbar(entry)
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX < 0) {
+                    val itemView = viewHolder.itemView
+                    swipeDeleteBackground.setBounds(
+                        itemView.right + dX.toInt(),
+                        itemView.top,
+                        itemView.right,
+                        itemView.bottom
+                    )
+                    swipeDeleteBackground.draw(c)
+                    val metrics = itemView.resources.displayMetrics
+                    swipeDeletePaint.textSize = 14f * metrics.scaledDensity
+                    val textMargin = 16f * metrics.density
+                    val centerY = (itemView.top + itemView.bottom) / 2f
+                    val textY = centerY - (swipeDeletePaint.descent() + swipeDeletePaint.ascent()) / 2f
+                    c.drawText("Delete", itemView.right.toFloat() - textMargin, textY, swipeDeletePaint)
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvMealEntries)
     }
 
     private fun setupListeners() {
@@ -122,6 +187,7 @@ class DashboardFragment : Fragment() {
                 binding.layoutMealEntries.visibility = View.VISIBLE
                 binding.tvMealCount.text = "${state.mealEntries.size} meal(s) logged"
             }
+            mealLogAdapter.submitList(state.mealEntries)
 
             bindMacroHeader(state)
             bindWaterWidget(state)
@@ -334,6 +400,27 @@ class DashboardFragment : Fragment() {
         }
         layout.error = null
         return value
+    }
+
+    private fun showUndoSnackbar(deleted: MealEntry) {
+        if (!isAdded) return
+        val foodName = deleted.foods.firstOrNull()?.name ?: "Meal"
+        binding.root.announceForAccessibility("Deleted $foodName from ${deleted.title}")
+        Snackbar.make(binding.root, "Deleted $foodName from ${deleted.title}", 5000)
+            .setAction("Undo") {
+                if (!isAdded) return@setAction
+                viewModel.restoreLastDeleted()
+                if (!isAdded) return@setAction
+                binding.root.announceForAccessibility("Restored $foodName to ${deleted.title}")
+            }
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
+                        viewModel.clearPendingDelete()
+                    }
+                }
+            })
+            .show()
     }
 
     private fun showDatePicker(activeDate: LocalDate) {

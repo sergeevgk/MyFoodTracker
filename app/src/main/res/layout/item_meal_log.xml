@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:minHeight="48dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:strokeColor="#E2E8F0"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tv_meal_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#2D3748"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="LUNCH · 13:00" />
+
+        <TextView
+            android:id="@+id/tv_meal_food_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="#2D3748"
+            android:textSize="14sp"
+            tools:text="Office lunch" />
+
+        <TextView
+            android:id="@+id/tv_meal_macros"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFeatureSettings="tnum"
+            android:textColor="#718096"
+            android:textSize="12sp"
+            tools:text="500 kcal · P 20g · C 45g · F 15g" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

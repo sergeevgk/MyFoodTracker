@@ -9,11 +9,13 @@ import com.example.myfoodtracker.domain.model.WaterLog
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.repository.WaterRepository
+import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
+import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -35,6 +37,8 @@ class DashboardViewModelTest {
     private lateinit var getWaterTotalUseCase: GetWaterTotalUseCase
     private lateinit var logWaterUseCase: LogWaterUseCase
     private lateinit var logQuickAddUseCase: LogQuickAddUseCase
+    private lateinit var deleteMealEntryUseCase: DeleteMealEntryUseCase
+    private lateinit var restoreMealEntryUseCase: RestoreMealEntryUseCase
     private lateinit var viewModel: DashboardViewModel
 
     private val testUser = UserProfile(
@@ -55,6 +59,8 @@ class DashboardViewModelTest {
         getWaterTotalUseCase = GetWaterTotalUseCase(fakeWaterRepository)
         logWaterUseCase = LogWaterUseCase(fakeWaterRepository)
         logQuickAddUseCase = LogQuickAddUseCase(fakeMealRepository)
+        deleteMealEntryUseCase = DeleteMealEntryUseCase(fakeMealRepository)
+        restoreMealEntryUseCase = RestoreMealEntryUseCase(fakeMealRepository)
 
         viewModel = DashboardViewModel(
             sessionRepository = fakeSessionRepository,
@@ -62,7 +68,9 @@ class DashboardViewModelTest {
             getMealEntriesByDateUseCase = getMealEntriesByDateUseCase,
             getWaterTotalUseCase = getWaterTotalUseCase,
             logWaterUseCase = logWaterUseCase,
-            logQuickAddUseCase = logQuickAddUseCase
+            logQuickAddUseCase = logQuickAddUseCase,
+            deleteMealEntryUseCase = deleteMealEntryUseCase,
+            restoreMealEntryUseCase = restoreMealEntryUseCase
         )
     }
 
@@ -379,6 +387,108 @@ class DashboardViewModelTest {
         assertTrue(state!!.mealEntries.isEmpty())
     }
 
+    @Test
+    fun deleteMealEntry_removesRowAndZeroesSummary() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        fakeMealRepository.entriesByDate["2026-09-15"] = listOf(
+            MealEntry(
+                id = "meal-del",
+                title = "LUNCH",
+                date = "2026-09-15",
+                time = "13:00",
+                foods = listOf(
+                    Food(name = "Lunch", weight = 0.0, calories = 500.0, carbs = 45.0, fat = 15.0, protein = 20.0, fiber = 0.0)
+                )
+            )
+        )
+        viewModel.selectDate(targetDate)
+        assertEquals(500.0, viewModel.uiState.value!!.dailySummary.totalCalories, 0.001)
+
+        viewModel.deleteMealEntry("meal-del")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+        assertEquals(0.0, state.dailySummary.totalCalories, 0.001)
+        assertEquals(0.0, state.dailySummary.totalProteinG, 0.001)
+    }
+
+    @Test
+    fun restoreLastDeleted_bringsEntryAndSummaryBack() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        fakeMealRepository.entriesByDate["2026-09-15"] = listOf(
+            MealEntry(
+                id = "meal-undo",
+                title = "DINNER",
+                date = "2026-09-15",
+                time = "19:00",
+                foods = listOf(
+                    Food(name = "Dinner", weight = 0.0, calories = 700.0, carbs = 60.0, fat = 20.0, protein = 30.0, fiber = 0.0)
+                )
+            )
+        )
+        viewModel.selectDate(targetDate)
+        viewModel.deleteMealEntry("meal-undo")
+        assertTrue(viewModel.uiState.value!!.mealEntries.isEmpty())
+
+        viewModel.restoreLastDeleted()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(1, state!!.mealEntries.size)
+        assertEquals("meal-undo", state.mealEntries[0].id)
+        assertEquals("DINNER", state.mealEntries[0].title)
+        assertEquals(700.0, state.dailySummary.totalCalories, 0.001)
+        assertEquals(30.0, state.dailySummary.totalProteinG, 0.001)
+    }
+
+    @Test
+    fun deleteMealEntry_onHistoricalDate_leavesTodayUntouched() {
+        val pastDate = LocalDate.of(2026, 9, 1)
+        val todayStr = LocalDate.now().toString()
+        fakeMealRepository.entriesByDate["2026-09-01"] = listOf(
+            MealEntry(id = "meal-old", title = "DINNER", date = "2026-09-01", time = "19:00", foods = emptyList())
+        )
+        fakeMealRepository.entriesByDate[todayStr] = listOf(
+            MealEntry(id = "meal-today", title = "LUNCH", date = todayStr, time = "12:00", foods = emptyList())
+        )
+        viewModel.selectDate(pastDate)
+
+        viewModel.deleteMealEntry("meal-old")
+
+        assertTrue(viewModel.uiState.value!!.mealEntries.isEmpty())
+        assertEquals(1, fakeMealRepository.entriesByDate[todayStr]?.size)
+    }
+
+    @Test
+    fun deleteMealEntry_withStaleId_noOpAndNoCrash() {
+        val targetDate = LocalDate.of(2026, 9, 15)
+        fakeMealRepository.entriesByDate["2026-09-15"] = listOf(
+            MealEntry(id = "meal-keep", title = "LUNCH", date = "2026-09-15", time = "13:00", foods = emptyList())
+        )
+        viewModel.selectDate(targetDate)
+
+        viewModel.deleteMealEntry("no-such-id")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(1, state!!.mealEntries.size)
+        assertEquals("meal-keep", state.mealEntries[0].id)
+    }
+
+    @Test
+    fun deleteMealEntry_withNullProfile_noCrashAndMealsEmpty() {
+        fakeSessionRepository.clearSession()
+        viewModel.selectDate(LocalDate.now())
+
+        viewModel.deleteMealEntry("any-id")
+        viewModel.restoreLastDeleted()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+    }
+
     private class FakeSessionRepository : SessionRepository {
         private val current = AtomicReference<UserProfile?>(null)
 
@@ -402,7 +512,20 @@ class DashboardViewModelTest {
 
         override fun addMealEntry(): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
-        override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
+        override fun deleteMealEntry(id: String): List<MealEntry> {
+            sessionRepository.getActiveProfileId() ?: return emptyList()
+            entriesByDate.forEach { (date, entries) ->
+                entriesByDate[date] = entries.filter { it.id != id }
+            }
+            return emptyList()
+        }
+
+        override fun restoreMealEntry(entry: MealEntry): List<MealEntry> {
+            sessionRepository.getActiveProfileId() ?: return emptyList()
+            val current = getMealEntriesByDate(entry.date).filter { it.id != entry.id }
+            entriesByDate[entry.date] = current + entry
+            return getMealEntriesByDate(entry.date)
+        }
 
         override fun logQuickAdd(
             name: String,
