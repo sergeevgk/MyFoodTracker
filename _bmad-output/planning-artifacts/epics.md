@@ -210,6 +210,21 @@ So that I can correct accidental meal entries.
 **Then** the record is removed from Room DB and a Snackbar with `[Undo]` appears for 5 seconds.
 **And** tapping `[Undo]` restores the record and recalculates dashboard macro totals instantly.
 
+### Story 2.6: Centralize UI Colors, Strings, and Theming Resources
+
+As a user and developer,
+I want all hardcoded hex colors, layout string literals, and UI format templates extracted into centralized Android resources (`colors.xml`, `strings.xml`, `dimens.xml`, and theme styles),
+So that the codebase eliminates technical debt accumulated across Stories 1.1–2.5, ensures consistent design tokens, prevents visual regressions, and enables future localization and dark mode support.
+
+**Acceptance Criteria:**
+
+**Given** all layout XML files,
+**When** checked for hardcoded inline hex colors,
+**Then** zero hardcoded `#...` colors remain; all colors reference centralized semantic/palette color resources.
+**And** all user-visible strings and dynamic format templates reference centralized `@string/` resources.
+**And** repeated dimensions (corner radii, touch targets) reference `@dimen/` resources.
+**And** all existing unit tests pass without regression.
+
 ---
 
 ## Epic 3: Offline Food Search & Custom Food Library

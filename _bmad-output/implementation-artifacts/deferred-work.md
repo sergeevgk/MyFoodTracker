@@ -28,3 +28,15 @@
 - **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods`** - `MealRepositoryImpl.logQuickAdd` performs two separate DAO operations sequentially without an atomic Room `@Transaction`. Pre-existing DAO design where inserting a meal and its foods are separate methods; wrapping in an atomic transaction method in `MealDao` should be addressed when DAO transactions are overhauled. [MealRepositoryImpl.kt:55]
 - **D-2: Hardcoded light-theme colors and string literals without central resources** - `dialog_quick_add_log.xml` and `DashboardFragment.kt` use hardcoded hex values (`#FFFFFF`, `#1B4D3E`, `#2D3748`, `#718096`) and string literals without `@color/` or `@string/` resources. Continues pre-existing project-wide pattern tracked under Story 2.1 (D-2) and Story 2.2 (D-1/D-2). [dialog_quick_add_log.xml:6, DashboardFragment.kt:185]
 
+## Deferred from: code review of 2-5-swipe-to-delete-intake-logs-with-undo (2026-10-02)
+
+- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods` during restore** - `MealRepositoryImpl.restoreMealEntry` executes `mealDao.insertMeal` and `mealDao.insertFoods` in sequence without a Room `@Transaction`. Continues the pre-existing architectural pattern tracked under Story 2.4 (D-1), to be addressed when DAO operations are unified under an atomic transaction helper. [MealRepositoryImpl.kt:93-118]
+
+## Resolved by: story 2-6-centralize-colors-strings-and-ui-resources (2026-10-02)
+
+- **2.1-D2: Hardcoded hex colors without central color resources** - RESOLVED. All palette/semantic tokens centralized in `res/values/colors.xml`; layouts, drawables (`bg_today_dot.xml`), `WeekDayAdapter`, and `DashboardFragment` swipe-delete background now reference `@color/` resources via `ContextCompat.getColor()`.
+- **2.2-D1: Hardcoded light-theme colors in layout XML** - RESOLVED. All layout hex values replaced with `@color/` references; brand/surface/ink colors registered as Material3 theme attributes in `res/values/themes.xml` and `res/values-night/themes.xml`.
+- **2.2-D2: Hardcoded UI string literals without `@string/` resources** - RESOLVED. All user-visible strings, parameterized format templates (`%1$s`, `%1$d`, `%1$.0f`), and TalkBack announcements centralized in `res/values/strings.xml`; presentation code uses `getString(R.string....)`.
+- **2.4-D2: Hardcoded light-theme colors and string literals without central resources** - RESOLVED. `dialog_quick_add_log.xml` and `DashboardFragment.kt` (dialog titles, buttons, validation errors, snackbar, announcements) now use `@color/`, `@string/`, and `@dimen/` resources.
+- Note: Story 2.6 AC1 also cites "2.5-D2", but the 2-5 deferred log contains only D-1 (DB transaction, still open). The swipe-delete hardcoded color (`#BA1A1A` + canvas `"Delete"`) from Story 2-5 is nonetheless centralized by this story (`R.color.danger_red`, `R.string.action_delete`).
+

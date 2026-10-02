@@ -1,3 +1,22 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+
+    <!-- Card corner radii -->
+    <dimen name="radius_card_small">8dp</dimen>
+    <dimen name="radius_card_medium">12dp</dimen>
+    <dimen name="radius_day_pill">24dp</dimen>
+    <dimen name="radius_button_large">28dp</dimen>
+
+    <!-- Touch targets -->
+    <dimen name="min_touch_target">48dp</dimen>
+
+    <!-- Common padding / margins -->
+    <dimen name="padding_screen">16dp</dimen>
+    <dimen name="padding_card">20dp</dimen>
+    <dimen name="padding_card_large">24dp</dimen>
+    <dimen name="padding_card_small">12dp</dimen>
+    <dimen name="margin_section">16dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_tiny">4dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
 </resources>

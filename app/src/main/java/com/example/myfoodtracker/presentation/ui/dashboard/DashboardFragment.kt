@@ -6,17 +6,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.ColorDrawable
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.DialogQuickAddLogBinding
 import com.example.myfoodtracker.databinding.FragmentDashboardBinding
+import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.Instant
@@ -33,6 +42,15 @@ class DashboardFragment : Fragment() {
     private val viewModel: DashboardViewModel by viewModel()
 
     private lateinit var weekDayAdapter: WeekDayAdapter
+    private lateinit var mealLogAdapter: MealLogAdapter
+
+    private lateinit var swipeDeleteBackground: ColorDrawable
+    private lateinit var swipeDeleteLabel: String
+    private val swipeDeletePaint = Paint().apply {
+        color = Color.WHITE
+        textAlign = Paint.Align.RIGHT
+        isAntiAlias = true
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,10 +76,63 @@ class DashboardFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+        swipeDeleteBackground = ColorDrawable(
+            ContextCompat.getColor(requireContext(), R.color.danger_red)
+        )
+        swipeDeleteLabel = getString(R.string.action_delete)
         weekDayAdapter = WeekDayAdapter { selectedDate ->
             viewModel.selectDate(selectedDate)
         }
         binding.rvWeekDays.adapter = weekDayAdapter
+
+        mealLogAdapter = MealLogAdapter()
+        binding.rvMealEntries.adapter = mealLogAdapter
+        binding.rvMealEntries.isNestedScrollingEnabled = false
+
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+                val entry = mealLogAdapter.currentList.getOrNull(position) ?: return
+                viewModel.deleteMealEntry(entry.id)
+                showUndoSnackbar(entry)
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX < 0) {
+                    val itemView = viewHolder.itemView
+                    swipeDeleteBackground.setBounds(
+                        itemView.right + dX.toInt(),
+                        itemView.top,
+                        itemView.right,
+                        itemView.bottom
+                    )
+                    swipeDeleteBackground.draw(c)
+                    val metrics = itemView.resources.displayMetrics
+                    swipeDeletePaint.textSize = 14f * metrics.scaledDensity
+                    val textMargin = 16f * metrics.density
+                    val centerY = (itemView.top + itemView.bottom) / 2f
+                    val textY = centerY - (swipeDeletePaint.descent() + swipeDeletePaint.ascent()) / 2f
+                    c.drawText(swipeDeleteLabel, itemView.right.toFloat() - textMargin, textY, swipeDeletePaint)
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvMealEntries)
     }
 
     private fun setupListeners() {
@@ -96,10 +167,12 @@ class DashboardFragment : Fragment() {
             playWaterTapFeedback()
             val total = viewModel.uiState.value?.waterTotalMl ?: 0
             val target = viewModel.uiState.value?.dailyGoal?.targetWaterMl
+            val totalStr = String.format(Locale.getDefault(), "%,d", total)
             val message = if (target != null && target > 0) {
-                "+250 milliliters water added. Total: $total milliliters of $target milliliters"
+                val targetStr = String.format(Locale.getDefault(), "%,d", target)
+                getString(R.string.water_added_with_target, totalStr, targetStr)
             } else {
-                "+250 milliliters water added. Total: $total milliliters"
+                getString(R.string.water_added_no_target, totalStr)
             }
             @Suppress("DEPRECATION")
             binding.cardWaterWidget.announceForAccessibility(message)
@@ -108,8 +181,8 @@ class DashboardFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            binding.tvWelcomeBanner.text = "Welcome, ${state.username}!"
-            binding.tvActiveProfile.text = "Active Profile ID: ${state.profileId}"
+            binding.tvWelcomeBanner.text = getString(R.string.welcome_banner_format, state.username)
+            binding.tvActiveProfile.text = getString(R.string.active_profile_format, state.profileId)
             binding.tvActiveDateHeader.text = state.formattedDateHeader
 
             weekDayAdapter.submitList(state.weekDays)
@@ -120,8 +193,10 @@ class DashboardFragment : Fragment() {
             } else {
                 binding.tvEmptyMeals.visibility = View.GONE
                 binding.layoutMealEntries.visibility = View.VISIBLE
-                binding.tvMealCount.text = "${state.mealEntries.size} meal(s) logged"
+                binding.tvMealCount.text =
+                    getString(R.string.meal_count_format, state.mealEntries.size)
             }
+            mealLogAdapter.submitList(state.mealEntries)
 
             bindMacroHeader(state)
             bindWaterWidget(state)
@@ -138,22 +213,22 @@ class DashboardFragment : Fragment() {
             val consumed = String.format(locale, "%,.0f", summary.totalCalories)
             val target = String.format(locale, "%,.0f", calorieTarget)
             val percent = ((summary.totalCalories / calorieTarget) * 100).toInt()
-            binding.tvCaloriesValue.text = "$consumed / $target kcal"
-            binding.tvCaloriesTarget.text = "$percent% of daily goal"
+            binding.tvCaloriesValue.text = getString(R.string.macro_value_with_target, consumed, target)
+            binding.tvCaloriesTarget.text = getString(R.string.macro_percent_of_goal, percent)
             binding.tvCaloriesTarget.visibility = View.VISIBLE
             binding.progressCalories.visibility = View.VISIBLE
             binding.progressCalories.setProgress(
                 ((summary.totalCalories / calorieTarget).coerceIn(0.0, 1.0) * 100).toInt()
             )
             binding.cardMacroHeader.contentDescription =
-                "Calories: $consumed of $target kilocalories consumed, $percent percent"
+                getString(R.string.a11y_calories_with_target, consumed, target, percent)
         } else {
             val consumed = String.format(locale, "%,.0f", summary.totalCalories)
-            binding.tvCaloriesValue.text = "$consumed kcal"
+            binding.tvCaloriesValue.text = getString(R.string.macro_value_no_target, consumed)
             binding.tvCaloriesTarget.visibility = View.GONE
             binding.progressCalories.visibility = View.GONE
             binding.cardMacroHeader.contentDescription =
-                "Calories: $consumed kilocalories consumed, no target set"
+                getString(R.string.a11y_calories_no_target, consumed)
         }
 
         bindMacroRow(
@@ -164,7 +239,7 @@ class DashboardFragment : Fragment() {
             total = summary.totalProteinG,
             target = goal?.targetProteinG,
             unit = "g",
-            nutrient = "Protein"
+            nutrient = getString(R.string.dashboard_macro_protein)
         )
         bindMacroRow(
             row = binding.layoutCarbsRow,
@@ -174,7 +249,7 @@ class DashboardFragment : Fragment() {
             total = summary.totalCarbsG,
             target = goal?.targetCarbsG,
             unit = "g",
-            nutrient = "Carbs"
+            nutrient = getString(R.string.dashboard_macro_carbs)
         )
         bindMacroRow(
             row = binding.layoutFatRow,
@@ -184,7 +259,7 @@ class DashboardFragment : Fragment() {
             total = summary.totalFatG,
             target = goal?.targetFatG,
             unit = "g",
-            nutrient = "Fat"
+            nutrient = getString(R.string.dashboard_macro_fat)
         )
     }
 
@@ -204,10 +279,11 @@ class DashboardFragment : Fragment() {
             val consumed = String.format(locale, "%.0f", total)
             val targetStr = String.format(locale, "%.0f", target)
             val percent = ((total / target) * 100).toInt()
-            valueView.text = "$consumed$unit"
-            targetView.text = " / $targetStr$unit"
+            valueView.text = getString(R.string.macro_row_format, consumed, unit)
+            targetView.text = getString(R.string.macro_row_target_format, targetStr, unit)
             progress.setProgress(((total / target).coerceIn(0.0, 1.0) * 100).toInt())
-            row.contentDescription = "$nutrient: $consumed of $targetStr grams consumed, $percent percent"
+            row.contentDescription =
+                getString(R.string.a11y_macro_row, nutrient, consumed, targetStr, percent)
         } else {
             row.visibility = View.GONE
         }
@@ -222,22 +298,22 @@ class DashboardFragment : Fragment() {
             val consumed = String.format(locale, "%,d", total)
             val targetStr = String.format(locale, "%,d", target)
             val percent = ((total.toDouble() / target) * 100).toInt()
-            binding.tvWaterValue.text = "$consumed / $targetStr ml"
-            binding.tvWaterTarget.text = "$percent% of daily goal"
+            binding.tvWaterValue.text = getString(R.string.water_value_with_target, consumed, targetStr)
+            binding.tvWaterTarget.text = getString(R.string.macro_percent_of_goal, percent)
             binding.tvWaterTarget.visibility = View.VISIBLE
             binding.progressWater.visibility = View.VISIBLE
             binding.progressWater.setProgress(
                 ((total.toDouble() / target).coerceIn(0.0, 1.0) * 100).toInt()
             )
             binding.cardWaterWidget.contentDescription =
-                "Water: $consumed of $targetStr milliliters consumed, $percent percent"
+                getString(R.string.a11y_water_with_target, consumed, targetStr, percent)
         } else {
             val consumed = String.format(locale, "%,d", total)
-            binding.tvWaterValue.text = "$consumed ml"
+            binding.tvWaterValue.text = getString(R.string.water_value_no_target, consumed)
             binding.tvWaterTarget.visibility = View.GONE
             binding.progressWater.visibility = View.GONE
             binding.cardWaterWidget.contentDescription =
-                "Water: $consumed milliliters consumed, no target set"
+                getString(R.string.a11y_water_no_target, consumed)
         }
     }
 
@@ -282,17 +358,17 @@ class DashboardFragment : Fragment() {
         dialogBinding.etQuickAddName.requestFocus()
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Quick Add")
+            .setTitle(getString(R.string.dialog_quick_add_title))
             .setView(dialogBinding.root)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save", null)
+            .setNegativeButton(getString(R.string.action_cancel), null)
+            .setPositiveButton(getString(R.string.action_save), null)
             .show()
 
         dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
             val name = dialogBinding.etQuickAddName.text?.toString().orEmpty()
             var valid = true
             if (name.isBlank()) {
-                dialogBinding.tilQuickAddName.error = "Enter a name"
+                dialogBinding.tilQuickAddName.error = getString(R.string.quick_add_error_name)
                 valid = false
             } else {
                 dialogBinding.tilQuickAddName.error = null
@@ -306,7 +382,7 @@ class DashboardFragment : Fragment() {
 
             val slot = dialogBinding.spinnerMealSlot.text?.toString()?.trim()?.uppercase() ?: "BREAKFAST"
             if (slot !in slots) {
-                dialogBinding.tilMealSlot.error = "Select a meal slot"
+                dialogBinding.tilMealSlot.error = getString(R.string.quick_add_error_slot)
                 return@setOnClickListener
             }
             dialogBinding.tilMealSlot.error = null
@@ -314,7 +390,14 @@ class DashboardFragment : Fragment() {
             viewModel.logQuickAdd(name.trim(), calories, protein, carbs, fat, slot)
             dialog.dismiss()
             if (!isAdded) return@setOnClickListener
-            binding.root.announceForAccessibility("Logged ${name.trim()}, ${calories.toInt()} kilocalories to $slot")
+            binding.root.announceForAccessibility(
+                getString(
+                    R.string.quick_add_logged_format,
+                    name.trim(),
+                    calories.toInt(),
+                    slot
+                )
+            )
         }
     }
 
@@ -329,11 +412,41 @@ class DashboardFragment : Fragment() {
         }
         val value = trimmed.toDoubleOrNull()
         if (value == null || !value.isFinite() || value < 0) {
-            layout.error = "Enter 0 or more"
+            layout.error = getString(R.string.quick_add_error_number)
             return null
         }
         layout.error = null
         return value
+    }
+
+    private fun showUndoSnackbar(deleted: MealEntry) {
+        if (!isAdded) return
+        val foodName = deleted.foods.firstOrNull()?.name
+            ?: getString(R.string.meal_fallback_name)
+        binding.root.announceForAccessibility(
+            getString(R.string.a11y_deleted, foodName, deleted.title)
+        )
+        Snackbar.make(
+            binding.root,
+            getString(R.string.snackbar_deleted_format, foodName, deleted.title),
+            5000
+        )
+            .setAction(getString(R.string.action_undo)) {
+                if (!isAdded) return@setAction
+                viewModel.restoreLastDeleted()
+                if (!isAdded) return@setAction
+                binding.root.announceForAccessibility(
+                    getString(R.string.a11y_restored, foodName, deleted.title)
+                )
+            }
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
+                        viewModel.clearPendingDelete()
+                    }
+                }
+            })
+            .show()
     }
 
     private fun showDatePicker(activeDate: LocalDate) {
@@ -343,7 +456,7 @@ class DashboardFragment : Fragment() {
             .toEpochMilli()
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select Date")
+            .setTitleText(getString(R.string.dialog_select_date_title))
             .setSelection(currentSelectionMillis)
             .build()
 

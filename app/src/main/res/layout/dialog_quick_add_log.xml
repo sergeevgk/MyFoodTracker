@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#FFFFFF">
+    android:background="@color/surface_card_bg">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="@dimen/padding_card">
 
         <!-- Name / description Input -->
         <com.google.android.material.textfield.TextInputLayout
@@ -17,13 +17,13 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Name (e.g. Office lunch)"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/quick_add_hint_name"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_quick_add_name"
@@ -40,13 +40,13 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Calories (kcal)"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/quick_add_hint_calories"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_quick_add_calories"
@@ -63,13 +63,13 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Protein (g)"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/quick_add_hint_protein"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_quick_add_protein"
@@ -86,13 +86,13 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Carbs (g)"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/quick_add_hint_carbs"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_quick_add_carbs"
@@ -109,13 +109,13 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Fat (g)"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/quick_add_hint_fat"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_quick_add_fat"
@@ -132,12 +132,12 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Meal slot"
+            android:hint="@string/quick_add_hint_meal_slot"
             app:errorEnabled="true"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
             <AutoCompleteTextView
                 android:id="@+id/spinner_meal_slot"

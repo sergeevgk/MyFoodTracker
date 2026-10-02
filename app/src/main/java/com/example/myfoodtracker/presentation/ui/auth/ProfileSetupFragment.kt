@@ -84,7 +84,10 @@ class ProfileSetupFragment : Fragment() {
                     sessionRepository.setActiveProfile(state.userProfile)
                     Toast.makeText(
                         requireContext(),
-                        "Profile '${state.userProfile.username}' created successfully!",
+                        getString(
+                            R.string.toast_profile_created,
+                            state.userProfile.username
+                        ),
                         Toast.LENGTH_SHORT
                     ).show()
                     if (findNavController().currentDestination?.id == R.id.profileSetupFragment) {

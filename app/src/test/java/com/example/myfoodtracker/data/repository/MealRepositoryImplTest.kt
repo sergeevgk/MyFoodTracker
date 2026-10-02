@@ -226,8 +226,7 @@ class MealRepositoryImplTest {
     }
 
     @Test
-    fun logQuickAdd_dateIsolation_eachDateHasOwnEntries() {
-        fakeSessionRepository.setActiveProfile(user1)
+    fun logQuickAdd_dateIsolation_eachDateHasOwnEntries() {        fakeSessionRepository.setActiveProfile(user1)
         repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
         repository.logQuickAdd("Snack", 100.0, 1.0, 10.0, 5.0, "SNACK", "2026-09-29")
 
@@ -235,6 +234,83 @@ class MealRepositoryImplTest {
         assertEquals(1, repository.getMealEntriesByDate("2026-09-29").size)
         assertEquals("LUNCH", repository.getMealEntriesByDate("2026-09-30")[0].title)
         assertEquals("SNACK", repository.getMealEntriesByDate("2026-09-29")[0].title)
+    }
+
+    @Test
+    fun deleteMealEntry_removesParentAndCascadedFoods() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        val mealId = fakeMealDao.meals[0].id
+        assertEquals(1, fakeMealDao.foods.size)
+
+        repository.deleteMealEntry(mealId)
+
+        assertTrue(fakeMealDao.meals.isEmpty())
+        assertTrue(fakeMealDao.foods.none { it.mealId == mealId })
+        assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
+    }
+
+    @Test
+    fun deleteMealEntry_otherProfileCannotDeleteFoodsIntact() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        val mealId = fakeMealDao.meals[0].id
+
+        fakeSessionRepository.setActiveProfile(user2)
+        repository.deleteMealEntry(mealId)
+
+        fakeSessionRepository.setActiveProfile(user1)
+        assertEquals(1, repository.getMealEntriesByDate("2026-09-30").size)
+        assertEquals(1, fakeMealDao.foods.size)
+    }
+
+    @Test
+    fun restoreMealEntry_reinsertsSameIdAndFoods() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Office lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        val deleted = repository.getMealEntriesByDate("2026-09-30").first()
+        repository.deleteMealEntry(deleted.id)
+        assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
+
+        val restored = repository.restoreMealEntry(deleted)
+
+        assertEquals(1, restored.size)
+        assertEquals(deleted.id, restored[0].id)
+        assertEquals("LUNCH", restored[0].title)
+        assertEquals("2026-09-30", restored[0].date)
+        assertEquals(1, restored[0].foods.size)
+        assertEquals("Office lunch", restored[0].foods[0].name)
+        assertEquals(500.0, restored[0].foods[0].calories, 0.001)
+        assertEquals(1, fakeMealDao.meals.size)
+        assertEquals(1, fakeMealDao.foods.size)
+    }
+
+    @Test
+    fun restoreMealEntry_noActiveSession_writesNothingAndReturnsEmpty() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        val deleted = repository.getMealEntriesByDate("2026-09-30").first()
+
+        fakeSessionRepository.clearSession()
+        val result = repository.restoreMealEntry(deleted)
+
+        assertTrue(result.isEmpty())
+        // Pre-existing quick-add row untouched; restore added nothing.
+        assertEquals(1, fakeMealDao.meals.size)
+        assertEquals(1, fakeMealDao.foods.size)
+    }
+
+    @Test
+    fun deleteMealEntry_dateIsolation_otherDatesUntouched() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        repository.logQuickAdd("Snack", 100.0, 1.0, 10.0, 5.0, "SNACK", "2026-09-29")
+        val todayId = repository.getMealEntriesByDate("2026-09-30").first().id
+
+        repository.deleteMealEntry(todayId)
+
+        assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
+        assertEquals(1, repository.getMealEntriesByDate("2026-09-29").size)
     }
 
     private class FakeSessionRepository : SessionRepository {
@@ -290,7 +366,11 @@ class MealRepositoryImplTest {
         }
 
         override fun deleteMeal(id: String, profileId: String) {
-            meals.removeAll { it.id == id && it.profileId == profileId }
+            val removed = meals.removeAll { it.id == id && it.profileId == profileId }
+            // Mirror real SQLite FK CASCADE: deleting the parent removes its foods.
+            if (removed) {
+                foods.removeAll { it.mealId == id }
+            }
         }
     }
 }
