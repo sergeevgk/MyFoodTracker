@@ -5,9 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.ItemMealLogBinding
 import com.example.myfoodtracker.domain.model.MealEntry
-import java.util.Locale
 
 class MealLogAdapter : ListAdapter<MealEntry, MealLogAdapter.MealViewHolder>(MealDiffCallback) {
 
@@ -29,8 +29,14 @@ class MealLogAdapter : ListAdapter<MealEntry, MealLogAdapter.MealViewHolder>(Mea
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(entry: MealEntry) {
-            val foodName = entry.foods.firstOrNull()?.name ?: "Meal"
-            binding.tvMealTitle.text = "${entry.title} · ${entry.time}"
+            val context = binding.root.context
+            val foodName = entry.foods.firstOrNull()?.name
+                ?: context.getString(R.string.meal_fallback_name)
+            binding.tvMealTitle.text = context.getString(
+                R.string.meal_title_time_format,
+                entry.title,
+                entry.time
+            )
             binding.tvMealFoodName.text = foodName
 
             var calories = 0.0
@@ -43,10 +49,8 @@ class MealLogAdapter : ListAdapter<MealEntry, MealLogAdapter.MealViewHolder>(Mea
                 carbs += food.carbs
                 fat += food.fat
             }
-            val locale = Locale.getDefault()
-            binding.tvMealMacros.text = String.format(
-                locale,
-                "%.0f kcal · P %.0fg · C %.0fg · F %.0fg",
+            binding.tvMealMacros.text = context.getString(
+                R.string.meal_macros_format,
                 calories,
                 protein,
                 carbs,
@@ -54,7 +58,12 @@ class MealLogAdapter : ListAdapter<MealEntry, MealLogAdapter.MealViewHolder>(Mea
             )
 
             val kcalInt = calories.toInt()
-            binding.root.contentDescription = "$foodName, ${entry.title}, $kcalInt kilocalories"
+            binding.root.contentDescription = context.getString(
+                R.string.a11y_meal_item,
+                foodName,
+                entry.title,
+                kcalInt
+            )
         }
     }
 

@@ -2,4 +2,34 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Brand palette: forest greens -->
+    <color name="primary_forest">#1B4D3E</color>
+    <color name="primary_forest_medium">#2D6A4F</color>
+
+    <!-- Neutral surfaces -->
+    <color name="surface_app_bg">#F8F9FA</color>
+    <color name="surface_card_bg">#FFFFFF</color>
+    <color name="surface_stroke">#E2E8F0</color>
+
+    <!-- Typography ink -->
+    <color name="text_primary">#2D3748</color>
+    <color name="text_secondary">#718096</color>
+
+    <!-- Macro accents -->
+    <color name="macro_calories">#1B4D3E</color>
+    <color name="macro_protein">#2D6A4F</color>
+    <color name="macro_carbs">#E9C46A</color>
+    <color name="macro_fat">#E76F51</color>
+
+    <!-- Water accents -->
+    <color name="water_primary">#0288D1</color>
+    <color name="water_card_bg">#E1F5FE</color>
+    <color name="water_progress_track">#B3E5FC</color>
+
+    <!-- Status / feedback -->
+    <color name="danger_red">#BA1A1A</color>
+    <color name="warning_banner_bg">#FFF3CD</color>
+    <color name="warning_banner_stroke">#FFEBAA</color>
+    <color name="warning_banner_text">#856404</color>
 </resources>

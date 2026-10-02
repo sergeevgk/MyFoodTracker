@@ -5,4 +5,105 @@
     <string name="my_food_tracker_label">My Food Tracker</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+
+    <!-- Dashboard static text -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_welcome_default">Welcome!</string>
+    <string name="dashboard_section_progress">Daily Progress</string>
+    <string name="dashboard_section_hydration">Hydration</string>
+    <string name="dashboard_section_meals">Logged Meals</string>
+    <string name="dashboard_empty_meals">No items logged for this date</string>
+    <string name="dashboard_macro_protein">Protein</string>
+    <string name="dashboard_macro_carbs">Carbs</string>
+    <string name="dashboard_macro_fat">Fat</string>
+    <string name="dashboard_water_default">0 ml</string>
+    <string name="water_add_button">+250ml</string>
+    <string name="active_profile_default">Active Profile ID:</string>
+
+    <!-- Common actions -->
+    <string name="action_today">Today</string>
+    <string name="action_logout">Log Out</string>
+    <string name="action_quick_add">＋ Quick Add</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_unlock">Unlock</string>
+    <string name="action_create_profile">Create Profile</string>
+    <string name="action_add_new_profile">Add New Profile</string>
+
+    <!-- Dialog titles -->
+    <string name="dialog_quick_add_title">Quick Add</string>
+    <string name="dialog_select_date_title">Select Date</string>
+
+    <!-- Quick-add input hints and validation -->
+    <string name="quick_add_hint_name">Name (e.g. Office lunch)</string>
+    <string name="quick_add_hint_calories">Calories (kcal)</string>
+    <string name="quick_add_hint_protein">Protein (g)</string>
+    <string name="quick_add_hint_carbs">Carbs (g)</string>
+    <string name="quick_add_hint_fat">Fat (g)</string>
+    <string name="quick_add_hint_meal_slot">Meal slot</string>
+    <string name="quick_add_error_name">Enter a name</string>
+    <string name="quick_add_error_number">Enter 0 or more</string>
+    <string name="quick_add_error_slot">Select a meal slot</string>
+
+    <!-- Auth screen -->
+    <string name="auth_title_welcome_back">Welcome Back</string>
+    <string name="auth_subtitle_passcode">Select profile and enter your 4-digit passcode</string>
+    <string name="auth_hint_profile">Select Profile</string>
+    <string name="auth_hint_passcode">4-Digit Passcode</string>
+
+    <!-- Profile setup screen -->
+    <string name="profile_title_create">Create Local Profile</string>
+    <string name="profile_disclaimer">Targets are user-configured and not clinically audited</string>
+    <string name="profile_section_targets">Daily Targets (Optional)</string>
+    <string name="profile_hint_username">Username *</string>
+    <string name="profile_hint_passcode">4-Digit Passcode *</string>
+    <string name="profile_hint_calories">Daily Calories (kcal)</string>
+    <string name="profile_hint_protein">Protein (g)</string>
+    <string name="profile_hint_carbs">Carbohydrates (g)</string>
+    <string name="profile_hint_fat">Fats (g)</string>
+    <string name="profile_hint_water">Water (ml)</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_calendar_picker">Select date from month calendar</string>
+    <string name="cd_prev_week">Previous week</string>
+    <string name="cd_next_week">Next week</string>
+    <string name="cd_quick_add">Quick-add calories and macros</string>
+    <string name="cd_meal_entries">Logged meal entries</string>
+    <string name="cd_add_water">+250 milliliters water</string>
+    <string name="cd_disclaimer">Disclaimer</string>
+
+    <!-- Parameterized format templates -->
+    <string name="welcome_banner_format">Welcome, %1$s!</string>
+    <string name="active_profile_format">Active Profile ID: %1$s</string>
+    <string name="macro_value_with_target">%1$s / %2$s kcal</string>
+    <string name="water_value_with_target">%1$s / %2$s ml</string>
+    <string name="macro_value_no_target">%1$s kcal</string>
+    <string name="water_value_no_target">%1$s ml</string>
+    <string name="macro_percent_of_goal">%1$d%% of daily goal</string>
+    <string name="macro_row_format">%1$s%2$s</string>
+    <string name="macro_row_target_format">" / %1$s%2$s"</string>
+    <string name="meal_title_time_format">%1$s · %2$s</string>
+    <string name="meal_macros_format">%1$.0f kcal · P %2$.0fg · C %3$.0fg · F %4$.0fg</string>
+    <string name="meal_count_format">%1$d meal(s) logged</string>
+    <string name="snackbar_deleted_format">Deleted %1$s from %2$s</string>
+    <string name="toast_profile_created">Profile \'%1$s\' created successfully!</string>
+    <string name="water_added_with_target">+250 milliliters water added. Total: %1$s milliliters of %2$s milliliters</string>
+    <string name="water_added_no_target">+250 milliliters water added. Total: %1$s milliliters</string>
+    <string name="quick_add_logged_format">Logged %1$s, %2$d kilocalories to %3$s</string>
+    <string name="meal_fallback_name">Meal</string>
+
+    <!-- Accessibility (TalkBack) announcement templates -->
+    <string name="a11y_calories_with_target">Calories: %1$s of %2$s kilocalories consumed, %3$d percent</string>
+    <string name="a11y_calories_no_target">Calories: %1$s kilocalories consumed, no target set</string>
+    <string name="a11y_water_with_target">Water: %1$s of %2$s milliliters consumed, %3$d percent</string>
+    <string name="a11y_water_no_target">Water: %1$s milliliters consumed, no target set</string>
+    <string name="a11y_macro_row">%1$s: %2$s of %3$s grams consumed, %4$d percent</string>
+    <string name="a11y_day_base">%1$s, %2$s</string>
+    <string name="a11y_day_selected_suffix">", selected"</string>
+    <string name="a11y_day_today_suffix">", today"</string>
+    <string name="a11y_meal_item">%1$s, %2$s, %3$d kilocalories</string>
+    <string name="a11y_deleted">Deleted %1$s from %2$s</string>
+    <string name="a11y_restored">Restored %1$s to %2$s</string>
 </resources>

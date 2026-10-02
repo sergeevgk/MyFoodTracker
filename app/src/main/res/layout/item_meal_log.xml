@@ -4,26 +4,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:minHeight="48dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="8dp"
+    android:layout_marginBottom="@dimen/margin_small"
+    android:minHeight="@dimen/min_touch_target"
+    app:cardBackgroundColor="@color/surface_card_bg"
+    app:cardCornerRadius="@dimen/radius_card_small"
     app:cardElevation="1dp"
-    app:strokeColor="#E2E8F0"
+    app:strokeColor="@color/surface_stroke"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="48dp"
+        android:minHeight="@dimen/min_touch_target"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="@dimen/padding_card_small">
 
         <TextView
             android:id="@+id/tv_meal_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#2D3748"
+            android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:textStyle="bold"
             tools:text="LUNCH · 13:00" />
@@ -33,7 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:textColor="#2D3748"
+            android:textColor="@color/text_primary"
             android:textSize="14sp"
             tools:text="Office lunch" />
 
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:fontFeatureSettings="tnum"
-            android:textColor="#718096"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp"
             tools:text="500 kcal · P 20g · C 45g · F 15g" />
 

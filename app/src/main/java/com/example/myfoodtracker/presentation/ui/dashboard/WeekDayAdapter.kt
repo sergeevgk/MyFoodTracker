@@ -5,9 +5,11 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.ItemWeekDayBinding
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DayItem
 import java.time.LocalDate
@@ -40,8 +42,11 @@ class WeekDayAdapter(
 
             val context = binding.root.context
             if (item.isSelected) {
-                binding.cardDayPill.setCardBackgroundColor(Color.parseColor("#1B4D3E"))
-                binding.cardDayPill.strokeColor = Color.parseColor("#1B4D3E")
+                binding.cardDayPill.setCardBackgroundColor(
+                    ContextCompat.getColor(context, R.color.primary_forest)
+                )
+                binding.cardDayPill.strokeColor =
+                    ContextCompat.getColor(context, R.color.primary_forest)
                 binding.cardDayPill.strokeWidth = 0
                 binding.tvDayName.setTextColor(Color.WHITE)
                 binding.tvDayNumber.setTextColor(Color.WHITE)
@@ -49,18 +54,25 @@ class WeekDayAdapter(
                 binding.viewTodayDot.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
             } else {
                 binding.cardDayPill.setCardBackgroundColor(Color.TRANSPARENT)
-                binding.cardDayPill.strokeColor = Color.parseColor("#E2E8F0")
+                binding.cardDayPill.strokeColor =
+                    ContextCompat.getColor(context, R.color.surface_stroke)
                 binding.cardDayPill.strokeWidth = dpToPx(1)
-                binding.tvDayName.setTextColor(Color.parseColor("#718096"))
-                binding.tvDayNumber.setTextColor(Color.parseColor("#2D3748"))
+                binding.tvDayName.setTextColor(
+                    ContextCompat.getColor(context, R.color.text_secondary)
+                )
+                binding.tvDayNumber.setTextColor(
+                    ContextCompat.getColor(context, R.color.text_primary)
+                )
                 binding.viewTodayDot.visibility = if (item.isToday) View.VISIBLE else View.GONE
-                binding.viewTodayDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1B4D3E"))
+                binding.viewTodayDot.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(context, R.color.primary_forest)
+                )
             }
 
             val statusDesc = buildString {
-                append("${item.dayName}, ${item.dayNumber}")
-                if (item.isSelected) append(", selected")
-                if (item.isToday) append(", today")
+                append(context.getString(R.string.a11y_day_base, item.dayName, item.dayNumber))
+                if (item.isSelected) append(context.getString(R.string.a11y_day_selected_suffix))
+                if (item.isToday) append(context.getString(R.string.a11y_day_today_suffix))
             }
             binding.root.contentDescription = statusDesc
 

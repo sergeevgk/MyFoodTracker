@@ -4,22 +4,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
+    android:background="@color/surface_app_bg"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/padding_screen">
 
         <!-- Top Header Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="12dp"
+            android:layout_marginBottom="@dimen/margin_section"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -27,12 +27,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_card">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="@dimen/margin_small">
 
                     <TextView
                         android:id="@+id/tv_dashboard_title"
@@ -40,8 +40,8 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:text="Dashboard"
-                        android:textColor="#1B4D3E"
+                        android:text="@string/dashboard_title"
+                        android:textColor="@color/primary_forest"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
@@ -56,24 +56,24 @@
                         <!-- Calendar Picker Button -->
                         <ImageButton
                             android:id="@+id/ib_calendar_picker"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="@dimen/min_touch_target"
+                            android:layout_height="@dimen/min_touch_target"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="Select date from month calendar"
-                            android:padding="12dp"
+                            android:contentDescription="@string/cd_calendar_picker"
+                            android:padding="@dimen/padding_card_small"
                             android:scaleType="fitCenter"
                             android:src="@drawable/ic_calendar_today"
-                            app:tint="#1B4D3E" />
+                            app:tint="@color/primary_forest" />
 
                         <!-- Logout Button -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_logout"
                             style="@style/Widget.Material3.Button.TextButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="4dp"
-                            android:text="Log Out"
-                            android:textColor="#BA1A1A"
+                            android:layout_height="@dimen/min_touch_target"
+                            android:layout_marginStart="@dimen/margin_tiny"
+                            android:text="@string/action_logout"
+                            android:textColor="@color/danger_red"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -85,19 +85,19 @@
                     android:id="@+id/tv_welcome_banner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Welcome!"
-                    android:textColor="#2D3748"
+                    android:text="@string/dashboard_welcome_default"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="@dimen/margin_tiny" />
 
                 <!-- Active Profile Info -->
                 <TextView
                     android:id="@+id/tv_active_profile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Active Profile ID: "
-                    android:textColor="#718096"
+                    android:text="@string/active_profile_default"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -108,26 +108,26 @@
             android:id="@+id/card_macro_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="12dp"
+            android:layout_marginBottom="@dimen/margin_section"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
-            app:strokeColor="#E2E8F0"
+            app:strokeColor="@color/surface_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_card">
 
                 <TextView
                     android:id="@+id/tv_macro_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="Daily Progress"
-                    android:textColor="#2D3748"
+                    android:layout_marginBottom="@dimen/padding_card_small"
+                    android:text="@string/dashboard_section_progress"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -137,7 +137,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFeatureSettings="tnum"
-                    android:textColor="#1B4D3E"
+                    android:textColor="@color/macro_calories"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     tools:text="1,450 kcal" />
@@ -146,9 +146,9 @@
                     android:id="@+id/tv_calories_target"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
+                    android:layout_marginBottom="@dimen/margin_tiny"
                     android:fontFeatureSettings="tnum"
-                    android:textColor="#718096"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     tools:text="of 2,000 kcal" />
 
@@ -156,16 +156,16 @@
                     android:id="@+id/progress_calories"
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
-                    android:layout_marginBottom="16dp"
-                    app:indicatorColor="#1B4D3E"
-                    app:trackColor="#E2E8F0" />
+                    android:layout_marginBottom="@dimen/margin_section"
+                    app:indicatorColor="@color/macro_calories"
+                    app:trackColor="@color/surface_stroke" />
 
                 <!-- Protein row -->
                 <LinearLayout
                     android:id="@+id/layout_protein_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="@dimen/padding_card_small"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -177,8 +177,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Protein"
-                            android:textColor="#718096"
+                            android:text="@string/dashboard_macro_protein"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
@@ -186,7 +186,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#2D3748"
+                            android:textColor="@color/text_primary"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             tools:text="30g" />
@@ -196,7 +196,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#718096"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             tools:text=" / 120g" />
 
@@ -206,9 +206,9 @@
                         android:id="@+id/progress_protein"
                         android:layout_width="match_parent"
                         android:layout_height="6dp"
-                        android:layout_marginTop="4dp"
-                        app:indicatorColor="#2D6A4F"
-                        app:trackColor="#E2E8F0" />
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        app:indicatorColor="@color/macro_protein"
+                        app:trackColor="@color/surface_stroke" />
 
                 </LinearLayout>
 
@@ -217,7 +217,7 @@
                     android:id="@+id/layout_carbs_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="@dimen/padding_card_small"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -229,8 +229,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Carbs"
-                            android:textColor="#718096"
+                            android:text="@string/dashboard_macro_carbs"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
@@ -238,7 +238,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#2D3748"
+                            android:textColor="@color/text_primary"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             tools:text="45g" />
@@ -248,7 +248,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#718096"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             tools:text=" / 200g" />
 
@@ -258,9 +258,9 @@
                         android:id="@+id/progress_carbs"
                         android:layout_width="match_parent"
                         android:layout_height="6dp"
-                        android:layout_marginTop="4dp"
-                        app:indicatorColor="#E9C46A"
-                        app:trackColor="#E2E8F0" />
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        app:indicatorColor="@color/macro_carbs"
+                        app:trackColor="@color/surface_stroke" />
 
                 </LinearLayout>
 
@@ -280,8 +280,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Fat"
-                            android:textColor="#718096"
+                            android:text="@string/dashboard_macro_fat"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
@@ -289,7 +289,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#2D3748"
+                            android:textColor="@color/text_primary"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             tools:text="12g" />
@@ -299,7 +299,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFeatureSettings="tnum"
-                            android:textColor="#718096"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             tools:text=" / 65g" />
 
@@ -309,9 +309,9 @@
                         android:id="@+id/progress_fat"
                         android:layout_width="match_parent"
                         android:layout_height="6dp"
-                        android:layout_marginTop="4dp"
-                        app:indicatorColor="#E76F51"
-                        app:trackColor="#E2E8F0" />
+                        android:layout_marginTop="@dimen/margin_tiny"
+                        app:indicatorColor="@color/macro_fat"
+                        app:trackColor="@color/surface_stroke" />
 
                 </LinearLayout>
 
@@ -323,9 +323,9 @@
             android:id="@+id/card_water_widget"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#E1F5FE"
-            app:cardCornerRadius="12dp"
+            android:layout_marginBottom="@dimen/margin_section"
+            app:cardBackgroundColor="@color/water_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -333,15 +333,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_card">
 
                 <TextView
                     android:id="@+id/tv_water_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Hydration"
-                    android:textColor="#2D3748"
+                    android:layout_marginBottom="@dimen/margin_small"
+                    android:text="@string/dashboard_section_hydration"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -350,8 +350,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFeatureSettings="tnum"
-                    android:text="0 ml"
-                    android:textColor="#0288D1"
+                    android:text="@string/dashboard_water_default"
+                    android:textColor="@color/water_primary"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     tools:text="1,250 / 2,000 ml" />
@@ -362,7 +362,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:fontFeatureSettings="tnum"
-                    android:textColor="#718096"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     tools:text="62% of daily goal" />
 
@@ -370,21 +370,21 @@
                     android:id="@+id/progress_water"
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
-                    android:layout_marginTop="8dp"
-                    app:indicatorColor="#0288D1"
-                    app:trackColor="#B3E5FC" />
+                    android:layout_marginTop="@dimen/margin_small"
+                    app:indicatorColor="@color/water_primary"
+                    app:trackColor="@color/water_progress_track" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_water_250"
                     android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
-                    android:minWidth="48dp"
-                    android:minHeight="48dp"
-                    android:text="+250ml"
-                    android:textColor="#FFFFFF"
-                    app:backgroundTint="#0288D1"
-                    android:contentDescription="+250 milliliters water" />
+                    android:layout_height="@dimen/min_touch_target"
+                    android:layout_marginTop="@dimen/padding_card_small"
+                    android:minWidth="@dimen/min_touch_target"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/water_add_button"
+                    android:textColor="@color/surface_card_bg"
+                    app:backgroundTint="@color/water_primary"
+                    android:contentDescription="@string/cd_add_water" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -393,9 +393,9 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="12dp"
+            android:layout_marginBottom="@dimen/margin_section"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -403,8 +403,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingTop="16dp"
-                android:paddingBottom="16dp">
+                android:paddingTop="@dimen/padding_screen"
+                android:paddingBottom="@dimen/padding_screen">
 
                 <!-- Navigation Controls Row -->
                 <LinearLayout
@@ -412,20 +412,20 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:layout_marginBottom="12dp">
+                    android:paddingStart="@dimen/padding_card_small"
+                    android:paddingEnd="@dimen/padding_card_small"
+                    android:layout_marginBottom="@dimen/padding_card_small">
 
                     <ImageButton
                         android:id="@+id/btn_prev_week"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="@dimen/min_touch_target"
+                        android:layout_height="@dimen/min_touch_target"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="Previous week"
-                        android:padding="12dp"
+                        android:contentDescription="@string/cd_prev_week"
+                        android:padding="@dimen/padding_card_small"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_chevron_left"
-                        app:tint="#1B4D3E" />
+                        app:tint="@color/primary_forest" />
 
                     <TextView
                         android:id="@+id/tv_active_date_header"
@@ -433,7 +433,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:textColor="#1B4D3E"
+                        android:textColor="@color/primary_forest"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         tools:text="Wednesday, Sep 30, 2026" />
@@ -442,23 +442,23 @@
                         android:id="@+id/btn_today"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="48dp"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginEnd="4dp"
-                        android:text="Today"
+                        android:layout_height="@dimen/min_touch_target"
+                        android:layout_marginStart="@dimen/margin_tiny"
+                        android:layout_marginEnd="@dimen/margin_tiny"
+                        android:text="@string/action_today"
                         android:textSize="13sp"
-                        app:cornerRadius="24dp" />
+                        app:cornerRadius="@dimen/radius_day_pill" />
 
                     <ImageButton
                         android:id="@+id/btn_next_week"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="@dimen/min_touch_target"
+                        android:layout_height="@dimen/min_touch_target"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="Next week"
-                        android:padding="12dp"
+                        android:contentDescription="@string/cd_next_week"
+                        android:padding="@dimen/padding_card_small"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_chevron_right"
-                        app:tint="#1B4D3E" />
+                        app:tint="@color/primary_forest" />
 
                 </LinearLayout>
 
@@ -469,8 +469,8 @@
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
                     android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
+                    android:paddingStart="@dimen/margin_small"
+                    android:paddingEnd="@dimen/margin_small"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:listitem="@layout/item_week_day" />
 
@@ -481,8 +481,8 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -490,22 +490,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="@dimen/padding_card_small">
 
                     <TextView
                         android:id="@+id/tv_meals_section_title"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Logged Meals"
-                        android:textColor="#2D3748"
+                        android:text="@string/dashboard_section_meals"
+                        android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -513,12 +513,12 @@
                         android:id="@+id/btn_quick_add"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:text="＋ Quick Add"
-                        android:textColor="#FFFFFF"
-                        app:backgroundTint="#1B4D3E"
-                        android:contentDescription="Quick-add calories and macros" />
+                        android:minWidth="@dimen/min_touch_target"
+                        android:minHeight="@dimen/min_touch_target"
+                        android:text="@string/action_quick_add"
+                        android:textColor="@color/surface_card_bg"
+                        app:backgroundTint="@color/primary_forest"
+                        android:contentDescription="@string/cd_quick_add" />
 
                 </LinearLayout>
 
@@ -528,9 +528,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:padding="24dp"
-                    android:text="No items logged for this date"
-                    android:textColor="#718096"
+                    android:padding="@dimen/padding_card_large"
+                    android:text="@string/dashboard_empty_meals"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <!-- Meal Entries Container -->
@@ -546,16 +546,16 @@
                         android:id="@+id/tv_meal_count"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="#2D3748"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_meal_entries"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="@dimen/padding_card_small"
                         android:clipToPadding="false"
-                        android:contentDescription="Logged meal entries"
+                        android:contentDescription="@string/cd_meal_entries"
                         android:nestedScrollingEnabled="false"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         tools:listitem="@layout/item_meal_log" />

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
+    android:background="@color/surface_app_bg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -12,14 +12,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="20dp">
+        android:padding="@dimen/padding_card">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardAuth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
             app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
@@ -27,14 +27,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="@dimen/padding_card_large">
 
                 <TextView
                     android:id="@+id/tvTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Welcome Back"
-                    android:textColor="#1B4D3E"
+                    android:text="@string/auth_title_welcome_back"
+                    android:textColor="@color/primary_forest"
                     android:textSize="22sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="6dp" />
@@ -43,10 +43,10 @@
                     android:id="@+id/tvSubtitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Select profile and enter your 4-digit passcode"
-                    android:textColor="#718096"
+                    android:text="@string/auth_subtitle_passcode"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
-                    android:layout_marginBottom="20dp" />
+                    android:layout_marginBottom="@dimen/padding_card" />
 
                 <!-- Profile Selector Dropdown -->
                 <com.google.android.material.textfield.TextInputLayout
@@ -54,12 +54,12 @@
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:hint="Select Profile"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusTopStart="8dp">
+                    android:layout_marginBottom="@dimen/margin_section"
+                    android:hint="@string/auth_hint_profile"
+                    app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+                    app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+                    app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+                    app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
                     <AutoCompleteTextView
                         android:id="@+id/actvProfileSelector"
@@ -74,13 +74,13 @@
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
-                    android:hint="4-Digit Passcode"
+                    android:layout_marginBottom="@dimen/padding_card_large"
+                    android:hint="@string/auth_hint_passcode"
                     app:errorEnabled="true"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusTopStart="8dp">
+                    app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+                    app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+                    app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+                    app:boxCornerRadiusTopStart="@dimen/radius_card_small">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etPasscode"
@@ -96,12 +96,12 @@
                     android:id="@+id/btnUnlock"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:text="Unlock"
-                    android:textColor="#FFFFFF"
+                    android:text="@string/action_unlock"
+                    android:textColor="@color/surface_card_bg"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    app:backgroundTint="#1B4D3E"
-                    app:cornerRadius="28dp" />
+                    app:backgroundTint="@color/primary_forest"
+                    app:cornerRadius="@dimen/radius_button_large" />
 
                 <!-- Add New Profile Link -->
                 <com.google.android.material.button.MaterialButton
@@ -109,9 +109,9 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Add New Profile"
-                    android:textColor="#1B4D3E"
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:text="@string/action_add_new_profile"
+                    android:textColor="@color/primary_forest"
                     android:textSize="14sp" />
 
                 <ProgressBar
@@ -119,7 +119,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/padding_card_small"
                     android:visibility="gone" />
 
             </LinearLayout>

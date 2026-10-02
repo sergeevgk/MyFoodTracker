@@ -58,7 +58,7 @@ development_status:
   2-3-quick-water-logging-plus-250ml: done
   2-4-quick-add-calorie-and-macro-logging: done
   2-5-swipe-to-delete-intake-logs-with-undo: done
-  2-6-centralize-colors-strings-and-ui-resources: ready-for-dev
+  2-6-centralize-colors-strings-and-ui-resources: review
   epic-2-retrospective: optional
   epic-3: backlog
   3-1-sqlite-fts5-search-engine-and-pre-populated-food-database: backlog
