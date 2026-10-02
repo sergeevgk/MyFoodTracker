@@ -91,6 +91,18 @@
                         android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Remember Device Checkbox -->
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cbRememberDevice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/padding_card"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/auth_cb_remember_device"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    app:buttonTint="@color/primary_forest" />
+
                 <!-- Unlock Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnUnlock"

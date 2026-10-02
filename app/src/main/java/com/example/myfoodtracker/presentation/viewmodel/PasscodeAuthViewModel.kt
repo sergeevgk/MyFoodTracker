@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.UserRepository
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
+import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 
 sealed class PasscodeAuthState {
     object Loading : PasscodeAuthState()
@@ -21,7 +22,8 @@ sealed class PasscodeAuthState {
 
 class PasscodeAuthViewModel(
     private val userRepository: UserRepository,
-    private val authenticateUserUseCase: AuthenticateUserUseCase
+    private val authenticateUserUseCase: AuthenticateUserUseCase,
+    private val restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase
 ) : ViewModel() {
 
     private val _state = MutableLiveData<PasscodeAuthState>(PasscodeAuthState.Loading)
@@ -29,6 +31,13 @@ class PasscodeAuthViewModel(
 
     fun loadProfiles() {
         val profiles = userRepository.getProfiles()
+
+        val rememberedProfile = restoreRememberedSessionUseCase(profiles)
+        if (rememberedProfile != null) {
+            _state.value = PasscodeAuthState.Authenticated(rememberedProfile)
+            return
+        }
+
         if (profiles.isEmpty()) {
             _state.value = PasscodeAuthState.NoProfiles
             return
@@ -54,7 +63,7 @@ class PasscodeAuthViewModel(
         )
     }
 
-    fun authenticate(passcode: String) {
+    fun authenticate(passcode: String, rememberDevice: Boolean = false) {
         val currentState = _state.value as? PasscodeAuthState.Content ?: return
         val selectedProfile = currentState.selectedProfile ?: return
 
@@ -67,7 +76,7 @@ class PasscodeAuthViewModel(
 
         _state.value = currentState.copy(isAuthenticating = true, passcodeError = null)
 
-        val result = authenticateUserUseCase(selectedProfile.id, passcode)
+        val result = authenticateUserUseCase(selectedProfile.id, passcode, rememberDevice)
         result.fold(
             onSuccess = { profile ->
                 _state.value = PasscodeAuthState.Authenticated(profile)

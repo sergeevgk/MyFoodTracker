@@ -81,7 +81,9 @@ class ProfileSetupFragment : Fragment() {
                 }
                 is ProfileSetupState.Success -> {
                     binding.btnCreateProfile.isEnabled = true
-                    sessionRepository.setActiveProfile(state.userProfile)
+                    // Creating a profile signs you in as it; do not carry over
+                    // another profile's remember-me choice.
+                    sessionRepository.setActiveProfile(state.userProfile, rememberDevice = false)
                     Toast.makeText(
                         requireContext(),
                         getString(

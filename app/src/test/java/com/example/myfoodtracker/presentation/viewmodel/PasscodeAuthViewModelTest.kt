@@ -7,6 +7,7 @@ import com.example.myfoodtracker.domain.security.PasscodeHasher
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.FakeAuthUserRepository
 import com.example.myfoodtracker.domain.usecase.FakeSessionRepository
+import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -20,6 +21,7 @@ class PasscodeAuthViewModelTest {
     private lateinit var fakeUserRepository: FakeAuthUserRepository
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var authenticateUserUseCase: AuthenticateUserUseCase
+    private lateinit var restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase
     private lateinit var viewModel: PasscodeAuthViewModel
 
     private lateinit var user1: UserProfile
@@ -30,7 +32,12 @@ class PasscodeAuthViewModelTest {
         fakeUserRepository = FakeAuthUserRepository()
         fakeSessionRepository = FakeSessionRepository()
         authenticateUserUseCase = AuthenticateUserUseCase(fakeUserRepository, fakeSessionRepository)
-        viewModel = PasscodeAuthViewModel(fakeUserRepository, authenticateUserUseCase)
+        restoreRememberedSessionUseCase = RestoreRememberedSessionUseCase(fakeSessionRepository)
+        viewModel = PasscodeAuthViewModel(
+            fakeUserRepository,
+            authenticateUserUseCase,
+            restoreRememberedSessionUseCase
+        )
     }
 
     @Test
@@ -113,5 +120,59 @@ class PasscodeAuthViewModelTest {
         assertEquals(user1.id, authState.profile.id)
         assertTrue(fakeSessionRepository.isLoggedIn())
         assertEquals(user1.id, fakeSessionRepository.getActiveProfileId())
+    }
+
+    @Test
+    fun loadProfiles_withRememberedProfile_emitsAuthenticatedDirectly() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        // Seed the persisted ID only, so the restored session is created by the ViewModel.
+        fakeSessionRepository.seedRememberedProfile(user1.id)
+
+        viewModel.loadProfiles()
+
+        val state = viewModel.state.value
+        assertTrue(state is PasscodeAuthState.Authenticated)
+        val authState = state as PasscodeAuthState.Authenticated
+        assertEquals(user1.id, authState.profile.id)
+        assertTrue(fakeSessionRepository.isLoggedIn())
+        assertEquals(user1.id, fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun loadProfiles_withStaleRememberedProfile_clearsRememberedSessionAndEmitsContent() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        // Remember a profile ID that doesn't exist in the database.
+        fakeSessionRepository.seedRememberedProfile("deleted-user-id")
+
+        viewModel.loadProfiles()
+
+        val state = viewModel.state.value
+        assertTrue(state is PasscodeAuthState.Content)
+        assertNull(fakeSessionRepository.getRememberedProfileId())
+        assertFalse(fakeSessionRepository.isLoggedIn())
+    }
+
+    @Test
+    fun authenticate_withRememberDeviceTrue_authenticatesAndPersistsRememberedProfile() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        viewModel.loadProfiles()
+
+        viewModel.authenticate("1234", rememberDevice = true)
+
+        val state = viewModel.state.value
+        assertTrue(state is PasscodeAuthState.Authenticated)
+        assertEquals(user1.id, fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun authenticate_withRememberDeviceFalse_authenticatesWithoutPersistingRememberedProfile() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        viewModel.loadProfiles()
+
+        viewModel.authenticate("1234", rememberDevice = false)
+
+        val state = viewModel.state.value
+        assertTrue(state is PasscodeAuthState.Authenticated)
+        assertNull(fakeSessionRepository.getRememberedProfileId())
     }
 }

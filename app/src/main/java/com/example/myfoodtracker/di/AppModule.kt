@@ -21,11 +21,16 @@ import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
+import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
+import android.content.Context
+import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
+import com.example.myfoodtracker.domain.repository.SessionStorage
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -45,8 +50,17 @@ val appModule = module {
     single { get<AppDatabase>().userProfileDao() }
     single { get<AppDatabase>().waterLogDao() }
 
+    // Session Preferences & Storage
+    single {
+        androidContext().getSharedPreferences(
+            SharedPrefsSessionStorage.PREFS_NAME,
+            Context.MODE_PRIVATE
+        )
+    }
+    single<SessionStorage> { SharedPrefsSessionStorage(get()) }
+
     // Repositories
-    single<SessionRepository> { SessionRepositoryImpl() }
+    single<SessionRepository> { SessionRepositoryImpl(get()) }
     single<MealRepository> { MealRepositoryImpl(get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
     single<WaterRepository> { WaterRepositoryImpl(get(), get()) }
@@ -60,6 +74,7 @@ val appModule = module {
     factory { CreateProfileUseCase(get()) }
     factory { AuthenticateUserUseCase(get(), get()) }
     factory { LogoutUseCase(get()) }
+    factory { RestoreRememberedSessionUseCase(get()) }
     factory { LogWaterUseCase(get()) }
     factory { GetWaterTotalUseCase(get()) }
     factory { LogQuickAddUseCase(get()) }
@@ -68,6 +83,6 @@ val appModule = module {
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
-    viewModel { PasscodeAuthViewModel(get(), get()) }
+    viewModel { PasscodeAuthViewModel(get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 }

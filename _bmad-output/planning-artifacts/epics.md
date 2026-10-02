@@ -269,6 +269,20 @@ So that my personal food items are prioritized.
 **Then** the food is saved with `is_custom = 1` and SQLite FTS triggers index it immediately.
 **And** frequently logged custom foods rank higher in search results than pre-seeded items with identical prefix match scores.
 
+### Story 3.4: Remember User Device Session & Auto-Login
+
+As a user,
+I want a checkbox on the login screen to remember my profile on this device,
+So that I can skip the passcode login screen on subsequent app launches until I explicitly log out.
+
+**Acceptance Criteria:**
+
+**Given** the passcode authentication screen,
+**When** the user selects a profile, checks "Remember user for this device", and enters the correct passcode,
+**Then** the profile ID is persisted to local device storage and the user is navigated to the dashboard.
+**And** subsequent app launches detect the remembered profile, automatically restore the active session, and navigate directly to the dashboard, skipping the passcode screen.
+**And** when the user explicitly taps "Log Out" on the dashboard, both the in-memory session and the remembered device session are cleared, returning to the login screen for future launches until re-checked.
+
 ---
 
 ## Epic 4: Reusable Recipe Management
