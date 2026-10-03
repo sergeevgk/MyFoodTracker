@@ -5,7 +5,7 @@ date: '2026-07-25'
 sections_completed:
   ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns']
 status: 'complete'
-rule_count: 19
+rule_count: 18
 optimized_for_llm: true
 ---
 
@@ -20,7 +20,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Android SDK**: Target 36, Min 35 (Java 11 compatibility)
 - **Android Gradle Plugin (AGP)**: 9.2.1
 - **Koin (Dependency Injection)**: 3.5.6
-- **Room Database**: 2.6.1 (using KSP compiler 2.2.10-2.0.2)
+- **Room Database**: 3.0.3 (`androidx.room3` + Room Gradle plugin, KSP 2.2.10-2.0.2) with `androidx.sqlite:sqlite-bundled` 2.7.1 (`BundledSQLiteDriver` for the FTS5 catalog DB; main DB keeps the default framework driver). Schema export: `app/schemas/<db-fqcn>/1.json`. Room 3 `@Relation` uses plural `parentColumns`/`entityColumns` arrays plus explicit `entity = X::class`.
 - **Jetpack Navigation**: 2.6.0 (Fragment & UI KTX)
 - **Material Components**: 1.10.0
 - **AppCompat**: 1.6.1
@@ -29,8 +29,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Language-Specific Rules (Kotlin)
 
-- **Synchronous Execution**: Database queries and VM updates are synchronous. Do not introduce `suspend` modifiers or coroutines unless refactoring the Room database builder.
+- **Synchronous Execution**: Database queries and VM updates are synchronous. Do not introduce `suspend` modifiers or coroutines unless refactoring the Room database builder. (Room 3 permits blocking DAOs in Android-only modules; `allowMainThreadQueries()` is retained.)
 - **Threading Exception**: Synchronous queries are permitted ONLY for local Room DB operations under `.allowMainThreadQueries()`. Any network or async API integrations must use Kotlin Coroutines.
+- **FTS5 Availability**: FTS5 search requires `BundledSQLiteDriver` on the catalog database — platform SQLite is not compiled with FTS5. Never switch the catalog DB back to the default driver.
 - **Data Model Decoupling**: Database entities must be mapped to domain models within the repository layer using private extension mappings. Never leak entities to domain or presentation layers.
 - **UseCase Pattern**: Define use cases as factory-injected classes using `operator fun invoke()` for clean calling conventions.
 
@@ -56,8 +57,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Development Workflow Rules
 
 - **Build & Test Verification**: Run `.\gradlew.bat compileDebugSources` and `.\gradlew.bat testDebugUnitTest` to verify that code changes compile and pass all existing unit tests.
-- **Emulator Control**: Run the emulator detached on Windows using: `Start-Process -FilePath "emulator" -ArgumentList "-avd", "medium_phone"`.
-- **Structure Updates**: Always update the files and folders map in `.agents/project_structure.md` when adding, deleting, or renaming code/resource files.
+- **No Running Android Emulator**: Do NOT launch or run the Android emulator for testing (neither directly via `emulator` / `emulator.exe` nor via `android emulator` CLI). There are environment difficulties with it for now.
+- **Explicit Manual Testing Notice**: Every time manual testing or on-device verification is needed (such as instrumented tests like `connectedDebugAndroidTest` or UI interaction), mention this explicitly in the results. Verify builds using JVM unit tests (`testDebugUnitTest`), compile checks (`compileDebugSources`), and APK assembly (`assembleDebug`, `assembleDebugAndroidTest`).
 
 ### Critical Don't-Miss Rules
 
@@ -84,4 +85,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Review quarterly for outdated rules.
 - Remove rules that become obvious over time.
 
-Last Updated: 2026-07-25
+Last Updated: 2026-10-03 (Story 3.1: Room 3.0.3 + FTS5 catalog)

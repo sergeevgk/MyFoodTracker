@@ -54,9 +54,9 @@ This document provides the complete epic and story breakdown for MyFoodTracker, 
 - **ARCH-5: View Binding Lifecycle Safety (AD-5)**: Fragments clear `_binding = null` in `onDestroyView()`. `LiveData` observed using `viewLifecycleOwner`.
 - **ARCH-6: Centralized Koin DI (AD-6)**: Declarations centralized in `di/AppModule.kt`: `single` for Repos/DB, `factory` for UseCases, `viewModel` for ViewModels (`by viewModel()`).
 - **ARCH-7: Database Cascades & Indexing (AD-7)**: `@ForeignKey` constraints with `onDelete = ForeignKey.CASCADE` and indexed foreign keys on child tables (`intake_logs`, `water_logs`, `user_daily_goals`, `food_nutrients`, `food_serving_units`).
-- **ARCH-8: SQLite FTS5 Virtual Table & Auto-Sync Triggers (AD-8)**: `foods_fts` virtual table indexed on `name` and `brand` with `AFTER INSERT`, `AFTER DELETE`, `AFTER UPDATE` triggers.
-- **ARCH-9: Verified Stack Alignment**: Android SDK Target 36 / Min 35, AGP 9.2.1, Koin 3.5.6, Room 2.6.1 (KSP 2.2.10-2.0.2), Jetpack Navigation 2.6.0, Material Components 1.10.0, AppCompat 1.6.1.
-- **ARCH-10: Pre-populated Asset Loader**: Pre-populated SQLite DB (~50,000 foods) bundled in APK assets and loaded via Room `createFromAsset()`.
+- **ARCH-8: SQLite FTS5 via Room `@Fts5` + Auto-Sync Triggers (AD-8)**: `catalog_foods_fts` (`@Fts5(contentEntity = CatalogFoodEntity)`, indexed on `name` and `brand`) with Room-generated `room_fts_content_sync_*` triggers; FTS5 provided by `BundledSQLiteDriver` (`androidx.sqlite:sqlite-bundled` 2.7.1) since platform SQLite omits FTS5.
+- **ARCH-9: Verified Stack Alignment**: Android SDK Target 36 / Min 35, AGP 9.2.1, Koin 3.5.6, Room 3.0.3 (`androidx.room3`, KSP 2.2.10-2.0.2) + `androidx.sqlite:sqlite-bundled` 2.7.1, Jetpack Navigation 2.6.0, Material Components 1.10.0, AppCompat 1.6.1.
+- **ARCH-10: Pre-populated Asset Loader**: Pre-populated SQLite DB (50,500 USDA FDC foods, `food_catalog.db`) bundled in APK assets (uncompressed) and loaded via Room `createFromAsset("databases/food_catalog.db")` into a dedicated `FoodCatalogDatabase` (separate from `meals_database` so version bumps never wipe user data).
 
 ### UX Design Requirements
 

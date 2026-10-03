@@ -1,6 +1,6 @@
 package com.example.myfoodtracker.data.db
 
-import androidx.room.*
+import androidx.room3.*
 
 @Dao
 interface MealDao {

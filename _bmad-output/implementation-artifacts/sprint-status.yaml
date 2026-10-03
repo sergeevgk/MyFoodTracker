@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-09-06T20:24:40+02:00
-last_updated: 2026-10-02T21:00:00+02:00
+last_updated: 2026-10-03T19:31:00+02:00
 project: MyFoodTracker
 project_key: NOKEY
 tracking_system: file-system
@@ -52,16 +52,16 @@ development_status:
   1-1-local-profile-creation-and-goal-setup: done
   1-2-passcode-authentication-and-startup-profile-lock: done
   epic-1-retrospective: optional
-  epic-2: in-progress
+  epic-2: done
   2-1-week-view-navigation-and-month-calendar-picker: done
   2-2-macro-progress-header-card-and-dynamic-target-display: done
   2-3-quick-water-logging-plus-250ml: done
   2-4-quick-add-calorie-and-macro-logging: done
   2-5-swipe-to-delete-intake-logs-with-undo: done
-  2-6-centralize-colors-strings-and-ui-resources: review
+  2-6-centralize-colors-strings-and-ui-resources: done
   epic-2-retrospective: optional
   epic-3: in-progress
-  3-1-sqlite-fts5-search-engine-and-pre-populated-food-database: backlog
+  3-1-sqlite-fts5-search-engine-and-pre-populated-food-database: done
   3-2-food-search-quantity-modal-and-meal-slot-logging: backlog
   3-3-custom-food-creation-and-relevance-ranking: backlog
   3-4-remember-user-session-on-device: done
