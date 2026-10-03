@@ -44,3 +44,10 @@ mv /tmp/local.properties.bak local.properties
 
 Always restore the backup immediately; never leave the swap in place and never
 commit `local.properties`.
+
+## Testing and Emulator Policy
+
+- **No running Android emulator**: Do NOT launch or run the Android emulator for automated or interactive testing (neither directly via `emulator` / `emulator.exe` nor via `android emulator` CLI). There are known difficulties with it for now.
+- **Explicit manual testing notice**: Every time manual testing or on-device verification is needed (such as instrumented tests like `connectedDebugAndroidTest`, UI walk-throughs, or hardware/device-specific checks), do NOT attempt to run the emulator. Instead, mention this explicitly in the results and deliverables so the developer can perform manual testing.
+- **Automated verification standard**: Rely on JVM unit tests (`./gradlew testDebugUnitTest` or `.\gradlew.bat testDebugUnitTest`), compile checks (`compileDebugSources`), and build assembly (`:app:assembleDebug`, `:app:assembleDebugAndroidTest`).
+

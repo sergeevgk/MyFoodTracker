@@ -1,20 +1,21 @@
 package com.example.myfoodtracker.data.dao
 
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Relation
-import androidx.room.Transaction
+import androidx.room3.Dao
+import androidx.room3.Embedded
+import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
+import androidx.room3.Relation
+import androidx.room3.Transaction
 import com.example.myfoodtracker.data.entity.UserDailyGoalEntity
 import com.example.myfoodtracker.data.entity.UserProfileEntity
 
 data class UserWithGoal(
     @Embedded val user: UserProfileEntity,
     @Relation(
-        parentColumn = "id",
-        entityColumn = "profile_id"
+        entity = UserDailyGoalEntity::class,
+        parentColumns = ["id"],
+        entityColumns = ["profile_id"]
     )
     val goal: UserDailyGoalEntity?
 )

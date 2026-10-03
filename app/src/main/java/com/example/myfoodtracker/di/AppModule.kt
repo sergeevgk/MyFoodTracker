@@ -1,10 +1,14 @@
 package com.example.myfoodtracker.di
 
-import androidx.room.Room
+import androidx.room3.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.myfoodtracker.data.db.AppDatabase
+import com.example.myfoodtracker.data.db.FoodCatalogDatabase
+import com.example.myfoodtracker.data.repository.FoodCatalogRepositoryImpl
 import com.example.myfoodtracker.data.repository.MealRepositoryImpl
 import com.example.myfoodtracker.data.repository.SessionRepositoryImpl
 import com.example.myfoodtracker.data.repository.UserRepositoryImpl
+import com.example.myfoodtracker.domain.repository.FoodCatalogRepository
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.repository.UserRepository
@@ -20,6 +24,7 @@ import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
+import com.example.myfoodtracker.domain.usecase.SearchFoodUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
@@ -49,6 +54,19 @@ val appModule = module {
     single { get<AppDatabase>().mealDao() }
     single { get<AppDatabase>().userProfileDao() }
     single { get<AppDatabase>().waterLogDao() }
+
+    // Food catalog database — FTS5 requires the bundled SQLite driver
+    single {
+        Room.databaseBuilder(get(), FoodCatalogDatabase::class.java, "food_catalog")
+            .setDriver(BundledSQLiteDriver())
+            .createFromAsset("databases/food_catalog.db")
+            .fallbackToDestructiveMigration()
+            .allowMainThreadQueries()
+            .build()
+    }
+    single { get<FoodCatalogDatabase>().foodCatalogDao() }
+    single<FoodCatalogRepository> { FoodCatalogRepositoryImpl(get()) }
+    factory { SearchFoodUseCase(get()) }
 
     // Session Preferences & Storage
     single {

@@ -42,6 +42,11 @@
 
 ## Deferred from: code review of story 3-4-remember-user-session-on-device (2026-10-02)
 
-- **3.4-D1: `.agents/project_structure.md` not updated for new source files** - Story 3.4 adds `domain/repository/SessionStorage.kt` and `data/local/SharedPrefsSessionStorage.kt` without updating the files-and-folders map required by the project-context "Structure Updates" rule. Pre-existing: the referenced `project_structure.md` file does not currently exist in the repository, so the rule is unsatisfiable as written. Either create the file or amend the rule.
+- **3.4-D1: `.agents/project_structure.md` tracking requirement dropped** - DROPPED / RESOLVED. Removed the obsolete "Structure Updates" rule requiring `.agents/project_structure.md` from `project-context.md` per user directive. Additional project structure file tracking is no longer required.
 - **3.4-D2: Remembered session has no TTL and no "not you?" escape hatch** - `SharedPrefsSessionStorage` persists a bare UUID with no timestamp and `SessionStorage` exposes no expiry parameter, so a remembered profile auto-logs in indefinitely until explicit logout. The single storage slot plus a `PasscodeAuthState.Authenticated` state with no discriminator mean there is no on-screen way to decline a restored session; a multi-profile user must complete a full logout round-trip to switch profiles. Deferred by user decision: remember-me persisting until explicit logout matches the story's intent. Consider a TTL (e.g. 30 days) and a "Not you?" affordance if the threat model grows. [SharedPrefsSessionStorage.kt:19-27, PasscodeAuthFragment.kt:116-123]
+
+## Forward notes from: story 3-1-sqlite-fts5-search-engine-and-pre-populated-food-database (2026-10-03)
+
+- **3.1-F1: Catalog version bump + `fallbackToDestructiveMigration` would wipe custom foods** - `FoodCatalogDatabase` uses `fallbackToDestructiveMigration()` with `createFromAsset`. When Story 3.3 stores user-created custom foods in `catalog_foods` (`is_custom = 1`), any future catalog `version` bump will destructively recopy the asset and delete those rows. Before bumping the catalog version, implement a migration that preserves `is_custom = 1` rows (export + re-import) or move custom foods to a separate table/DB. [di/AppModule.kt]
+- **3.1-F2: Story 5.2 backup/restore must cover two databases** - Backup/restore currently assumes a single `meals_database`; it must later include the `food_catalog` file (at minimum the `is_custom = 1` rows, since the bundled asset itself is reinstallable).
 

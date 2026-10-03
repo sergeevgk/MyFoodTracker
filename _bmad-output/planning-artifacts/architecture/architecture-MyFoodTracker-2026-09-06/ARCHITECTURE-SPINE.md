@@ -66,6 +66,7 @@ graph TD
 - **Binds:** `data/` DAOs, Room database builder
 - **Prevents:** Race conditions and unnecessary coroutine overhead for instant local DB operations.
 - **Rule:** Database queries and ViewModel updates operate synchronously on the main thread using `.allowMainThreadQueries()` in the Room DB builder. Coroutines/`suspend` functions are prohibited for local Room DAO access unless refactoring the underlying builder.
+- **Room 3 amendment (Story 3.1):** Room 3.x rejects blocking DAO functions only in non-Android (KMP) source sets; this Android-only module keeps synchronous DAOs legally. `allowMainThreadQueries()` is still honored. The main `meals_database` keeps the default `AndroidSQLiteDriver` (framework SQLite); only the `food_catalog` database sets `BundledSQLiteDriver()` because only it needs FTS5.
 
 ### AD-3 — Domain Model Decoupling & Extensions [ADOPTED]
 - **Binds:** `data/repository/`, `domain/model/`
@@ -93,9 +94,10 @@ graph TD
 - **Rule:** Child database entities MUST declare explicit `@ForeignKey` constraints with `onDelete = ForeignKey.CASCADE` and create an index on foreign key columns.
 
 ### AD-8 — SQLite FTS5 Search & Autocomplete Engine [ADOPTED]
-- **Binds:** `data/dao/FoodFtsDao.kt`, `data/db/AppDatabase.kt`
+- **Binds:** `data/dao/FoodCatalogDao.kt`, `data/db/FoodCatalogDatabase.kt`
 - **Prevents:** High latency (`> 50ms`) full-table `LIKE` search scans on 50k+ food items.
-- **Rule:** Offline food autocomplete MUST use a dedicated SQLite FTS5 virtual table (`foods_fts`) with prefix matching (`query*`) and SQLite database triggers (`AFTER INSERT`, `AFTER DELETE`, `AFTER UPDATE`) to maintain automatic index synchronization.
+- **Rule:** Offline food autocomplete MUST use the Room `@Fts5` annotation with `contentEntity` auto-sync (Room-generated `room_fts_content_sync_*` triggers; never write to the FTS table directly — all writes go through `catalog_foods`). Prefix matching is per-term (`"term"*`); FTS5 is only available via `BundledSQLiteDriver` (`androidx.sqlite:sqlite-bundled`) because platform SQLite is not compiled with FTS5.
+- **Implemented (Story 3.1):** separate `food_catalog` database (read-only bundled content must not share `meals_database` version bumps/`fallbackToDestructiveMigration`, which would wipe user data), `catalog_`-prefixed tables, `catalog_foods.id INTEGER AUTOINCREMENT` as FTS `content_rowid`, seed asset `app/src/main/assets/databases/food_catalog.db` (50,500 USDA FDC foods) loaded via `createFromAsset`, schema export `app/schemas/com.example.myfoodtracker.data.db.FoodCatalogDatabase/1.json`.
 
 ---
 
@@ -117,7 +119,7 @@ graph TD
 | **Android SDK** | Target 36, Min 35 | Target Android runtime platform (Java 11 compatibility) |
 | **Android Gradle Plugin (AGP)** | 9.2.1 | Build tool & packaging |
 | **Koin** | 3.5.6 | Dependency Injection framework |
-| **Room Database** | 2.6.1 (KSP 2.2.10-2.0.2) | SQLite local ORM & persistence engine |
+| **Room Database** | 3.0.3 (`androidx.room3`, KSP 2.2.10-2.0.2) + `androidx.sqlite:sqlite-bundled` 2.7.1 | SQLite local ORM & persistence engine; bundled driver provides FTS5 |
 | **Jetpack Navigation** | 2.6.0 | Fragment-based screen navigation & argument passing |
 | **Material Components** | 1.10.0 | Material Design 3 UI component system |
 | **AppCompat** | 1.6.1 | Android backward compatibility layer |

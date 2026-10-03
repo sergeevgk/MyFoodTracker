@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room3)
 }
 
 android {
@@ -35,6 +36,12 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    androidResources {
+        noCompress.add("db")
+    }
+    room3 {
+        schemaDirectory("$projectDir/schemas")
+    }
 }
 
 dependencies {
@@ -49,12 +56,13 @@ dependencies {
     implementation(libs.koin.android)
 
     // Room
-    implementation(libs.room.runtime)
-    ksp(libs.room.compiler)
-    implementation(libs.room.ktx)
+    implementation(libs.androidx.room3.runtime)
+    ksp(libs.androidx.room3.compiler)
+    implementation(libs.androidx.sqlite.bundled)
 
     testImplementation(libs.junit)
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation("androidx.test:core:1.6.1")
 }

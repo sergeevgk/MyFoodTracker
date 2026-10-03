@@ -1,0 +1,291 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "0407e73aa8c8219f3fca19ebe9dc8429",
+    "entities": [
+      {
+        "tableName": "catalog_foods",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `brand` TEXT, `barcode` TEXT, `base_serving_size` REAL NOT NULL, `base_serving_unit` TEXT NOT NULL, `is_custom` INTEGER NOT NULL, `is_deleted` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brand",
+            "columnName": "brand",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "barcode",
+            "columnName": "barcode",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baseServingSize",
+            "columnName": "base_serving_size",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "baseServingUnit",
+            "columnName": "base_serving_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCustom",
+            "columnName": "is_custom",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDeleted",
+            "columnName": "is_deleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_catalog_foods_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_catalog_foods_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_catalog_foods_barcode",
+            "unique": false,
+            "columnNames": [
+              "barcode"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_catalog_foods_barcode` ON `${TABLE_NAME}` (`barcode`)"
+          }
+        ]
+      },
+      {
+        "tableName": "catalog_food_nutrients",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`food_id` INTEGER NOT NULL, `calories` REAL NOT NULL, `protein_g` REAL NOT NULL, `carbs_g` REAL NOT NULL, `fat_g` REAL NOT NULL, `fiber_g` REAL NOT NULL, `sugar_g` REAL NOT NULL, `sodium_mg` REAL NOT NULL, PRIMARY KEY(`food_id`), FOREIGN KEY(`food_id`) REFERENCES `catalog_foods`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "foodId",
+            "columnName": "food_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calories",
+            "columnName": "calories",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "proteinG",
+            "columnName": "protein_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carbsG",
+            "columnName": "carbs_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fatG",
+            "columnName": "fat_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fiberG",
+            "columnName": "fiber_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sugarG",
+            "columnName": "sugar_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sodiumMg",
+            "columnName": "sodium_mg",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "food_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_catalog_food_nutrients_food_id",
+            "unique": false,
+            "columnNames": [
+              "food_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_catalog_food_nutrients_food_id` ON `${TABLE_NAME}` (`food_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "catalog_foods",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "food_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "catalog_food_serving_units",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `food_id` INTEGER NOT NULL, `unit_name` TEXT NOT NULL, `grams_per_unit` REAL NOT NULL, FOREIGN KEY(`food_id`) REFERENCES `catalog_foods`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foodId",
+            "columnName": "food_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitName",
+            "columnName": "unit_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gramsPerUnit",
+            "columnName": "grams_per_unit",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_catalog_food_serving_units_food_id",
+            "unique": false,
+            "columnNames": [
+              "food_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_catalog_food_serving_units_food_id` ON `${TABLE_NAME}` (`food_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "catalog_foods",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "food_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "catalog_foods_fts",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS5(`name`, `brand`, tokenize=`unicode61`, content=`catalog_foods`)",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brand",
+            "columnName": "brand",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "rowid"
+          ]
+        },
+        "ftsVersion": "FTS5",
+        "ftsOptions": {
+          "tokenizer": "unicode61",
+          "tokenizerArgs": [],
+          "contentTable": "catalog_foods",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC",
+          "contentRowId": "",
+          "columnSize": true,
+          "detail": "FULL"
+        },
+        "contentSyncTriggers": [
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_catalog_foods_fts_BEFORE_UPDATE BEFORE UPDATE ON `catalog_foods` BEGIN DELETE FROM `catalog_foods_fts` WHERE `rowid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_catalog_foods_fts_BEFORE_DELETE BEFORE DELETE ON `catalog_foods` BEGIN DELETE FROM `catalog_foods_fts` WHERE `rowid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_catalog_foods_fts_AFTER_UPDATE AFTER UPDATE ON `catalog_foods` BEGIN INSERT INTO `catalog_foods_fts`(`rowid`, `name`, `brand`) VALUES (NEW.`rowid`, NEW.`name`, NEW.`brand`); END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_catalog_foods_fts_AFTER_INSERT AFTER INSERT ON `catalog_foods` BEGIN INSERT INTO `catalog_foods_fts`(`rowid`, `name`, `brand`) VALUES (NEW.`rowid`, NEW.`name`, NEW.`brand`); END"
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0407e73aa8c8219f3fca19ebe9dc8429')"
+    ]
+  }
+}
