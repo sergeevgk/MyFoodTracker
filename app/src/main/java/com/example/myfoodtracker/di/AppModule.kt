@@ -21,6 +21,7 @@ import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogFoodEntryUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
@@ -30,6 +31,7 @@ import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
+import com.example.myfoodtracker.presentation.viewmodel.FoodSearchViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
 import android.content.Context
@@ -96,11 +98,13 @@ val appModule = module {
     factory { LogWaterUseCase(get()) }
     factory { GetWaterTotalUseCase(get()) }
     factory { LogQuickAddUseCase(get()) }
+    factory { LogFoodEntryUseCase(get()) }
     factory { RestoreMealEntryUseCase(get()) }
 
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get(), get()) }
-    viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { FoodSearchViewModel(get(), get()) }
 }

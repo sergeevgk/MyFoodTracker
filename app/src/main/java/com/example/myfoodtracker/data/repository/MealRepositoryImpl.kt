@@ -90,6 +90,43 @@ class MealRepositoryImpl(
         return getMealEntriesByDate(date)
     }
 
+    override fun logFoodEntry(
+        foodName: String,
+        quantityGrams: Double,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        fiberG: Double,
+        mealSlot: String,
+        date: String
+    ): List<MealEntry> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return getMealEntriesByDate(date)
+        val slot = mealSlot.trim().uppercase()
+        require(slot in setOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")) { "Invalid meal slot" }
+        val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+        val meal = MealEntryEntity(
+            id = UUID.randomUUID().toString(),
+            profileId = profileId,
+            title = slot,
+            date = date,
+            time = currentTime
+        )
+        mealDao.insertMeal(meal)
+        val food = FoodEntity(
+            mealId = meal.id,
+            name = foodName.trim(),
+            weight = quantityGrams,
+            calories = calories,
+            carbs = carbsG,
+            fat = fatG,
+            protein = proteinG,
+            fiber = fiberG
+        )
+        mealDao.insertFoods(listOf(food))
+        return getMealEntriesByDate(date)
+    }
+
     override fun restoreMealEntry(entry: MealEntry): List<MealEntry> {
         val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
         // Parent first (FK order), same id so REPLACE re-inserts the deleted row exactly.

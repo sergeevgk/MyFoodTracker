@@ -17,5 +17,16 @@ interface MealRepository {
         mealSlot: String,
         date: String
     ): List<MealEntry>
+    fun logFoodEntry(
+        foodName: String,
+        quantityGrams: Double,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        fiberG: Double,
+        mealSlot: String,
+        date: String
+    ): List<MealEntry>
     fun restoreMealEntry(entry: MealEntry): List<MealEntry>
 }

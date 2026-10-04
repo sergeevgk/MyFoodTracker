@@ -29,7 +29,9 @@ class FoodCatalogRepositoryImpl(
             fatG = fatG,
             fiberG = fiberG,
             sugarG = sugarG,
-            sodiumMg = sodiumMg
+            sodiumMg = sodiumMg,
+            baseServingSize = baseServingSize,
+            baseServingUnit = baseServingUnit
         )
     }
 }

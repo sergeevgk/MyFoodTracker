@@ -112,6 +112,40 @@ class FoodCatalogRepositoryImplTest {
     }
 
     @Test
+    fun search_mapsBaseServingFieldsToDomainModel() {
+        fakeDao.rows = listOf(
+            FoodSearchRow(
+                id = 7L, name = "Chicken Breast", brand = "Brand X", barcode = null,
+                isCustom = 0, calories = 120.0, proteinG = 23.0, carbsG = 0.5,
+                fatG = 2.0, fiberG = 0.0, sugarG = 0.0, sodiumMg = 70.0,
+                baseServingSize = 150.0, baseServingUnit = "g"
+            )
+        )
+
+        val results = repository.search("chicken")
+
+        assertEquals(1, results.size)
+        assertEquals(150.0, results[0].baseServingSize, 0.001)
+        assertEquals("g", results[0].baseServingUnit)
+    }
+
+    @Test
+    fun search_rowWithoutServingFields_defaultsTo100g() {
+        fakeDao.rows = listOf(
+            FoodSearchRow(
+                id = 1L, name = "Apple", brand = null, barcode = null,
+                isCustom = 0, calories = 52.0, proteinG = 0.3, carbsG = 14.0,
+                fatG = 0.2, fiberG = 2.4, sugarG = 10.0, sodiumMg = 1.0
+            )
+        )
+
+        val results = repository.search("apple")
+
+        assertEquals(100.0, results[0].baseServingSize, 0.001)
+        assertEquals("g", results[0].baseServingUnit)
+    }
+
+    @Test
     fun search_nonCustomRow_mapsIsCustomFalse() {
         fakeDao.rows = listOf(
             FoodSearchRow(

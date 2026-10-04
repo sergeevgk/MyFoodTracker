@@ -16,4 +16,6 @@ data class FoodSearchRow(
     @ColumnInfo(name = "fiber_g") val fiberG: Double,
     @ColumnInfo(name = "sugar_g") val sugarG: Double,
     @ColumnInfo(name = "sodium_mg") val sodiumMg: Double,
+    @ColumnInfo(name = "base_serving_size") val baseServingSize: Double = 100.0,
+    @ColumnInfo(name = "base_serving_unit") val baseServingUnit: String = "g",
 )

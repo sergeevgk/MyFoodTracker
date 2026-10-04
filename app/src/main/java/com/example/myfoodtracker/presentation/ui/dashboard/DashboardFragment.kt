@@ -18,9 +18,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.DialogQuickAddLogBinding
 import com.example.myfoodtracker.databinding.FragmentDashboardBinding
+import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.domain.model.MealEntry
+import com.example.myfoodtracker.domain.model.ServingUnit
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
+import com.example.myfoodtracker.presentation.ui.search.FoodSearchBottomSheet
+import com.example.myfoodtracker.presentation.ui.search.LogFoodQuantityDialogFragment
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -33,7 +37,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
 
-class DashboardFragment : Fragment() {
+class DashboardFragment : Fragment(),
+    FoodSearchBottomSheet.Listener,
+    LogFoodQuantityDialogFragment.Listener {
 
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
@@ -159,7 +165,7 @@ class DashboardFragment : Fragment() {
         }
 
         binding.btnQuickAdd.setOnClickListener {
-            showQuickAddDialog()
+            showFoodSearchSheet()
         }
 
         binding.btnAddWater250.setOnClickListener {
@@ -345,6 +351,52 @@ class DashboardFragment : Fragment() {
                     .start()
             }
             .start()
+    }
+
+    private fun showFoodSearchSheet() {
+        if (!isAdded) return
+        val date = viewModel.uiState.value?.activeDate ?: LocalDate.now()
+        FoodSearchBottomSheet.newInstance(date.toString())
+            .show(childFragmentManager, "FOOD_SEARCH_SHEET")
+    }
+
+    override fun onFoodSelected(food: FoodItem) {
+        if (!isAdded) return
+        LogFoodQuantityDialogFragment.newInstance(food)
+            .show(childFragmentManager, "LOG_FOOD_QUANTITY")
+    }
+
+    override fun onQuickAddRequested() {
+        if (!isAdded) return
+        showQuickAddDialog()
+    }
+
+    override fun onLogFoodConfirmed(
+        food: FoodItem,
+        quantity: Double,
+        unit: ServingUnit,
+        slot: String
+    ) {
+        if (!isAdded) return
+        viewModel.logFoodEntry(food, quantity, unit, slot)
+        val unitLabel = when (unit) {
+            ServingUnit.G -> "g"
+            ServingUnit.ML -> "ml"
+            ServingUnit.SERVINGS -> if (quantity == 1.0) " serving" else " servings"
+        }
+        val quantityLabel = if (quantity % 1.0 == 0.0 && quantity <= Long.MAX_VALUE && quantity >= Long.MIN_VALUE) {
+            quantity.toLong().toString()
+        } else {
+            quantity.toString()
+        }
+        val message = getString(
+            R.string.log_food_logged_format,
+            "$quantityLabel$unitLabel",
+            food.name.trim(),
+            slot
+        )
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        binding.root.announceForAccessibility(message)
     }
 
     private fun showQuickAddDialog() {

@@ -14,6 +14,7 @@ interface FoodCatalogDao {
     @Query(
         """
         SELECT f.id, f.name, f.brand, f.barcode, f.is_custom,
+               f.base_serving_size, f.base_serving_unit,
                COALESCE(n.calories, 0.0) AS calories,
                COALESCE(n.protein_g, 0.0) AS protein_g,
                COALESCE(n.carbs_g, 0.0) AS carbs_g,
