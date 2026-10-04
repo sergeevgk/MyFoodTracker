@@ -3,7 +3,9 @@ package com.example.myfoodtracker.presentation.viewmodel
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.Food
+import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.domain.model.MealEntry
+import com.example.myfoodtracker.domain.model.ServingUnit
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.model.WaterLog
 import com.example.myfoodtracker.domain.repository.MealRepository
@@ -12,6 +14,7 @@ import com.example.myfoodtracker.domain.repository.WaterRepository
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogFoodEntryUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
@@ -37,6 +40,7 @@ class DashboardViewModelTest {
     private lateinit var getWaterTotalUseCase: GetWaterTotalUseCase
     private lateinit var logWaterUseCase: LogWaterUseCase
     private lateinit var logQuickAddUseCase: LogQuickAddUseCase
+    private lateinit var logFoodEntryUseCase: LogFoodEntryUseCase
     private lateinit var deleteMealEntryUseCase: DeleteMealEntryUseCase
     private lateinit var restoreMealEntryUseCase: RestoreMealEntryUseCase
     private lateinit var viewModel: DashboardViewModel
@@ -59,6 +63,7 @@ class DashboardViewModelTest {
         getWaterTotalUseCase = GetWaterTotalUseCase(fakeWaterRepository)
         logWaterUseCase = LogWaterUseCase(fakeWaterRepository)
         logQuickAddUseCase = LogQuickAddUseCase(fakeMealRepository)
+        logFoodEntryUseCase = LogFoodEntryUseCase(fakeMealRepository)
         deleteMealEntryUseCase = DeleteMealEntryUseCase(fakeMealRepository)
         restoreMealEntryUseCase = RestoreMealEntryUseCase(fakeMealRepository)
 
@@ -69,6 +74,7 @@ class DashboardViewModelTest {
             getWaterTotalUseCase = getWaterTotalUseCase,
             logWaterUseCase = logWaterUseCase,
             logQuickAddUseCase = logQuickAddUseCase,
+            logFoodEntryUseCase = logFoodEntryUseCase,
             deleteMealEntryUseCase = deleteMealEntryUseCase,
             restoreMealEntryUseCase = restoreMealEntryUseCase
         )
@@ -492,8 +498,64 @@ class DashboardViewModelTest {
         assertTrue(state!!.mealEntries.isEmpty())
     }
 
-    private class FakeSessionRepository : SessionRepository {
-        private val current = AtomicReference<UserProfile?>(null)
+    @Test
+    fun logFoodEntry_insertsScaledEntryForActiveDateAndUpdatesSummary() {
+        val targetDate = LocalDate.of(2026, 10, 4)
+        viewModel.selectDate(targetDate)
+        assertEquals(0, viewModel.uiState.value?.mealEntries?.size)
+
+        viewModel.logFoodEntry(chickenFoodItem(), 150.0, ServingUnit.G, "BREAKFAST")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertEquals(1, state!!.mealEntries.size)
+        assertEquals("BREAKFAST", state.mealEntries[0].title)
+        assertEquals("2026-10-04", state.mealEntries[0].date)
+        assertEquals(180.0, state.dailySummary.totalCalories, 0.001)
+        assertEquals(34.5, state.dailySummary.totalProteinG, 0.001)
+    }
+
+    @Test
+    fun logFoodEntry_withInvalidQuantity_stateUnchangedAndNoCrash() {
+        val targetDate = LocalDate.of(2026, 10, 4)
+        viewModel.selectDate(targetDate)
+
+        viewModel.logFoodEntry(chickenFoodItem(), 0.0, ServingUnit.G, "BREAKFAST")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+        assertEquals(0.0, state.dailySummary.totalCalories, 0.001)
+    }
+
+    @Test
+    fun logFoodEntry_withNullProfile_noCrashAndMealsEmpty() {
+        fakeSessionRepository.clearSession()
+        viewModel.selectDate(LocalDate.now())
+
+        viewModel.logFoodEntry(chickenFoodItem(), 150.0, ServingUnit.G, "BREAKFAST")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state)
+        assertTrue(state!!.mealEntries.isEmpty())
+    }
+
+    private fun chickenFoodItem() = FoodItem(
+        id = 7L,
+        name = "Chicken Breast",
+        brand = "Brand X",
+        barcode = null,
+        isCustom = false,
+        calories = 120.0,
+        proteinG = 23.0,
+        carbsG = 0.5,
+        fatG = 2.0,
+        fiberG = 0.0,
+        sugarG = 0.0,
+        sodiumMg = 70.0
+    )
+
+    private class FakeSessionRepository : SessionRepository {        private val current = AtomicReference<UserProfile?>(null)
         private var rememberedId: String? = null
 
         override fun getActiveProfile(): UserProfile? = current.get()
@@ -565,6 +627,39 @@ class DashboardViewModelTest {
                         fat = fatG,
                         protein = proteinG,
                         fiber = 0.0
+                    )
+                )
+            )
+            entriesByDate[date] = getMealEntriesByDate(date) + entry
+            return getMealEntriesByDate(date)
+        }
+
+        override fun logFoodEntry(
+            foodName: String,
+            quantityGrams: Double,
+            calories: Double,
+            proteinG: Double,
+            carbsG: Double,
+            fatG: Double,
+            fiberG: Double,
+            mealSlot: String,
+            date: String
+        ): List<MealEntry> {
+            sessionRepository.getActiveProfileId() ?: return getMealEntriesByDate(date)
+            val entry = MealEntry(
+                id = java.util.UUID.randomUUID().toString(),
+                title = mealSlot,
+                date = date,
+                time = "12:00",
+                foods = listOf(
+                    Food(
+                        name = foodName,
+                        weight = quantityGrams,
+                        calories = calories,
+                        carbs = carbsG,
+                        fat = fatG,
+                        protein = proteinG,
+                        fiber = fiberG
                     )
                 )
             )

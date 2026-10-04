@@ -4,11 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.myfoodtracker.domain.model.DailySummary
+import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.domain.model.MealEntry
+import com.example.myfoodtracker.domain.model.ServingUnit
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
+import com.example.myfoodtracker.domain.usecase.LogFoodEntryUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
@@ -28,6 +31,7 @@ class DashboardViewModel(
     private val getWaterTotalUseCase: GetWaterTotalUseCase,
     private val logWaterUseCase: LogWaterUseCase,
     private val logQuickAddUseCase: LogQuickAddUseCase,
+    private val logFoodEntryUseCase: LogFoodEntryUseCase,
     private val deleteMealEntryUseCase: DeleteMealEntryUseCase,
     private val restoreMealEntryUseCase: RestoreMealEntryUseCase
 ) : ViewModel() {
@@ -106,6 +110,21 @@ class DashboardViewModel(
         val date = _uiState.value?.activeDate ?: LocalDate.now()
         try {
             logQuickAddUseCase(name, calories, proteinG, carbsG, fatG, mealSlot, date.toString())
+        } catch (e: IllegalArgumentException) {
+            return
+        }
+        selectDate(date)
+    }
+
+    fun logFoodEntry(
+        food: FoodItem,
+        quantity: Double,
+        unit: ServingUnit,
+        mealSlot: String
+    ) {
+        val date = _uiState.value?.activeDate ?: LocalDate.now()
+        try {
+            logFoodEntryUseCase(food, quantity, unit, mealSlot, date.toString())
         } catch (e: IllegalArgumentException) {
             return
         }

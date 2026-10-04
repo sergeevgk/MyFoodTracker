@@ -62,5 +62,17 @@ class GetMealEntriesByDateUseCaseTest {
             mealSlot: String,
             date: String
         ): List<MealEntry> = emptyList()
+
+        override fun logFoodEntry(
+            foodName: String,
+            quantityGrams: Double,
+            calories: Double,
+            proteinG: Double,
+            carbsG: Double,
+            fatG: Double,
+            fiberG: Double,
+            mealSlot: String,
+            date: String
+        ): List<MealEntry> = emptyList()
     }
 }

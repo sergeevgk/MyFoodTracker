@@ -13,4 +13,6 @@ data class FoodItem(
     val fiberG: Double,
     val sugarG: Double,
     val sodiumMg: Double,
+    val baseServingSize: Double = 100.0,
+    val baseServingUnit: String = "g",
 )

@@ -95,6 +95,27 @@
     <string name="quick_add_logged_format">Logged %1$s, %2$d kilocalories to %3$s</string>
     <string name="meal_fallback_name">Meal</string>
 
+    <!-- Food search bottom sheet -->
+    <string name="food_search_title">Log Food</string>
+    <string name="food_search_hint">Search foods (e.g. chick)</string>
+    <string name="food_search_clear">Clear search</string>
+    <string name="food_search_recent_title">Recent Foods</string>
+    <string name="food_search_no_results_format">No foods matching \'%1$s\'</string>
+    <string name="food_search_create_custom_food">+ Create Custom Food</string>
+    <string name="food_search_custom_chip">Custom</string>
+    <string name="food_search_quick_add_option">Quick-Add instead?</string>
+    <string name="food_search_row_subtitle_format">%1$s &#183; %2$s</string>
+
+    <!-- Log-food quantity modal -->
+    <string name="log_food_quantity_title">Log Food</string>
+    <string name="log_food_hint_quantity">Quantity (e.g. 150)</string>
+    <string name="log_food_hint_unit">Unit</string>
+    <string name="log_food_hint_meal_slot">Meal slot</string>
+    <string name="log_food_error_quantity">Enter a quantity greater than 0</string>
+    <string name="log_food_error_slot">Select a meal slot</string>
+    <string name="log_food_preview_format">%1$.0f kcal &#183; P %2$.0fg &#183; C %3$.0fg &#183; F %4$.0fg</string>
+    <string name="log_food_logged_format">Logged %1$s %2$s to %3$s</string>
+
     <!-- Accessibility (TalkBack) announcement templates -->
     <string name="a11y_calories_with_target">Calories: %1$s of %2$s kilocalories consumed, %3$d percent</string>
     <string name="a11y_calories_no_target">Calories: %1$s kilocalories consumed, no target set</string>
@@ -105,6 +126,8 @@
     <string name="a11y_day_selected_suffix">", selected"</string>
     <string name="a11y_day_today_suffix">", today"</string>
     <string name="a11y_meal_item">%1$s, %2$s, %3$d kilocalories</string>
+    <string name="a11y_food_search_result">%1$s, %2$s, %3$d kilocalories per 100 grams</string>
+    <string name="a11y_log_food_preview">%1$s kilocalories, protein %2$s grams, carbs %3$s grams, fat %4$s grams</string>
     <string name="a11y_deleted">Deleted %1$s from %2$s</string>
     <string name="a11y_restored">Restored %1$s to %2$s</string>
 </resources>

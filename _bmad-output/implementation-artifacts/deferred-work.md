@@ -50,3 +50,9 @@
 - **3.1-F1: Catalog version bump + `fallbackToDestructiveMigration` would wipe custom foods** - `FoodCatalogDatabase` uses `fallbackToDestructiveMigration()` with `createFromAsset`. When Story 3.3 stores user-created custom foods in `catalog_foods` (`is_custom = 1`), any future catalog `version` bump will destructively recopy the asset and delete those rows. Before bumping the catalog version, implement a migration that preserves `is_custom = 1` rows (export + re-import) or move custom foods to a separate table/DB. [di/AppModule.kt]
 - **3.1-F2: Story 5.2 backup/restore must cover two databases** - Backup/restore currently assumes a single `meals_database`; it must later include the `food_catalog` file (at minimum the `is_custom = 1` rows, since the bundled asset itself is reinstallable).
 
+## Deferred from: code review of 3-2-food-search-quantity-modal-and-meal-slot-logging (2026-10-04)
+
+- **3.2-D1: Non-atomic composite meal logging (`insertMeal` and `insertFoods`)** - `MealRepositoryImpl.logFoodEntry` performs two separate DAO operations without an atomic Room `@Transaction`. Continues pre-existing DAO design debt 2.4-D1 / 2.5-D1, to be addressed when meal DAO operations are overhauled with unified transaction support. [MealRepositoryImpl.kt:80]
+- **3.2-D2: Instrumented test coverage for `FoodCatalogDao` projection additions** - `FoodCatalogDao` added `base_serving_size` and `base_serving_unit` to the search projection. Integration verified via JVM unit tests; on-device instrumented test execution deferred per project policy forbidding automated emulator runs. Flagged for manual on-device verification. [FoodCatalogFtsTest.kt:50]
+
+
