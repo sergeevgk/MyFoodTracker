@@ -65,6 +65,7 @@ development_status:
   3-2-food-search-quantity-modal-and-meal-slot-logging: done
   3-3-custom-food-creation-and-relevance-ranking: backlog
   3-4-remember-user-session-on-device: done
+  3-5-german-and-european-food-catalog-seed-pipeline: ready-for-dev
   epic-3-retrospective: optional
   epic-4: backlog
   4-1-recipe-builder-and-ingredient-grouping: backlog
