@@ -25,6 +25,7 @@ import com.example.myfoodtracker.domain.usecase.LogFoodEntryUseCase
 import com.example.myfoodtracker.domain.usecase.LogQuickAddUseCase
 import com.example.myfoodtracker.domain.usecase.LogWaterUseCase
 import com.example.myfoodtracker.domain.usecase.LogoutUseCase
+import com.example.myfoodtracker.domain.usecase.CreateCustomFoodUseCase
 import com.example.myfoodtracker.domain.usecase.SearchFoodUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
@@ -68,7 +69,8 @@ val appModule = module {
     }
     single { get<FoodCatalogDatabase>().foodCatalogDao() }
     single<FoodCatalogRepository> { FoodCatalogRepositoryImpl(get()) }
-    factory { SearchFoodUseCase(get()) }
+    factory { SearchFoodUseCase(get(), get()) }
+    factory { CreateCustomFoodUseCase(get()) }
 
     // Session Preferences & Storage
     single {
@@ -106,5 +108,5 @@ val appModule = module {
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { FoodSearchViewModel(get(), get()) }
+    viewModel { FoodSearchViewModel(get(), get(), get()) }
 }

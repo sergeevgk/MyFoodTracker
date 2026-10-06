@@ -56,3 +56,7 @@
 - **3.2-D2: Instrumented test coverage for `FoodCatalogDao` projection additions** - `FoodCatalogDao` added `base_serving_size` and `base_serving_unit` to the search projection. Integration verified via JVM unit tests; on-device instrumented test execution deferred per project policy forbidding automated emulator runs. Flagged for manual on-device verification. [FoodCatalogFtsTest.kt:50]
 
 
+
+## Deferred from: code review of 3-3-custom-food-creation-and-relevance-ranking (2026-10-06)
+
+- **3.3-D1: Main-thread synchronous `MealRepository` scan on every search keystroke** - `SearchFoodUseCase` scans all meal entries synchronously on the main thread during typing without debounce. Documented in Dev Notes §2: acceptable for small history; if manual on-device timing exceeds the 50ms average threshold, a future optimization should add an optimized `COUNT/GROUP BY` query to `MealDao`. [SearchFoodUseCase.kt:21]

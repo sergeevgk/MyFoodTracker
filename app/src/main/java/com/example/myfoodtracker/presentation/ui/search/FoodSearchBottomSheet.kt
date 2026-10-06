@@ -6,15 +6,16 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import com.example.myfoodtracker.R
 import com.example.myfoodtracker.databinding.FragmentFoodSearchBottomSheetBinding
 import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.presentation.viewmodel.FoodSearchViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class FoodSearchBottomSheet : BottomSheetDialogFragment() {
+class FoodSearchBottomSheet : BottomSheetDialogFragment(),
+    CreateCustomFoodDialogFragment.Listener {
 
     interface Listener {
         fun onFoodSelected(food: FoodItem)
@@ -67,12 +68,9 @@ class FoodSearchBottomSheet : BottomSheetDialogFragment() {
         })
 
         binding.btnCreateCustomFood.setOnClickListener {
-            // Story 3.3 entry point: surface only, creation is out of scope.
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.food_search_create_custom_food),
-                Toast.LENGTH_SHORT
-            ).show()
+            hideKeyboard()
+            CreateCustomFoodDialogFragment.newInstance(lastQuery)
+                .show(childFragmentManager, "CREATE_CUSTOM_FOOD")
         }
 
         binding.btnSearchQuickAdd.setOnClickListener {
@@ -94,6 +92,37 @@ class FoodSearchBottomSheet : BottomSheetDialogFragment() {
 
     private fun getListener(): Listener? =
         parentFragment as? Listener ?: activity as? Listener
+
+    override fun onCustomFoodConfirmed(
+        name: String,
+        brand: String?,
+        baseServingSize: Double,
+        baseServingUnit: String,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        fiberG: Double,
+        sugarG: Double,
+        sodiumMg: Double
+    ): FoodItem? {
+        val created = viewModel.createCustomFood(
+            name, brand, baseServingSize, baseServingUnit,
+            calories, proteinG, carbsG, fatG, fiberG, sugarG, sodiumMg
+        ) ?: return null
+        viewModel.search(lastQuery, activeDate)
+        val hostView = activity?.findViewById<View>(android.R.id.content) ?: binding.root
+        val message = getString(R.string.custom_food_saved_format, created.name.trim())
+        Snackbar.make(hostView, message, Snackbar.LENGTH_SHORT).show()
+        hostView.announceForAccessibility(
+            getString(R.string.a11y_custom_food_saved, created.name.trim())
+        )
+        // Save-to-Custom-Library-&-Log handoff: forward to the existing
+        // quantity-modal path, mirroring a tapped search result.
+        getListener()?.onFoodSelected(created)
+        dismiss()
+        return created
+    }
 
     private fun renderResults(results: List<FoodItem>, query: String) {
         val trimmed = query.trim()

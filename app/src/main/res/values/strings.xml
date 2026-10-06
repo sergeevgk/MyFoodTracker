@@ -116,6 +116,26 @@
     <string name="log_food_preview_format">%1$.0f kcal &#183; P %2$.0fg &#183; C %3$.0fg &#183; F %4$.0fg</string>
     <string name="log_food_logged_format">Logged %1$s %2$s to %3$s</string>
 
+    <!-- Create-custom-food editor -->
+    <string name="custom_food_title">New Custom Food</string>
+    <string name="custom_food_hint_name">Food name</string>
+    <string name="custom_food_hint_brand">Brand (optional)</string>
+    <string name="custom_food_hint_serving_size">Serving size (e.g. 100)</string>
+    <string name="custom_food_hint_serving_unit">Serving unit</string>
+    <string name="custom_food_hint_calories">Calories per 100 g (kcal)</string>
+    <string name="custom_food_hint_protein">Protein per 100 g (g)</string>
+    <string name="custom_food_hint_carbs">Carbs per 100 g (g)</string>
+    <string name="custom_food_hint_fat">Fat per 100 g (g)</string>
+    <string name="custom_food_hint_fiber">Fiber per 100 g (g, optional)</string>
+    <string name="custom_food_hint_sugar">Sugar per 100 g (g, optional)</string>
+    <string name="custom_food_hint_sodium">Sodium per 100 g (mg, optional)</string>
+    <string name="custom_food_error_name">Enter a name</string>
+    <string name="custom_food_error_serving_size">Enter a serving size greater than 0</string>
+    <string name="custom_food_error_number">Enter 0 or more</string>
+    <string name="custom_food_error_required">Enter a value</string>
+    <string name="custom_food_error_save">Could not save — check the fields and retry</string>
+    <string name="custom_food_saved_format">Saved %1$s to Custom Library</string>
+
     <!-- Accessibility (TalkBack) announcement templates -->
     <string name="a11y_calories_with_target">Calories: %1$s of %2$s kilocalories consumed, %3$d percent</string>
     <string name="a11y_calories_no_target">Calories: %1$s kilocalories consumed, no target set</string>
@@ -128,6 +148,7 @@
     <string name="a11y_meal_item">%1$s, %2$s, %3$d kilocalories</string>
     <string name="a11y_food_search_result">%1$s, %2$s, %3$d kilocalories per 100 grams</string>
     <string name="a11y_log_food_preview">%1$s kilocalories, protein %2$s grams, carbs %3$s grams, fat %4$s grams</string>
+    <string name="a11y_custom_food_saved">Custom food %1$s saved to library</string>
     <string name="a11y_deleted">Deleted %1$s from %2$s</string>
     <string name="a11y_restored">Restored %1$s to %2$s</string>
 </resources>

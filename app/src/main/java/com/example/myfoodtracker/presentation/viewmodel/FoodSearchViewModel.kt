@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.MealRepository
+import com.example.myfoodtracker.domain.usecase.CreateCustomFoodUseCase
 import com.example.myfoodtracker.domain.usecase.SearchFoodUseCase
 
 class FoodSearchViewModel(
     private val searchFoodUseCase: SearchFoodUseCase,
-    private val mealRepository: MealRepository
+    private val mealRepository: MealRepository,
+    private val createCustomFoodUseCase: CreateCustomFoodUseCase
 ) : ViewModel() {
 
     private val _results = MutableLiveData<List<FoodItem>>(emptyList())
@@ -31,6 +33,32 @@ class FoodSearchViewModel(
 
     fun loadInitial(activeDate: String = "") {
         _results.value = recentFoods(activeDate)
+    }
+
+    fun createCustomFood(
+        name: String,
+        brand: String?,
+        baseServingSize: Double,
+        baseServingUnit: String,
+        calories: Double,
+        proteinG: Double,
+        carbsG: Double,
+        fatG: Double,
+        fiberG: Double = 0.0,
+        sugarG: Double = 0.0,
+        sodiumMg: Double = 0.0
+    ): FoodItem? {
+        return try {
+            val created = createCustomFoodUseCase(
+                name, brand, baseServingSize, baseServingUnit,
+                calories, proteinG, carbsG, fatG, fiberG, sugarG, sodiumMg
+            )
+            _error.value = null
+            created
+        } catch (e: IllegalArgumentException) {
+            _error.value = e.message
+            null
+        }
     }
 
     fun recentFoods(date: String = "", limit: Int = 10): List<FoodItem> {

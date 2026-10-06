@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-09-06T20:24:40+02:00
-last_updated: 2026-10-04T17:02:00+02:00
+last_updated: 2026-10-06T19:15:00+02:00
 project: MyFoodTracker
 project_key: NOKEY
 tracking_system: file-system
@@ -63,7 +63,7 @@ development_status:
   epic-3: in-progress
   3-1-sqlite-fts5-search-engine-and-pre-populated-food-database: done
   3-2-food-search-quantity-modal-and-meal-slot-logging: done
-  3-3-custom-food-creation-and-relevance-ranking: backlog
+  3-3-custom-food-creation-and-relevance-ranking: done
   3-4-remember-user-session-on-device: done
   3-5-german-and-european-food-catalog-seed-pipeline: ready-for-dev
   epic-3-retrospective: optional
