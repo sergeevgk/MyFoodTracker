@@ -60,3 +60,8 @@
 ## Deferred from: code review of 3-3-custom-food-creation-and-relevance-ranking (2026-10-06)
 
 - **3.3-D1: Main-thread synchronous `MealRepository` scan on every search keystroke** - `SearchFoodUseCase` scans all meal entries synchronously on the main thread during typing without debounce. Documented in Dev Notes §2: acceptable for small history; if manual on-device timing exceeds the 50ms average threshold, a future optimization should add an optimized `COUNT/GROUP BY` query to `MealDao`. [SearchFoodUseCase.kt:21]
+
+## Deferred from: code review of 3-5-german-and-european-food-catalog-seed-pipeline (2026-10-07)
+
+- **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - Bundeslebensmittelschlüssel 4.0 is licensed under CC BY 4.0 (© Max Rubner-Institut, DOI 10.25826/Data20251217-134202-0) and Open Food Facts is licensed under ODbL 1.0 (© Open Food Facts contributors). When an About/Credits or Settings screen is introduced in a future story, attribution and licensing notices must be displayed to satisfy license requirements. [tools/seed/README.md]
+

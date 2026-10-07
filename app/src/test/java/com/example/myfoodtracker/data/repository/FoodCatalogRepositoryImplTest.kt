@@ -34,6 +34,47 @@ class FoodCatalogRepositoryImplTest {
     }
 
     @Test
+    fun search_germanSingleTerm_buildsPrefixMatch() {
+        repository.search("Vollmilch")
+
+        assertEquals("\"Vollmilch\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_germanMultiTerm_buildsPerTermPrefixMatch() {
+        repository.search("Haferflocken Alpro")
+
+        assertEquals("\"Haferflocken\"* \"Alpro\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_umlautTerm_buildsPrefixMatch() {
+        repository.search("Müller")
+
+        assertEquals("\"Müller\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_germanBrandedRow_mapsNameBrandBarcode() {
+        fakeDao.rows = listOf(
+            FoodSearchRow(
+                id = 8001L, name = "Vollmilch 3,5%", brand = "Alpro",
+                barcode = "4001234567890",
+                isCustom = 0, calories = 64.0, proteinG = 3.3, carbsG = 4.8,
+                fatG = 3.5, fiberG = 0.0, sugarG = 4.8, sodiumMg = 50.0
+            )
+        )
+
+        val results = repository.search("Vollmilch")
+
+        assertEquals(1, results.size)
+        assertEquals("Vollmilch 3,5%", results[0].name)
+        assertEquals("Alpro", results[0].brand)
+        assertEquals("4001234567890", results[0].barcode)
+        assertFalse(results[0].isCustom)
+    }
+
+    @Test
     fun search_embeddedQuote_escapesByDoubling() {
         repository.search("a\"b")
 
