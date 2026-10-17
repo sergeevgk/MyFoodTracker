@@ -19,4 +19,7 @@
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_tiny">4dp</dimen>
     <dimen name="margin_large">24dp</dimen>
+
+    <!-- Recipe logging dialog -->
+    <dimen name="dialog_log_recipe_ingredients_max_height">240dp</dimen>
 </resources>

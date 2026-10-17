@@ -10,7 +10,8 @@ import com.example.myfoodtracker.databinding.ItemRecipeBinding
 import com.example.myfoodtracker.domain.model.Recipe
 
 class RecipeAdapter(
-    private val onDeleteClicked: (Recipe) -> Unit
+    private val onDeleteClicked: (Recipe) -> Unit,
+    private val onRecipeClicked: (Recipe) -> Unit
 ) : ListAdapter<Recipe, RecipeAdapter.RecipeViewHolder>(RecipeDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
@@ -19,7 +20,7 @@ class RecipeAdapter(
             parent,
             false
         )
-        return RecipeViewHolder(binding, onDeleteClicked)
+        return RecipeViewHolder(binding, onDeleteClicked, onRecipeClicked)
     }
 
     override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
@@ -28,7 +29,8 @@ class RecipeAdapter(
 
     class RecipeViewHolder(
         private val binding: ItemRecipeBinding,
-        private val onDeleteClicked: (Recipe) -> Unit
+        private val onDeleteClicked: (Recipe) -> Unit,
+        private val onRecipeClicked: (Recipe) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(recipe: Recipe) {
@@ -43,12 +45,13 @@ class RecipeAdapter(
                 recipe.totalFatG
             )
             binding.root.contentDescription = context.getString(
-                R.string.a11y_recipe_item,
+                R.string.a11y_recipe_log_row,
                 recipe.name,
                 recipe.ingredientCount,
                 recipe.totalCalories.toInt()
             )
             binding.ibDeleteRecipe.setOnClickListener { onDeleteClicked(recipe) }
+            binding.root.setOnClickListener { onRecipeClicked(recipe) }
         }
     }
 

@@ -6,12 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +25,7 @@ import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.model.ServingUnit
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.presentation.ui.dashboard.model.DashboardUiState
+import com.example.myfoodtracker.presentation.ui.recipe.RecipeListFragment
 import com.example.myfoodtracker.presentation.ui.search.FoodSearchBottomSheet
 import com.example.myfoodtracker.presentation.ui.search.LogFoodQuantityDialogFragment
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
@@ -79,6 +82,36 @@ class DashboardFragment : Fragment(),
         setupRecyclerView()
         setupListeners()
         observeViewModel()
+        observeRecipeLoggedResult()
+    }
+
+    /**
+     * The recipe list writes rows on its own ViewModel/repositories, so the dashboard's
+     * in-memory meal list is stale until we re-select the same date. No spinner: the
+     * write and the reload are both local SQLite.
+     */
+    private fun observeRecipeLoggedResult() {
+        setFragmentResultListener(RecipeListFragment.REQUEST_RECIPE_LOGGED) { _, bundle ->
+            val date = bundle.getString(RecipeListFragment.EXTRA_LOGGED_DATE) ?: return@setFragmentResultListener
+            val slot = bundle.getString(RecipeListFragment.EXTRA_LOGGED_SLOT).orEmpty()
+            val name = bundle.getString(RecipeListFragment.EXTRA_LOGGED_RECIPE_NAME).orEmpty()
+            val parsed = runCatching { LocalDate.parse(date) }.getOrNull() ?: return@setFragmentResultListener
+
+            viewModel.selectDate(parsed)
+
+            if (!isAdded) return@setFragmentResultListener
+            val root = _binding?.root ?: return@setFragmentResultListener
+            val message = getString(R.string.log_recipe_logged_format, name, slot)
+            Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show()
+            root.announceForAccessibility(
+                getString(
+                    R.string.a11y_recipe_logged,
+                    name,
+                    slot,
+                    bundle.getInt(RecipeListFragment.EXTRA_LOGGED_INGREDIENT_COUNT, 0)
+                )
+            )
+        }
     }
 
     private fun setupRecyclerView() {
@@ -169,7 +202,12 @@ class DashboardFragment : Fragment(),
         }
 
         binding.btnRecipes.setOnClickListener {
-            findNavController().navigate(R.id.action_dashboardFragment_to_recipeListFragment)
+            // Hand the *viewed* date to the recipe list. Never substitute today.
+            val activeDate = viewModel.uiState.value?.activeDate ?: return@setOnClickListener
+            findNavController().navigate(
+                R.id.action_dashboardFragment_to_recipeListFragment,
+                bundleOf(RecipeListFragment.ARG_ACTIVE_DATE to activeDate.toString())
+            )
         }
 
         binding.btnAddWater250.setOnClickListener {

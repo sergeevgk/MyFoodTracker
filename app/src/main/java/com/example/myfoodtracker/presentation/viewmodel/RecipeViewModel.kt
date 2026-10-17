@@ -7,12 +7,14 @@ import com.example.myfoodtracker.domain.model.NewRecipeIngredient
 import com.example.myfoodtracker.domain.model.Recipe
 import com.example.myfoodtracker.domain.usecase.DeleteRecipeUseCase
 import com.example.myfoodtracker.domain.usecase.GetRecipesUseCase
+import com.example.myfoodtracker.domain.usecase.LogRecipeUseCase
 import com.example.myfoodtracker.domain.usecase.SaveRecipeUseCase
 
 class RecipeViewModel(
     private val saveRecipeUseCase: SaveRecipeUseCase,
     private val getRecipesUseCase: GetRecipesUseCase,
-    private val deleteRecipeUseCase: DeleteRecipeUseCase
+    private val deleteRecipeUseCase: DeleteRecipeUseCase,
+    private val logRecipeUseCase: LogRecipeUseCase
 ) : ViewModel() {
 
     private val _recipes = MutableLiveData<List<Recipe>>(emptyList())
@@ -20,6 +22,9 @@ class RecipeViewModel(
 
     private val _saveError = MutableLiveData<String?>(null)
     val saveError: LiveData<String?> = _saveError
+
+    private val _logError = MutableLiveData<String?>(null)
+    val logError: LiveData<String?> = _logError
 
     init {
         refresh()
@@ -46,5 +51,25 @@ class RecipeViewModel(
 
     fun deleteRecipe(recipeId: String) {
         _recipes.value = deleteRecipeUseCase(recipeId)
+    }
+
+    /**
+     * Writes every constituent of [recipeId] to [date] via the use case.
+     * No `refresh()` and no `LocalDate.now()` here - the dashboard reload is
+     * driven by the fragment result the calling fragment emits on success.
+     */
+    fun logRecipe(recipeId: String, mealSlot: String, date: String): Boolean {
+        return try {
+            logRecipeUseCase(recipeId, mealSlot, date)
+            _logError.value = null
+            true
+        } catch (e: IllegalArgumentException) {
+            _logError.value = e.message
+            false
+        }
+    }
+
+    fun clearLogError() {
+        _logError.value = null
     }
 }

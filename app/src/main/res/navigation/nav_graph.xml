@@ -48,6 +48,9 @@
         android:id="@+id/recipeListFragment"
         android:name="com.example.myfoodtracker.presentation.ui.recipe.RecipeListFragment"
         android:label="@string/recipe_list_title">
+        <argument
+            android:name="activeDate"
+            app:argType="string" />
         <action
             android:id="@+id/action_recipeListFragment_to_recipeBuilderFragment"
             app:destination="@id/recipeBuilderFragment" />

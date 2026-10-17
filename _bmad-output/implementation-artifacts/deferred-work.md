@@ -72,3 +72,7 @@
 - **4.1-D3: Preserve builder drafts across screen rotation / configuration changes** - Drafts are currently held in Fragment memory during the build session; saving draft state across process recreation or configuration change is deferred as post-MVP presentation state refinement. [RecipeBuilderFragment.kt:33]
 - **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48]
 
+## Deferred from: code review of 4-2-one-tap-recipe-logging (2026-10-17)
+
+- **4.2-D1: Check lifecycle and context before accessing resources in `scroll.post`** - `LogRecipeDialogFragment.capIngredientScrollHeight` calls `resources.getDimensionPixelSize` in a posted runnable without an `isAdded` / `context != null` guard. Deferred per user decision as edge-case lifecycle hardening. [LogRecipeDialogFragment.kt:94]
+

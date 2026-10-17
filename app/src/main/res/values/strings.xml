@@ -181,4 +181,14 @@
     <string name="cd_delete_recipe">Delete recipe</string>
     <string name="cd_remove_ingredient">Remove ingredient</string>
     <string name="a11y_recipe_item">%1$s, %2$d ingredients, %3$d kilocalories</string>
+
+    <!-- Recipe logging (Story 4.2) -->
+    <string name="action_log">Log</string>
+    <string name="log_recipe_title">Log Recipe</string>
+    <string name="log_recipe_logged_format">Logged %1$s to %2$s</string>
+    <string name="log_recipe_error_missing">Recipe not found</string>
+    <string name="log_recipe_error_date">Missing log date</string>
+    <string name="log_recipe_ingredient_line">%1$s &#183; %2$s %3$s &#183; %4$.0f kcal</string>
+    <string name="a11y_recipe_logged">Logged %1$s to %2$s, %3$d foods added</string>
+    <string name="a11y_recipe_log_row">Log %1$s, %2$d ingredients, %3$d kilocalories</string>
 </resources>

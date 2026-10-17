@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_card_bg"
+    android:orientation="vertical"
+    android:padding="@dimen/padding_card">
+
+    <TextView
+        android:id="@+id/tv_log_recipe_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="Chicken Bowl" />
+
+    <ScrollView
+        android:id="@+id/scroll_log_recipe_ingredients"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small">
+
+        <TextView
+            android:id="@+id/tv_log_recipe_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            tools:text="Chicken Breast &#183; 150 g &#183; 180 kcal" />
+
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/tv_log_recipe_totals"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="2 ingredients &#183; 440 kcal &#183; P 40g &#183; C 58g &#183; F 3g" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_log_recipe_slot"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_card_small"
+        android:hint="@string/log_food_hint_meal_slot"
+        app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+        app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+        app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+        app:boxCornerRadiusTopStart="@dimen/radius_card_small"
+        app:errorEnabled="true">
+
+        <AutoCompleteTextView
+            android:id="@+id/spinner_log_recipe_slot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:minHeight="@dimen/min_touch_target" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tv_log_recipe_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small"
+        android:textColor="@color/danger_red"
+        android:textSize="13sp"
+        android:visibility="gone"
+        tools:text="Recipe not found"
+        tools:visibility="visible" />
+
+</LinearLayout>
