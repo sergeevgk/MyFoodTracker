@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_card_bg"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/min_touch_target"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/padding_screen"
+    android:paddingTop="@dimen/padding_card_small"
+    android:paddingEnd="@dimen/padding_card_small"
+    android:paddingBottom="@dimen/padding_card_small">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_recipe_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Chicken Bowl" />
+
+        <TextView
+            android:id="@+id/tv_recipe_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_tiny"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            tools:text="2 ingredients · 440 kcal" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/ib_delete_recipe"
+        android:layout_width="@dimen/min_touch_target"
+        android:layout_height="@dimen/min_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cd_delete_recipe"
+        android:padding="@dimen/padding_card_small"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_delete" />
+
+</LinearLayout>

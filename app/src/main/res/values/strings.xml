@@ -151,4 +151,34 @@
     <string name="a11y_custom_food_saved">Custom food %1$s saved to library</string>
     <string name="a11y_deleted">Deleted %1$s from %2$s</string>
     <string name="a11y_restored">Restored %1$s to %2$s</string>
+
+    <!-- Recipe builder (Epic 4) -->
+    <string name="recipe_list_title">My Recipes</string>
+    <string name="recipe_builder_title">Build Recipe</string>
+    <string name="recipe_empty">No recipes yet — tap + to build one</string>
+    <string name="recipe_empty_ingredients">No ingredients yet — add foods from search</string>
+    <string name="recipe_hint_name">Recipe name (e.g. Breakfast bowl)</string>
+    <string name="recipe_error_name">Enter a recipe name</string>
+    <string name="recipe_error_empty">Add at least one ingredient</string>
+    <string name="recipe_add_ingredient">＋ Add ingredient</string>
+    <string name="recipe_ingredient_quantity_title">Ingredient Quantity</string>
+    <string name="recipe_ingredient_quantity_format">%1$s %2$s</string>
+    <string name="recipe_row_summary_format">%1$d ingredients &#183; %2$.0f kcal &#183; P %3$.0fg &#183; C %4$.0fg &#183; F %5$.0fg</string>
+    <string name="recipe_totals_format">%1$d ingredients &#183; %2$.0f kcal &#183; P %3$.0fg &#183; C %4$.0fg &#183; F %5$.0fg</string>
+    <string name="recipe_saved_format">Recipe \'%1$s\' saved</string>
+    <string name="recipe_deleted_format">Deleted recipe \'%1$s\'</string>
+    <string name="dialog_delete_recipe_title">Delete Recipe?</string>
+    <string name="dialog_delete_recipe_message">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="recipe_quick_add_unavailable">Quick-add isn\'t available for recipe ingredients — pick a food instead</string>
+    <string name="action_save_recipe">Save Recipe</string>
+    <string name="action_recipes">Recipes</string>
+
+    <!-- Recipe content descriptions -->
+    <string name="cd_recipes">Open recipe manager</string>
+    <string name="cd_recipe_list">Saved recipes</string>
+    <string name="cd_add_recipe">Add new recipe</string>
+    <string name="cd_add_ingredient">Add ingredient from food search</string>
+    <string name="cd_delete_recipe">Delete recipe</string>
+    <string name="cd_remove_ingredient">Remove ingredient</string>
+    <string name="a11y_recipe_item">%1$s, %2$d ingredients, %3$d kilocalories</string>
 </resources>

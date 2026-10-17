@@ -65,3 +65,10 @@
 
 - **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - Bundeslebensmittelschlüssel 4.0 is licensed under CC BY 4.0 (© Max Rubner-Institut, DOI 10.25826/Data20251217-134202-0) and Open Food Facts is licensed under ODbL 1.0 (© Open Food Facts contributors). When an About/Credits or Settings screen is introduced in a future story, attribution and licensing notices must be displayed to satisfy license requirements. [tools/seed/README.md]
 
+## Deferred from: code review of 4-1-recipe-builder-and-ingredient-grouping (2026-10-15)
+
+- **4.1-D1: Shared `FoodSearchBottomSheet` shows "Quick Add" button that displays unavailable snackbar in recipe flow** - The shared `FoodSearchBottomSheet` component exposes the "Quick Add" button even when opened from `RecipeBuilderFragment`. Tapping it dismisses the sheet and displays a snackbar. Modifying `FoodSearchBottomSheet` to conditionally hide Quick Add is deferred as a cross-cutting component enhancement. [RecipeBuilderFragment.kt:95-102]
+- **4.1-D2: Recipe card in `RecipeListFragment` has no detail/inspection view for existing recipe ingredients** - Tapping a saved recipe card in the list does not show its ingredient breakdown or quantities (only the macro sum). Recipe inspection/editing is deferred to Story 4.2 / future stories as Story 4.1 is scoped to creation and listing. [RecipeListFragment.kt:34]
+- **4.1-D3: Preserve builder drafts across screen rotation / configuration changes** - Drafts are currently held in Fragment memory during the build session; saving draft state across process recreation or configuration change is deferred as post-MVP presentation state refinement. [RecipeBuilderFragment.kt:33]
+- **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48]
+

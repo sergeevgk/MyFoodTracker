@@ -9,7 +9,9 @@ import com.example.myfoodtracker.data.repository.MealRepositoryImpl
 import com.example.myfoodtracker.data.repository.SessionRepositoryImpl
 import com.example.myfoodtracker.data.repository.UserRepositoryImpl
 import com.example.myfoodtracker.domain.repository.FoodCatalogRepository
+import com.example.myfoodtracker.data.repository.RecipeRepositoryImpl
 import com.example.myfoodtracker.domain.repository.MealRepository
+import com.example.myfoodtracker.domain.repository.RecipeRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.repository.UserRepository
 import com.example.myfoodtracker.domain.repository.WaterRepository
@@ -28,13 +30,17 @@ import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.CreateCustomFoodUseCase
 import com.example.myfoodtracker.domain.usecase.SearchFoodUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreMealEntryUseCase
+import com.example.myfoodtracker.domain.usecase.DeleteRecipeUseCase
+import com.example.myfoodtracker.domain.usecase.GetRecipesUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
+import com.example.myfoodtracker.domain.usecase.SaveRecipeUseCase
 import com.example.myfoodtracker.domain.usecase.UpdateMealEntryUseCase
 import com.example.myfoodtracker.presentation.MealViewModel
 import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.example.myfoodtracker.presentation.viewmodel.FoodSearchViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
+import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
 import android.content.Context
 import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
 import com.example.myfoodtracker.domain.repository.SessionStorage
@@ -55,6 +61,7 @@ val appModule = module {
         .build()
     }
     single { get<AppDatabase>().mealDao() }
+    single { get<AppDatabase>().recipeDao() }
     single { get<AppDatabase>().userProfileDao() }
     single { get<AppDatabase>().waterLogDao() }
 
@@ -84,6 +91,7 @@ val appModule = module {
     // Repositories
     single<SessionRepository> { SessionRepositoryImpl(get()) }
     single<MealRepository> { MealRepositoryImpl(get(), get()) }
+    single<RecipeRepository> { RecipeRepositoryImpl(get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
     single<WaterRepository> { WaterRepositoryImpl(get(), get()) }
 
@@ -100,6 +108,9 @@ val appModule = module {
     factory { LogWaterUseCase(get()) }
     factory { GetWaterTotalUseCase(get()) }
     factory { LogQuickAddUseCase(get()) }
+    factory { SaveRecipeUseCase(get()) }
+    factory { GetRecipesUseCase(get()) }
+    factory { DeleteRecipeUseCase(get()) }
     factory { LogFoodEntryUseCase(get()) }
     factory { RestoreMealEntryUseCase(get()) }
 
@@ -108,5 +119,6 @@ val appModule = module {
     viewModel { ProfileSetupViewModel(get()) }
     viewModel { PasscodeAuthViewModel(get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { RecipeViewModel(get(), get(), get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }
 }

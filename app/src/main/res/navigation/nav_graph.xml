@@ -39,6 +39,23 @@
             app:destination="@id/passcodeAuthFragment"
             app:popUpTo="@id/dashboardFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_recipeListFragment"
+            app:destination="@id/recipeListFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/recipeListFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.recipe.RecipeListFragment"
+        android:label="@string/recipe_list_title">
+        <action
+            android:id="@+id/action_recipeListFragment_to_recipeBuilderFragment"
+            app:destination="@id/recipeBuilderFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recipeBuilderFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.recipe.RecipeBuilderFragment"
+        android:label="@string/recipe_builder_title" />
 
 </navigation>

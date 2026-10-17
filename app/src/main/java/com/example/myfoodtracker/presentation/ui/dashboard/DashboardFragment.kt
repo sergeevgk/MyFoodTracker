@@ -168,6 +168,10 @@ class DashboardFragment : Fragment(),
             showFoodSearchSheet()
         }
 
+        binding.btnRecipes.setOnClickListener {
+            findNavController().navigate(R.id.action_dashboardFragment_to_recipeListFragment)
+        }
+
         binding.btnAddWater250.setOnClickListener {
             viewModel.logWaterPlus250()
             playWaterTapFeedback()

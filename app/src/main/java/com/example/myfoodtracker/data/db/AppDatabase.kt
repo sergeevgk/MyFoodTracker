@@ -12,13 +12,16 @@ import com.example.myfoodtracker.data.entity.UserProfileEntity
         FoodEntity::class,
         UserProfileEntity::class,
         UserDailyGoalEntity::class,
-        WaterLogEntity::class
+        WaterLogEntity::class,
+        RecipeEntity::class,
+        RecipeIngredientEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun mealDao(): MealDao
     abstract fun userProfileDao(): UserProfileDao
     abstract fun waterLogDao(): WaterLogDao
+    abstract fun recipeDao(): RecipeDao
 }

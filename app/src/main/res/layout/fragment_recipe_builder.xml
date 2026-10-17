@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface_app_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_screen">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_recipe_name"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/recipe_hint_name"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_recipe_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_ingredient"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/min_touch_target"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:minWidth="@dimen/min_touch_target"
+            android:minHeight="@dimen/min_touch_target"
+            android:text="@string/recipe_add_ingredient"
+            android:contentDescription="@string/cd_add_ingredient" />
+
+        <TextView
+            android:id="@+id/tv_empty_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="@dimen/padding_card"
+            android:text="@string/recipe_empty_ingredients"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_recipe_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_recipe_ingredient" />
+
+        <TextView
+            android:id="@+id/tv_drafts_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/danger_red"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_recipe_totals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_section"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="2 ingredients · 440 kcal" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_recipe"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/min_touch_target"
+            android:layout_marginTop="@dimen/padding_card_small"
+            android:minHeight="@dimen/min_touch_target"
+            android:text="@string/action_save_recipe"
+            app:backgroundTint="@color/primary_forest" />
+
+    </LinearLayout>
+</ScrollView>
