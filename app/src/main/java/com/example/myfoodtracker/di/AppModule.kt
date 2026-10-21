@@ -8,6 +8,7 @@ import com.example.myfoodtracker.data.repository.FoodCatalogRepositoryImpl
 import com.example.myfoodtracker.data.repository.MealRepositoryImpl
 import com.example.myfoodtracker.data.repository.SessionRepositoryImpl
 import com.example.myfoodtracker.data.repository.UserRepositoryImpl
+import com.example.myfoodtracker.data.export.LogExportFileWriter
 import com.example.myfoodtracker.domain.repository.FoodCatalogRepository
 import com.example.myfoodtracker.data.repository.RecipeRepositoryImpl
 import com.example.myfoodtracker.domain.repository.MealRepository
@@ -20,6 +21,7 @@ import com.example.myfoodtracker.domain.usecase.AddMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.CreateProfileUseCase
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
+import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesByDateUseCase
 import com.example.myfoodtracker.domain.usecase.GetMealEntriesUseCase
 import com.example.myfoodtracker.domain.usecase.GetWaterTotalUseCase
@@ -42,6 +44,7 @@ import com.example.myfoodtracker.presentation.viewmodel.FoodSearchViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
 import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
+import com.example.myfoodtracker.presentation.viewmodel.SettingsViewModel
 import android.content.Context
 import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
 import com.example.myfoodtracker.domain.repository.SessionStorage
@@ -115,6 +118,10 @@ val appModule = module {
     factory { LogFoodEntryUseCase(get()) }
     factory { RestoreMealEntryUseCase(get()) }
     factory { LogRecipeUseCase(get(), get()) }
+    factory { ExportLogsUseCase(get()) }
+
+    // Infrastructure
+    single { LogExportFileWriter(androidContext()) }
 
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
@@ -123,4 +130,5 @@ val appModule = module {
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }

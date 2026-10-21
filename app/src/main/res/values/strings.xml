@@ -191,4 +191,31 @@
     <string name="log_recipe_ingredient_line">%1$s &#183; %2$s %3$s &#183; %4$.0f kcal</string>
     <string name="a11y_recipe_logged">Logged %1$s to %2$s, %3$d foods added</string>
     <string name="a11y_recipe_log_row">Log %1$s, %2$d ingredients, %3$d kilocalories</string>
+
+    <!-- Settings &amp; Data Management (Epic 5, Story 5.1) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_export">Export Logs</string>
+    <string name="settings_signed_in_format">Signed in as %1$s</string>
+    <string name="settings_format_label">Format</string>
+    <string name="settings_format_csv">CSV</string>
+    <string name="settings_format_txt">TXT</string>
+    <string name="settings_date_range_label">Date range</string>
+    <string name="settings_date_range_default">Select a date range</string>
+    <string name="settings_date_range_format">%1$s – %2$s</string>
+    <string name="settings_export_share">Export CSV Logs</string>
+    <string name="settings_export_share_txt">Export TXT Logs</string>
+    <string name="settings_export_save">Save to file…</string>
+    <string name="export_share_title">Share nutrition log</string>
+    <string name="export_share_subject">MyFoodTracker nutrition log</string>
+    <string name="export_success_format">Exported %1$d rows</string>
+    <string name="export_success_csv">Exported %1$d rows to CSV</string>
+    <string name="export_success_txt">Exported %1$d rows to TXT</string>
+    <string name="export_empty">No logs in the selected range</string>
+    <string name="export_error_range">Invalid date range</string>
+    <string name="export_error_profile">No active profile</string>
+    <string name="export_error_failed">Could not export the log file</string>
+    <string name="export_error_save_failed">Could not save the log file</string>
+    <string name="a11y_export_date_range">Select export date range, currently %1$s</string>
+    <string name="a11y_export_success">Exported %1$d rows to %2$s</string>
+    <string name="settings_attribution">Food catalog data: BLS data © Max Rubner-Institut, licensed CC BY 4.0 (DOI 10.25826/Data20251217-134202-0); OFF data © Open Food Facts contributors, licensed ODbL 1.0. All data stays on this device.</string>
 </resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Only the `exports` subdirectory of the app cache is exposed through the
+  FileProvider. Never declare `path="."` — that would expose the whole cache.
+-->
+<paths>
+    <cache-path
+        name="exports"
+        path="exports/" />
+</paths>

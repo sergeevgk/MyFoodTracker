@@ -76,3 +76,14 @@
 
 - **4.2-D1: Check lifecycle and context before accessing resources in `scroll.post`** - `LogRecipeDialogFragment.capIngredientScrollHeight` calls `resources.getDimensionPixelSize` in a posted runnable without an `isAdded` / `context != null` guard. Deferred per user decision as edge-case lifecycle hardening. [LogRecipeDialogFragment.kt:94]
 
+## Resolved by: story 5-1-csv-and-txt-log-export (2026-10-21)
+
+- **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - RESOLVED. Story 5.1 introduced the first Settings screen ("Settings & Data Management", reachable from the dashboard overflow menu) and displays the attribution/privacy notice verbatim as `@string/settings_attribution` in `fragment_settings.xml`: "Food catalog data: BLS data © Max Rubner-Institut, licensed CC BY 4.0 (DOI 10.25826/Data20251217-134202-0); OFF data © Open Food Facts contributors, licensed ODbL 1.0. All data stays on this device." The notice is static text, visible without scrolling into a hidden tab, and independent of the export state.
+
+## Forward notes from: story 5-1-csv-and-txt-log-export (2026-10-21)
+
+- **5.1-F1: Water logs are not part of the log export** - The export header is fixed by FR-12 (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) and has no water column, so `water_logs` rows are not exported. Adding a water section (or a second file) is a product decision for a future story. [domain/usecase/ExportLogsUseCase.kt]
+- **5.1-F2: "Save to file…" payload is held in a Fragment field and is lost on rotation** - While the system document picker is open, the pending `ExportPayload` lives in a `SettingsFragment` field (per the story contract). A configuration change while the picker is open therefore loses the payload; the activity result then reports "Could not save the log file" instead of writing the file. Moving the pending payload into the ViewModel (or `onSaveInstanceState`) would remove this edge case. [presentation/ui/settings/SettingsFragment.kt]
+- Note: deferred item `1.2-D3` (logout action in the settings screen) stays **open** — Story 5.1 did not add a logout button; the dashboard logout is unchanged.
+
+

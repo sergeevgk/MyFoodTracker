@@ -55,9 +55,22 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                openSettings()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    /**
+     * Settings is reachable from the dashboard only. On the lock screen (or any
+     * other destination) the menu item does nothing — no navigation, no crash.
+     */
+    private fun openSettings() {
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        if (navController.currentDestination?.id != R.id.dashboardFragment) return
+        navController.navigate(R.id.action_dashboardFragment_to_settingsFragment)
     }
 
     override fun onSupportNavigateUp(): Boolean {

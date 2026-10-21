@@ -42,7 +42,15 @@
         <action
             android:id="@+id/action_dashboardFragment_to_recipeListFragment"
             app:destination="@id/recipeListFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.myfoodtracker.presentation.ui.settings.SettingsFragment"
+        android:label="@string/settings_title" />
 
     <fragment
         android:id="@+id/recipeListFragment"
