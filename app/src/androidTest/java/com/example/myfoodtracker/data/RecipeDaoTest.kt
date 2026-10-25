@@ -128,4 +128,51 @@ class RecipeDaoTest {
         assertTrue(dao.getRecipesWithIngredientsByProfileId("profile-1").isEmpty())
         assertTrue(dao.getIngredientsByRecipeId("r1").isEmpty())
     }
+
+    /**
+     * Story 6.2: the restore-time remap composite rewrites mapped links and
+     * clears dangling ones in one transaction; untouched links stay put.
+     * Compiled via `:app:assembleDebugAndroidTest`; executed on device only
+     * (no-emulator policy).
+     */
+    @Test
+    fun remapAndClearCatalogFoodLinks_roundTripsRemapAndClear() {
+        val dao = db.recipeDao()
+        dao.insertRecipe(
+            RecipeEntity(
+                id = "r3", profileId = "profile-1", name = "Remap Bowl",
+                createdAt = 1000L, updatedAt = 2000L
+            )
+        )
+        dao.insertIngredients(
+            listOf(
+                RecipeIngredientEntity(
+                    recipeId = "r3", catalogFoodId = 3001L, foodName = "Old Whey",
+                    quantityGrams = 100.0, unit = "g",
+                    calories = 120.0, protein = 24.0, carbs = 3.0, fat = 1.0, fiber = 0.0
+                ),
+                RecipeIngredientEntity(
+                    recipeId = "r3", catalogFoodId = 9999L, foodName = "Gone Food",
+                    quantityGrams = 50.0, unit = "g",
+                    calories = 60.0, protein = 2.0, carbs = 10.0, fat = 0.5, fiber = 1.0
+                ),
+                RecipeIngredientEntity(
+                    recipeId = "r3", catalogFoodId = 5L, foodName = "Seed Food",
+                    quantityGrams = 200.0, unit = "g",
+                    calories = 260.0, protein = 5.0, carbs = 56.0, fat = 0.6, fiber = 1.0
+                )
+            )
+        )
+
+        val inserted = dao.getIngredientsByRecipeId("r3").associateBy { it.foodName }
+        dao.remapAndClearCatalogFoodLinks(
+            remaps = mapOf(9001L to listOf(inserted.getValue("Old Whey").id)),
+            clearedIngredientIds = listOf(inserted.getValue("Gone Food").id)
+        )
+
+        val after = dao.getIngredientsByRecipeId("r3").associateBy { it.foodName }
+        assertEquals(9001L, after.getValue("Old Whey").catalogFoodId)
+        assertNull(after.getValue("Gone Food").catalogFoodId)
+        assertEquals(5L, after.getValue("Seed Food").catalogFoodId)
+    }
 }

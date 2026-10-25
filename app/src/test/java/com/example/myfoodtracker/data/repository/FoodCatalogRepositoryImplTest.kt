@@ -297,5 +297,16 @@ class FoodCatalogRepositoryImplTest {
         override fun deleteCustomFoods() {
             deleteCustomFoodsCallCount++
         }
+
+        // Restore-time dangling sweep stub (story 6.2) — mechanical, tests in
+        // RecipeIngredientLinkRemapperTest carry the meaningful behavior.
+
+        var lastGetExistingFoodIdsQuery: List<Long>? = null
+        var existingFoodIdsToReturn: List<Long> = emptyList()
+
+        override fun getExistingFoodIds(ids: List<Long>): List<Long> {
+            lastGetExistingFoodIdsQuery = ids
+            return existingFoodIdsToReturn
+        }
     }
 }

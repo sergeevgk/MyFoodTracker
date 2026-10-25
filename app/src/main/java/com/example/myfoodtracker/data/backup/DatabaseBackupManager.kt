@@ -318,7 +318,10 @@ class DatabaseBackupManager(
                 sugarG = nutrient?.sugarG ?: 0.0,
                 sodiumMg = nutrient?.sodiumMg ?: 0.0,
                 createdAt = food.createdAt,
-                updatedAt = food.updatedAt
+                updatedAt = food.updatedAt,
+                // The catalog id the restored recipe_ingredients rows reference;
+                // the restore path builds its old→new remap from it (story 6.2).
+                sourceCatalogId = food.id
             )
         }
     }
@@ -328,8 +331,8 @@ class DatabaseBackupManager(
             "INSERT INTO $CUSTOM_FOODS_TABLE (" +
                 "name, brand, barcode, base_serving_size, base_serving_unit, is_deleted, " +
                 "calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, " +
-                "created_at, updated_at" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "created_at, updated_at, source_catalog_id" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             arrayOf<Any?>(
                 food.name,
                 food.brand,
@@ -345,7 +348,8 @@ class DatabaseBackupManager(
                 food.sugarG,
                 food.sodiumMg,
                 food.createdAt,
-                food.updatedAt
+                food.updatedAt,
+                food.sourceCatalogId
             )
         )
     }
@@ -572,7 +576,8 @@ class DatabaseBackupManager(
                 sugar_g           REAL    NOT NULL,
                 sodium_mg         REAL    NOT NULL,
                 created_at        INTEGER NOT NULL,
-                updated_at        INTEGER NOT NULL
+                updated_at        INTEGER NOT NULL,
+                source_catalog_id INTEGER
             )
         """.trimIndent()
     }

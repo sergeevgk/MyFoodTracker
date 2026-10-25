@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import com.example.myfoodtracker.data.backup.PendingRestoreApplier
 import com.example.myfoodtracker.data.dao.FoodCatalogDao
+import com.example.myfoodtracker.data.db.RecipeDao
 import com.example.myfoodtracker.di.appModule
 import com.example.myfoodtracker.domain.model.CustomFoodBackup
 import org.koin.android.ext.koin.androidContext
@@ -28,18 +29,21 @@ class MainApplication : Application() {
         }
 
         // The restored custom foods belong to the catalog database, which needs
-        // FTS5 and is therefore only reachable through the Room DAO. The DAO is
+        // FTS5 and is therefore only reachable through the Room DAO. The DAOs are
         // resolved only when a restore actually occurred (even if carrying 0 custom
         // foods, so pre-existing custom foods are replaced per AC #7), so a normal cold
-        // start never opens (and on the first run never copies) the catalog.
+        // start never opens (and on the first run never copies) the catalog. `RecipeDao`
+        // is already a Koin single and opening it does not touch the catalog asset —
+        // it opens the already-swapped main DB, which is why it must only run post-Koin.
         if (restoredCustomFoods != null) {
             try {
                 restoreApplier.applyCustomFoods(
                     koinApplication.koin.get<FoodCatalogDao>(),
+                    koinApplication.koin.get<RecipeDao>(),
                     restoredCustomFoods
                 )
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "Could not restore the backed-up custom foods", e)
+                Log.e(LOG_TAG, "Could not restore custom foods or remap recipe links", e)
             }
         }
     }

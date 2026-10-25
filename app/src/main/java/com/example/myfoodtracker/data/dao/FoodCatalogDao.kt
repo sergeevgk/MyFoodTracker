@@ -6,6 +6,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Transaction
 import com.example.myfoodtracker.data.db.FoodSearchRow
+import com.example.myfoodtracker.data.db.RestoredCustomFood
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
 
@@ -75,14 +76,26 @@ interface FoodCatalogDao {
     /**
      * Atomically replaces the user's custom foods during a restore.
      * Deletion of old foods and insertion of all restored foods occur within
-     * a single transaction.
+     * a single transaction. Returns the **old→new id mapping**: a re-insert
+     * allocates a fresh id, and the applier needs to remap the restored
+     * `recipe_ingredients` references (story 6.2) before the first recipe read.
      */
     @Transaction
-    fun replaceCustomFoods(foods: List<Pair<CatalogFoodEntity, CatalogFoodNutrientEntity>>) {
+    fun replaceCustomFoods(foods: List<RestoredCustomFood>): List<Pair<Long, Long>> {
         deleteCustomFoods()
-        foods.forEach { (food, nutrient) ->
-            val id = insertFood(food)
-            insertNutrients(nutrient.copy(foodId = id))
+        val mapping = mutableListOf<Pair<Long, Long>>()
+        foods.forEach { item ->
+            val id = insertFood(item.food)
+            insertNutrients(item.nutrient.copy(foodId = id))
+            item.sourceId?.let { mapping.add(it to id) }
         }
+        return mapping
     }
+
+    /**
+     * Existence probe for the restore-time dangling sweep: used with the
+     * (small) candidate id list — never load the whole ~10k-row seed id space.
+     */
+    @Query("SELECT id FROM catalog_foods WHERE id IN (:ids)")
+    fun getExistingFoodIds(ids: List<Long>): List<Long>
 }

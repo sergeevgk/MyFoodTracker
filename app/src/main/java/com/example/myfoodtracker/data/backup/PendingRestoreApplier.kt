@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.util.Log
 import com.example.myfoodtracker.data.dao.FoodCatalogDao
+import com.example.myfoodtracker.data.db.RecipeDao
+import com.example.myfoodtracker.data.db.RestoredCustomFood
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
 import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
@@ -70,18 +72,30 @@ class PendingRestoreApplier(
     }
 
     /**
-     * Inserts the restored custom foods into the catalog. Called **after** Koin
-     * started.
+     * Inserts the restored custom foods into the catalog and remaps the
+     * restored `recipe_ingredients` catalog links. Called **after** Koin
+     * started, and the remap is consumed **before this method returns** —
+     * i.e. before any UI exists to read recipes (resolves 5.2-D1).
      *
      * The device's previous custom foods are removed first (a restore replaces
      * state, it does not merge). New ids are allocated by SQLite — the backed-up
      * ids could collide with the seeded catalog of a different asset version.
+     * `replaceCustomFoods` returns the carried old→new id mapping (built from
+     * the backup's `source_catalog_id`; empty for a legacy pre-6.2 backup),
+     * which [RecipeIngredientLinkRemapper] applies: mapped links are rewritten
+     * to the new ids; links that no longer resolve in the rebuilt catalog are
+     * nulled explicitly — never left dangling.
+     *
      * Writes go to `catalog_foods`, so Room's FTS sync triggers index them.
      */
-    fun applyCustomFoods(foodCatalogDao: FoodCatalogDao, foods: List<CustomFoodBackup>) {
-        val pairs = foods.map { food ->
-            Pair(
-                CatalogFoodEntity(
+    fun applyCustomFoods(
+        foodCatalogDao: FoodCatalogDao,
+        recipeDao: RecipeDao,
+        foods: List<CustomFoodBackup>
+    ) {
+        val restored = foods.map { food ->
+            RestoredCustomFood(
+                food = CatalogFoodEntity(
                     name = food.name,
                     brand = food.brand,
                     barcode = food.barcode,
@@ -92,7 +106,7 @@ class PendingRestoreApplier(
                     createdAt = food.createdAt,
                     updatedAt = food.updatedAt
                 ),
-                CatalogFoodNutrientEntity(
+                nutrient = CatalogFoodNutrientEntity(
                     foodId = 0,
                     calories = food.calories,
                     proteinG = food.proteinG,
@@ -101,10 +115,12 @@ class PendingRestoreApplier(
                     fiberG = food.fiberG,
                     sugarG = food.sugarG,
                     sodiumMg = food.sodiumMg
-                )
+                ),
+                sourceId = food.sourceCatalogId
             )
         }
-        foodCatalogDao.replaceCustomFoods(pairs)
+        val mapping = foodCatalogDao.replaceCustomFoods(restored)
+        RecipeIngredientLinkRemapper(recipeDao, foodCatalogDao).remapAfterRestore(mapping)
     }
 
     // --- Internals --------------------------------------------------------------------
@@ -158,14 +174,35 @@ class PendingRestoreApplier(
         }
     }
 
+    /**
+     * Two-tier column read (story 6.2).
+     *
+     * The backup written by this app version carries the `source_catalog_id`
+     * column — the backup-side catalog id the restored `recipe_ingredients`
+     * rows reference, needed to build the restore-time remap. A **pre-6.2
+     * backup** has no such column: the first query throws `SQLiteException`
+     * and the fallback re-reads the legacy 15-column list with
+     * `sourceCatalogId = null` (the remap then relies on the dangling sweep).
+     * A missing id **column** must therefore degrade to `null` ids — only the
+     * *table itself* being absent falls through to an empty list (outer catch).
+     */
     private fun readCustomFoods(database: SQLiteDatabase): List<CustomFoodBackup> =
         try {
-            database.rawQuery(
-                "SELECT name, brand, barcode, base_serving_size, base_serving_unit, " +
-                    "is_deleted, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, " +
-                    "sodium_mg, created_at, updated_at FROM $CUSTOM_FOODS_TABLE",
-                null
-            ).use { cursor ->
+            readCustomFoods(database, withSourceId = true)
+        } catch (_: Exception) {
+            readCustomFoods(database, withSourceId = false)
+        }
+
+    private fun readCustomFoods(
+        database: SQLiteDatabase,
+        withSourceId: Boolean
+    ): List<CustomFoodBackup> =
+        try {
+            val sql = "SELECT name, brand, barcode, base_serving_size, base_serving_unit, " +
+                "is_deleted, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, " +
+                "sodium_mg, created_at, updated_at" +
+                if (withSourceId) ", source_catalog_id FROM $CUSTOM_FOODS_TABLE" else " FROM $CUSTOM_FOODS_TABLE"
+            database.rawQuery(sql, null).use { cursor ->
                 val foods = mutableListOf<CustomFoodBackup>()
                 while (cursor.moveToNext()) {
                     foods.add(
@@ -184,13 +221,15 @@ class PendingRestoreApplier(
                             sugarG = cursor.getDouble(11),
                             sodiumMg = cursor.getDouble(12),
                             createdAt = cursor.getLong(13),
-                            updatedAt = cursor.getLong(14)
+                            updatedAt = cursor.getLong(14),
+                            sourceCatalogId = if (withSourceId && !cursor.isNull(15)) cursor.getLong(15) else null
                         )
                     )
                 }
                 foods
             }
-        } catch (e: SQLiteException) {
+        } catch (e: Exception) {
+            if (withSourceId) throw e
             Log.w(LOG_TAG, "The staged backup carries no readable custom foods", e)
             emptyList()
         }

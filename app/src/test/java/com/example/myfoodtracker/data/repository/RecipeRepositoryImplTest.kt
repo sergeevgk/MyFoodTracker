@@ -3,6 +3,7 @@ package com.example.myfoodtracker.data.repository
 import com.example.myfoodtracker.data.db.RecipeDao
 import com.example.myfoodtracker.data.db.RecipeEntity
 import com.example.myfoodtracker.data.db.RecipeIngredientEntity
+import com.example.myfoodtracker.data.db.RecipeIngredientLinkRow
 import com.example.myfoodtracker.data.db.RecipeWithIngredients
 import com.example.myfoodtracker.domain.model.NewRecipeIngredient
 import com.example.myfoodtracker.domain.repository.SessionRepository
@@ -192,6 +193,31 @@ class RecipeRepositoryImplTest {
             ingredientsByRecipe.values.forEach { list ->
                 list.removeAll { it.id == ingredientId }
             }
+        }
+
+        // --- Restore-time remap members (story 6.2) — minimal mechanical stubs ---
+
+        var catalogLinks: List<RecipeIngredientLinkRow> = emptyList()
+        var lastCatalogLinkUpdate: Pair<List<Long>, Long>? = null
+        var lastClearedCatalogLinks: List<Long>? = null
+        var remapAndClearCalls = 0
+
+        override fun getIngredientsWithCatalogLinks(): List<RecipeIngredientLinkRow> =
+            catalogLinks
+
+        override fun updateCatalogFoodLink(ingredientIds: List<Long>, newFoodId: Long) {
+            lastCatalogLinkUpdate = ingredientIds to newFoodId
+        }
+
+        override fun clearCatalogFoodLink(ingredientIds: List<Long>) {
+            lastClearedCatalogLinks = ingredientIds
+        }
+
+        override fun remapAndClearCatalogFoodLinks(
+            remaps: Map<Long, List<Long>>,
+            clearedIngredientIds: List<Long>
+        ) {
+            remapAndClearCalls++
         }
     }
 
