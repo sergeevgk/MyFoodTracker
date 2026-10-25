@@ -22,6 +22,17 @@ interface MealDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFoods(foods: List<FoodEntity>)
 
+    /**
+     * Atomic parent+child write: both rows commit together or neither does.
+     * Delegates to the REPLACE-annotated primitives, so the same id re-insert
+     * semantics (restore path) are inherited unchanged.
+     */
+    @Transaction
+    fun insertMealWithFoods(meal: MealEntryEntity, foods: List<FoodEntity>) {
+        insertMeal(meal)
+        insertFoods(foods)
+    }
+
     @Query("UPDATE meals SET title = :title WHERE id = :id AND profile_id = :profileId")
     fun updateMealTitle(id: String, profileId: String, title: String)
 

@@ -75,18 +75,21 @@ class MealRepositoryImpl(
             date = date,
             time = currentTime
         )
-        mealDao.insertMeal(meal)
-        val food = FoodEntity(
-            mealId = meal.id,
-            name = name.trim(),
-            weight = 0.0,
-            calories = calories,
-            carbs = carbsG,
-            fat = fatG,
-            protein = proteinG,
-            fiber = 0.0
+        mealDao.insertMealWithFoods(
+            meal,
+            listOf(
+                FoodEntity(
+                    mealId = meal.id,
+                    name = name.trim(),
+                    weight = 0.0,
+                    calories = calories,
+                    carbs = carbsG,
+                    fat = fatG,
+                    protein = proteinG,
+                    fiber = 0.0
+                )
+            )
         )
-        mealDao.insertFoods(listOf(food))
         return getMealEntriesByDate(date)
     }
 
@@ -112,18 +115,21 @@ class MealRepositoryImpl(
             date = date,
             time = currentTime
         )
-        mealDao.insertMeal(meal)
-        val food = FoodEntity(
-            mealId = meal.id,
-            name = foodName.trim(),
-            weight = quantityGrams,
-            calories = calories,
-            carbs = carbsG,
-            fat = fatG,
-            protein = proteinG,
-            fiber = fiberG
+        mealDao.insertMealWithFoods(
+            meal,
+            listOf(
+                FoodEntity(
+                    mealId = meal.id,
+                    name = foodName.trim(),
+                    weight = quantityGrams,
+                    calories = calories,
+                    carbs = carbsG,
+                    fat = fatG,
+                    protein = proteinG,
+                    fiber = fiberG
+                )
+            )
         )
-        mealDao.insertFoods(listOf(food))
         return getMealEntriesByDate(date)
     }
 
@@ -137,7 +143,6 @@ class MealRepositoryImpl(
             date = entry.date,
             time = entry.time
         )
-        mealDao.insertMeal(meal)
         val foods = entry.foods.map {
             FoodEntity(
                 mealId = entry.id,
@@ -150,7 +155,7 @@ class MealRepositoryImpl(
                 fiber = it.fiber
             )
         }
-        mealDao.insertFoods(foods)
+        mealDao.insertMealWithFoods(meal, foods)
         return getMealEntriesByDate(entry.date)
     }
 

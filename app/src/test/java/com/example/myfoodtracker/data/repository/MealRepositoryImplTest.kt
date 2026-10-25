@@ -301,6 +301,45 @@ class MealRepositoryImplTest {
     }
 
     @Test
+    fun logQuickAdd_writesThroughTransactionalCompositeMethod() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+
+        // The meal+food pair must go through the atomic @Transaction DAO method,
+        // not two separate primitive inserts.
+        assertEquals(1, fakeMealDao.transactionalInsertCalls)
+        assertEquals(0, fakeMealDao.directInsertMealCalls)
+    }
+
+    @Test
+    fun logFoodEntry_writesThroughTransactionalCompositeMethod() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        repository.logFoodEntry(
+            "Rice", 200.0, 260.0, 5.0, 56.0, 0.6, 1.0, "DINNER", "2026-09-30"
+        )
+
+        assertEquals(1, fakeMealDao.transactionalInsertCalls)
+        assertEquals(0, fakeMealDao.directInsertMealCalls)
+    }
+
+    @Test
+    fun restoreMealEntry_writesThroughTransactionalCompositeMethod() {
+        fakeSessionRepository.setActiveProfile(user1)
+        repository.logQuickAdd("Office lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
+        val deleted = repository.getMealEntriesByDate("2026-09-30").first()
+        repository.deleteMealEntry(deleted.id)
+        val compositeCallsBefore = fakeMealDao.transactionalInsertCalls
+
+        repository.restoreMealEntry(deleted)
+
+        // Setup (logQuickAdd) also uses the composite; restore adds exactly one more.
+        assertEquals(compositeCallsBefore + 1, fakeMealDao.transactionalInsertCalls)
+        assertEquals(0, fakeMealDao.directInsertMealCalls)
+    }
+
+    @Test
     fun deleteMealEntry_dateIsolation_otherDatesUntouched() {
         fakeSessionRepository.setActiveProfile(user1)
         repository.logQuickAdd("Lunch", 500.0, 20.0, 45.0, 15.0, "LUNCH", "2026-09-30")
@@ -337,6 +376,17 @@ class MealRepositoryImplTest {
     private class FakeMealDao : MealDao {
         val meals = mutableListOf<MealEntryEntity>()
         val foods = mutableListOf<FoodEntity>()
+        var transactionalInsertCalls = 0
+        var directInsertMealCalls = 0
+
+        override fun insertMealWithFoods(meal: MealEntryEntity, foods: List<FoodEntity>) {
+            // Record the composite entry point, then apply the same state changes the
+            // primitives would (without touching the direct-call counter).
+            transactionalInsertCalls++
+            meals.removeAll { it.id == meal.id }
+            meals.add(meal)
+            this.foods.addAll(foods)
+        }
 
         override fun getMealsWithFoodsByProfileIdAndDate(profileId: String, date: String): List<MealWithFoods> {
             return meals.filter { it.profileId == profileId && it.date == date }.map { meal ->
@@ -360,6 +410,7 @@ class MealRepositoryImplTest {
         }
 
         override fun insertMeal(meal: MealEntryEntity) {
+            directInsertMealCalls++
             meals.removeAll { it.id == meal.id }
             meals.add(meal)
         }

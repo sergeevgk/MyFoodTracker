@@ -106,6 +106,18 @@ Users can group multiple logged foods or custom ingredients into saved recipes w
 Users can export their nutrition history to CSV/TXT files for sharing, and create full local SQLite database backups or restore application state from a local `.db` file completely offline.
 **FRs covered:** FR-12, FR-13
 
+### Epic 6: Data Integrity & Backup/Restore Hardening (deferred-work)
+Multi-table writes become atomically consistent via Room `@Transaction` methods, restored custom foods keep their links to `recipe_ingredients`, and the catalog database plus backup format are protected against future custom-food data loss.
+**Deferred items:** 2.4-D1, 2.5-D1, 3.2-D1, 4.1-D4, 5.2-D1, 5.2-F4, 3.1-F1, 5.2-F1
+
+### Epic 7: Security & Session Hardening (deferred-work)
+The passcode is defended by a slow KDF and failed-attempt lockout, passcode hashes no longer circulate through UI state, and the remembered session gains an explicit switch-profile affordance.
+**Deferred items:** 1.2-D1, 1.2-D2, 1.2-D5, 3.4-D2
+
+### Epic 8: UX Polish, Robustness & Product Gaps (deferred-work)
+Meal dates remain correct at midnight boundaries, screen rotations no longer lose in-progress state (recipe drafts, export payloads), quick-add gives haptic feedback, the recipe flow hides the Quick Add button, recipe cards gain an inspection view, the Settings screen gets a Logout action, and water logs can be exported.
+**Deferred items:** 2.1-D1, 4.1-D3, 5.1-F2, 4.2-D1, 2.3-D1, 4.1-D1, 4.1-D2, 1.2-D3, 5.1-F1
+
 ---
 
 ## Epic 1: App Foundation, User Profiles & Security
@@ -362,3 +374,158 @@ So that my data is portable without cloud sync.
 **And** when the user selects "Restore Database" and picks a `.db` file, a modal alert warns of overwrite, validates schema integrity, overwrites active DB, and prompts an application restart.
 
 
+
+---
+
+## Epic 6: Data Integrity & Backup/Restore Hardening
+
+Multi-table writes become atomically consistent via Room `@Transaction` methods, restored custom foods keep their links to `recipe_ingredients`, and the catalog database plus backup format are protected against future custom-food data loss. (Origin: deferred-work.md register items.)
+
+### Story 6.1: Unify Atomic Room Transactions for Multi-Table Writes
+
+As a user,
+I want multi-step data writes to either fully succeed or fully fail,
+So that a crash or disk error can never leave my logs half-recorded.
+
+**Acceptance Criteria:**
+
+**Given** any repository method that writes more than one table (quick-add meal+foods, logging a food entry, restoring a deleted meal entry, saving a recipe+ingredients),
+**When** the write executes,
+**Then** it is wrapped in a single Room `@Transaction` DAO method and leaves no partial state on failure.
+**And** no repository code calls `insertMeal` + `insertFoods` (or `insertRecipe` + `insertIngredients`) as separate DAO calls anymore.
+
+### Story 6.2: Remap Custom-Food IDs in recipe_ingredients After Restore
+
+As a user,
+I want my recipes to still reference the correct custom foods after a database restore,
+So that restoring a backup does not silently corrupt recipe macro data.
+
+**Acceptance Criteria:**
+
+**Given** a restore that re-inserts custom foods with freshly allocated IDs into the catalog database (5.2 story path via `FoodCatalogDao`),
+**When** the re-insert completes,
+**Then** every `recipe_ingredients.catalog_food_id` row that referenced a re-inserted custom food is remapped to the new ID (old→new mapping built during re-insertion, before the first recipe read).
+**And** a `recipe_ingredient` whose mapped old ID no longer has a corresponding custom food (deleted before backup) is removed or nulled explicitly — never left dangling.
+**And** the staged restore directory (`filesDir/pending_restore/`) is excluded from platform auto-backup via `backup_rules.xml` / `data_extraction_rules.xml` (resolves 5.2-F4).
+
+### Story 6.3: Catalog DB Migration & Backup-Format Hardening
+
+As a user,
+I want a catalog app update (or a future backup format) to never delete my custom foods or their serving units,
+So that my library survives app upgrades and round-trips through backup/restore.
+
+**Acceptance Criteria:**
+
+**Given** the `FoodCatalogDatabase` version is bumped in the future,
+**When** the migration runs,
+**Then** `is_custom = 1` rows plus their `catalog_food_nutrients` are preserved in place (destructive re-copy of the asset must not touch custom rows).
+**And** the backup format v2 carries `catalog_food_serving_units` rows of custom foods; `myfoodtracker_backup_meta.format_version` becomes `2`; the validation decision table accepts v1 and v2 respectively (restore of a v1 file remains valid, v1 files simply have no serving-unit data).
+
+---
+
+## Epic 7: Security & Session Hardening
+
+The passcode is defended by a slow KDF and failed-attempt lockout, passcode hashes no longer circulate through UI state, and the remembered session gains an explicit switch-profile affordance. (Origin: deferred-work.md register items.)
+
+### Story 7.1: Passcode KDF Upgrade & Failed-Attempt Lockout
+
+As a user on a shared device,
+I want my 4-digit passcode hardened against brute-force extraction of the database,
+So that my nutrition data stays private even if the DB file is copied.
+
+**Acceptance Criteria:**
+
+**Given** profile creation or passcode change,
+**When** the passcode is stored,
+**Then** it is hashed with PBKDF2-HMAC-SHA256 (≥ 100k iterations, per-hash random salt, ~8-byte salt) in a prefixed storage format (e.g. `pbkdf2$<iters>$<salt>$<hash>`); hash work takes noticeably longer than instant (target ≥ 100 ms on-device) instead of microseconds.
+**And** existing SHA-256 profiles migrate transparently: legacy plain-hex hashes still verify, and after a successful legacy verification the stored hash is re-saved in the prefixed format.
+**Given** repeated wrong passcode entries,
+**When** the failure count increases,
+**Then** an escalating delay (e.g. 1s → 5s → 30s; counter persisted so restart does not reset it) makes automated guessing impractical; the UI shows the remaining wait.
+**And** one unit test class covers both hash formats' verification and the backoff schedule computation.
+
+### Story 7.2: Session & Presentation-State Hygiene
+
+As a privacy-conscious user,
+I want passcode hashes kept out of presentation state and a visible way to decline a remembered session,
+So that my credentials are never exposed beyond the auth layer and profile switching is a single tap.
+
+**Acceptance Criteria:**
+
+**Given** the passcode auth flow,
+**When** `PasscodeAuthState` and `UserProfile` build their UI-facing variants,
+**Then** `passcodeHash` is not carried in them (auth compares hashes inside domain/use-case internals; IDs and display names suffice).
+**Given** a remembered session on app start,
+**When** the passcode screen appears for a restored profile,
+**Then** a "Not you?" affordance lets the user switch profiles / decline the restored session without a full logout round-trip.
+**And** a session TTL (e.g. 30 days) is a user-decision gate in this story (3.4-D2): skipped by default, implemented only if requested.
+
+---
+
+## Epic 8: UX Polish, Robustness & Product Gaps
+
+Meal dates remain correct at midnight boundaries, screen rotations no longer lose in-progress state, quick-add gives haptic feedback, the recipe flow hides the Quick Add button, recipe cards gain an inspection view, the Settings screen gets a Logout action, and water logs can be exported. (Origin: deferred-work.md register items.)
+
+### Story 8.1: Meal Date Correctness at Midnight Boundaries
+
+As a user logging an entry a minute before midnight,
+I want the entry recorded on the date I have selected in the dashboard,
+So that my log does not silently land on the wrong day.
+
+**Acceptance Criteria:**
+
+**Given** the user has an active dashboard date selected (possibly a historical date or day-switched via `MaterialDatePicker`),
+**When** any intake write occurs (`addMealEntry`, quick-add log, food entry log),
+**Then** the target `LocalDate` is passed explicitly by the caller and the entry lands on that date — `MealRepositoryImpl` no longer calls `LocalDate.now()` internally (MealRepositoryImpl.kt:33).
+**And** unit tests cover a write crossing the device-midnight boundary (entry at 23:59 against a target date already in the next day).
+
+### Story 8.2: State Survival & Lifecycle Hardening
+
+As a user,
+I want rotation and configuration changes not to lose my recipe draft or my pending export,
+So that long in-progress actions survive routine screen state changes.
+
+**Acceptance Criteria:**
+
+**Given** the recipe builder,
+**When** the device rotates or the process is recreated,
+**Then** the current draft (name, chosen ingredients and weights) is restored from a ViewModel; it survives rotation (4.1-D3).
+**Given** the export flow,
+**When** the system document picker is open and a configuration change occurs,
+**Then** the pending `ExportPayload` lives in a ViewModel (`onSaveInstanceState` path accepted) and the save completes after the result returns — no "Could not save the log file" (5.1-F2, SettingsFragment.kt).
+**Given** `LogRecipeDialogFragment.capIngredientScrollHeight`,
+**When** the posted runnable executes after the dialog fragment is detached,
+**Then** the resources access is guarded by `isAdded`/`context != null` (4.2-D1).
+
+### Story 8.3: Dashboard & Recipe UX Polish
+
+As a user,
+I want tactile confirmation on quick-add water, no misleading Quick Add button in the recipe flow, and an inspection view for saved recipes,
+So that the UI responds to what I do and cannot take me down a wrong path.
+
+**Acceptance Criteria:**
+
+**Given** a tap on the +250ml water button,
+**When** the log is written,
+**Then** `performHapticFeedback(KEYBOARD_TAP)` is triggered (2.3-D1).
+**Given** `FoodSearchBottomSheet` opened from `RecipeBuilderFragment`,
+**When** it renders,
+**Then** the Quick Add button is hidden in recipe flow and never offers an unavailable snackbar action (4.1-D1).
+**Given** the recipe list,
+**When** the user taps a saved recipe card,
+**Then** a read-only detail view shows the ingredient breakdown with quantities and the macro sum (4.1-D2, `RecipeListFragment.kt:34`; editing is out of scope).
+
+### Story 8.4: Settings Completion — Logout & Water Export
+
+As a user,
+I want a Logout action in the Settings screen and my water history included in the log export,
+So that account switching needs no dashboard detour and the export reflects everything I track.
+
+**Acceptance Criteria:**
+
+**Given** the Settings & Data Management screen,
+**When** it renders,
+**Then** a Logout button is present and performs the existing logout use case (1.2-D3; `1.2-D3` register item closed).
+**Given** the user exports logs,
+**When** water history exists,
+**Then** water rows are exported **within the existing CSV/TXT artifact** (no second file; format free to evolve — no external consumers until all work is done; product decision 2026-10-25).

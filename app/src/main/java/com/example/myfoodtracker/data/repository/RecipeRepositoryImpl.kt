@@ -20,16 +20,14 @@ class RecipeRepositoryImpl(
         val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
         val now = System.currentTimeMillis()
         val recipeId = UUID.randomUUID().toString()
-        recipeDao.insertRecipe(
+        recipeDao.insertRecipeWithIngredients(
             RecipeEntity(
                 id = recipeId,
                 profileId = profileId,
                 name = name,
                 createdAt = now,
                 updatedAt = now
-            )
-        )
-        recipeDao.insertIngredients(
+            ),
             ingredients.map {
                 RecipeIngredientEntity(
                     recipeId = recipeId,

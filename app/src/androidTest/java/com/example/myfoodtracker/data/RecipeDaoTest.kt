@@ -65,6 +65,32 @@ class RecipeDaoTest {
     }
 
     @Test
+    fun insertRecipeWithIngredients_roundTripsRecipeAndIngredients() {
+        val dao = db.recipeDao()
+        dao.insertRecipeWithIngredients(
+            RecipeEntity(
+                id = "r2", profileId = "profile-1", name = "Composite Bowl",
+                createdAt = 1000L, updatedAt = 2000L
+            ),
+            listOf(
+                RecipeIngredientEntity(
+                    recipeId = "r2", catalogFoodId = 7L, foodName = "Rice",
+                    quantityGrams = 200.0, unit = "g",
+                    calories = 260.0, protein = 5.0, carbs = 56.0, fat = 0.6, fiber = 1.0
+                )
+            )
+        )
+
+        val loaded = dao.getRecipesWithIngredientsByProfileId("profile-1")
+
+        assertEquals(1, loaded.size)
+        assertEquals("Composite Bowl", loaded[0].recipe.name)
+        assertEquals(1, loaded[0].ingredients.size)
+        assertEquals("Rice", loaded[0].ingredients[0].foodName)
+        assertEquals(200.0, loaded[0].ingredients[0].quantityGrams, 0.001)
+    }
+
+    @Test
     fun query_filtersByProfileId() {
         val dao = db.recipeDao()
         dao.insertRecipe(

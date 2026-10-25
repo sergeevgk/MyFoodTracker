@@ -25,12 +25,12 @@
 
 ## Deferred from: code review of 2-4-quick-add-calorie-and-macro-logging (2026-10-01)
 
-- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods`** - `MealRepositoryImpl.logQuickAdd` performs two separate DAO operations sequentially without an atomic Room `@Transaction`. Pre-existing DAO design where inserting a meal and its foods are separate methods; wrapping in an atomic transaction method in `MealDao` should be addressed when DAO transactions are overhauled. [MealRepositoryImpl.kt:55]
+- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods`** - `MealRepositoryImpl.logQuickAdd` performs two separate DAO operations sequentially without an atomic Room `@Transaction`. Pre-existing DAO design where inserting a meal and its foods are separate methods; wrapping in an atomic transaction method in `MealDao` should be addressed when DAO transactions are overhauled. [MealRepositoryImpl.kt:55] **RESOLVED** by story 6-1 (2026-10-25) — see "Resolved by" section below.
 - **D-2: Hardcoded light-theme colors and string literals without central resources** - `dialog_quick_add_log.xml` and `DashboardFragment.kt` use hardcoded hex values (`#FFFFFF`, `#1B4D3E`, `#2D3748`, `#718096`) and string literals without `@color/` or `@string/` resources. Continues pre-existing project-wide pattern tracked under Story 2.1 (D-2) and Story 2.2 (D-1/D-2). [dialog_quick_add_log.xml:6, DashboardFragment.kt:185]
 
 ## Deferred from: code review of 2-5-swipe-to-delete-intake-logs-with-undo (2026-10-02)
 
-- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods` during restore** - `MealRepositoryImpl.restoreMealEntry` executes `mealDao.insertMeal` and `mealDao.insertFoods` in sequence without a Room `@Transaction`. Continues the pre-existing architectural pattern tracked under Story 2.4 (D-1), to be addressed when DAO operations are unified under an atomic transaction helper. [MealRepositoryImpl.kt:93-118]
+- **D-1: Lack of atomic database transaction across `insertMeal` and `insertFoods` during restore** - `MealRepositoryImpl.restoreMealEntry` executes `mealDao.insertMeal` and `mealDao.insertFoods` in sequence without a Room `@Transaction`. Continues the pre-existing architectural pattern tracked under Story 2.4 (D-1), to be addressed when DAO operations are unified under an atomic transaction helper. [MealRepositoryImpl.kt:93-118] **RESOLVED** by story 6-1 (2026-10-25) — see "Resolved by" section below.
 
 ## Resolved by: story 2-6-centralize-colors-strings-and-ui-resources (2026-10-02)
 
@@ -53,7 +53,7 @@
 
 ## Deferred from: code review of 3-2-food-search-quantity-modal-and-meal-slot-logging (2026-10-04)
 
-- **3.2-D1: Non-atomic composite meal logging (`insertMeal` and `insertFoods`)** - `MealRepositoryImpl.logFoodEntry` performs two separate DAO operations without an atomic Room `@Transaction`. Continues pre-existing DAO design debt 2.4-D1 / 2.5-D1, to be addressed when meal DAO operations are overhauled with unified transaction support. [MealRepositoryImpl.kt:80]
+- **3.2-D1: Non-atomic composite meal logging (`insertMeal` and `insertFoods`)** - `MealRepositoryImpl.logFoodEntry` performs two separate DAO operations without an atomic Room `@Transaction`. Continues pre-existing DAO design debt 2.4-D1 / 2.5-D1, to be addressed when meal DAO operations are overhauled with unified transaction support. [MealRepositoryImpl.kt:80] **RESOLVED** by story 6-1 (2026-10-25) — see "Resolved by" section below.
 - **3.2-D2: Instrumented test coverage for `FoodCatalogDao` projection additions** - `FoodCatalogDao` added `base_serving_size` and `base_serving_unit` to the search projection. Integration verified via JVM unit tests; on-device instrumented test execution deferred per project policy forbidding automated emulator runs. Flagged for manual on-device verification. [FoodCatalogFtsTest.kt:50]
 
 
@@ -66,12 +66,19 @@
 
 - **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - Bundeslebensmittelschlüssel 4.0 is licensed under CC BY 4.0 (© Max Rubner-Institut, DOI 10.25826/Data20251217-134202-0) and Open Food Facts is licensed under ODbL 1.0 (© Open Food Facts contributors). When an About/Credits or Settings screen is introduced in a future story, attribution and licensing notices must be displayed to satisfy license requirements. [tools/seed/README.md]
 
+## Resolved by: backlog-creation analysis sweep (2026-10-25)
+
+- **1.2-D4: Dashboard has no ViewModel** - RESOLVED (verified). `DashboardViewModel` exists at `presentation/viewmodel/DashboardViewModel.kt` and is wired in `AppModule.kt:134`; `DashboardFragment` injects via `by viewModel()`.
+- **2.1-D3: No accessibility announcements on active date change** - RESOLVED (verified). `announceForAccessibility` is used project-wide post-story 2.6 (DashboardFragment.kt ×6 call sites, SettingsFragment.kt, RecipeListFragment.kt, FoodSearchBottomSheet.kt).
+- Triaged as **measure-first, story-blocked**: 3.3-D1 (main-thread search scan — act only if on-device timing exceeds the 50ms threshold) and 5.2-F3/5.2-D2 (sync backup/restore — act only if measured ≥ 1s). No story created.
+- Triaged as **manual device verification only**: 5.2-F2 (SQLite restore path checklist in story 5-2 Completion Notes) and 3.2-D2 (FoodCatalogDao projection on-device). No story created.
+
 ## Deferred from: code review of 4-1-recipe-builder-and-ingredient-grouping (2026-10-15)
 
 - **4.1-D1: Shared `FoodSearchBottomSheet` shows "Quick Add" button that displays unavailable snackbar in recipe flow** - The shared `FoodSearchBottomSheet` component exposes the "Quick Add" button even when opened from `RecipeBuilderFragment`. Tapping it dismisses the sheet and displays a snackbar. Modifying `FoodSearchBottomSheet` to conditionally hide Quick Add is deferred as a cross-cutting component enhancement. [RecipeBuilderFragment.kt:95-102]
 - **4.1-D2: Recipe card in `RecipeListFragment` has no detail/inspection view for existing recipe ingredients** - Tapping a saved recipe card in the list does not show its ingredient breakdown or quantities (only the macro sum). Recipe inspection/editing is deferred to Story 4.2 / future stories as Story 4.1 is scoped to creation and listing. [RecipeListFragment.kt:34]
 - **4.1-D3: Preserve builder drafts across screen rotation / configuration changes** - Drafts are currently held in Fragment memory during the build session; saving draft state across process recreation or configuration change is deferred as post-MVP presentation state refinement. [RecipeBuilderFragment.kt:33]
-- **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48]
+- **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48] **RESOLVED** by story 6-1 (2026-10-25) — see "Resolved by" section below.
 
 ## Deferred from: code review of 4-2-one-tap-recipe-logging (2026-10-17)
 
@@ -98,6 +105,19 @@
 
 - **5.2-D1: Discarded custom food IDs in `recipe_ingredients` after restore** - When custom foods are restored into `FoodCatalogDao`, fresh IDs are allocated to prevent collision with the seeded catalog asset, leaving `catalog_food_id` in `recipe_ingredients` unlinked to the new IDs. [RecipeIngredientEntity.kt]
 - **5.2-D2: Synchronous main-thread execution of backup and restore operations** - Backup/restore runs synchronously on the main thread per project architectural constraint AD-2 (no coroutines). Tracked as forward note 5.2-F3. [SettingsFragment.kt]
+
+## Resolved by: story 6-1-unify-atomic-room-transactions (2026-10-25)
+
+- **2.4-D1: Lack of atomic database transaction across `insertMeal` and `insertFoods`** - RESOLVED. `MealRepositoryImpl.logQuickAdd` now writes the meal and its food through the single `@Transaction` DAO method `MealDao.insertMealWithFoods` (a Room 3 default-body interface method delegating to the existing REPLACE-annotated primitives). Delegation is guarded by the JVM test `logQuickAdd_writesThroughTransactionalCompositeMethod`.
+- **2.5-D1: Lack of atomic database transaction across `insertMeal` and `insertFoods` during restore** - RESOLVED. `MealRepositoryImpl.restoreMealEntry` uses the same `insertMealWithFoods` composite. The REPLACE re-insert-same-id semantics and parent-first FK order are inherited from the primitives and unchanged; the "Parent first (FK order)" comment remains accurate. Guarded by `restoreMealEntry_writesThroughTransactionalCompositeMethod` and `restoreMealEntry_reinsertsSameIdAndFoods`.
+- **3.2-D1: Non-atomic composite meal logging (`insertMeal` and `insertFoods`)** - RESOLVED. `MealRepositoryImpl.logFoodEntry` writes through the same `insertMealWithFoods` composite. Guarded by `logFoodEntry_writesThroughTransactionalCompositeMethod`.
+- **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - RESOLVED. `RecipeRepositoryImpl.saveRecipe` writes through the new `@Transaction` `RecipeDao.insertRecipeWithIngredients` composite. Guarded by `saveRecipe_writesThroughTransactionalCompositeMethod` (JVM) and `insertRecipeWithIngredients_roundTripsRecipeAndIngredients` (androidTest; executed on device only per the no-emulator policy).
+- Note: single-table inserts are intentionally not wrapped (`MealRepositoryImpl.addMealEntry` calls `insertMeal` alone — nothing to make atomic). No schema, signature, DI wiring, or conflict-strategy changes were made.
+
+## Deferred from: code review of 6-1-unify-atomic-room-transactions (2026-10-25)
+
+- **6.1-D1: Missing instrumented test coverage for `MealDao.insertMealWithFoods`** - While `RecipeDaoTest.kt` contains an instrumented test for `RecipeDao.insertRecipeWithIngredients`, `MealDao` lacks an instrumented test class in `androidTest`. Delegated execution verified via JVM unit tests (`MealRepositoryImplTest`); on-device execution deferred per project policy forbidding automated emulator runs. [MealDao.kt:29]
+
 
 
 

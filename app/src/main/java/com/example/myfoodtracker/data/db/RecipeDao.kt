@@ -14,6 +14,16 @@ interface RecipeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertIngredients(ingredients: List<RecipeIngredientEntity>)
 
+    /**
+     * Atomic parent+child write: the recipe and its ingredients commit together
+     * or neither does. Delegates to the REPLACE-annotated primitives.
+     */
+    @Transaction
+    fun insertRecipeWithIngredients(recipe: RecipeEntity, ingredients: List<RecipeIngredientEntity>) {
+        insertRecipe(recipe)
+        insertIngredients(ingredients)
+    }
+
     @Query("SELECT * FROM recipes WHERE profile_id = :profileId ORDER BY updated_at DESC")
     fun getRecipesByProfileId(profileId: String): List<RecipeEntity>
 

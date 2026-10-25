@@ -50,6 +50,25 @@ class RecipeRepositoryImplTest {
     }
 
     @Test
+    fun saveRecipe_writesThroughTransactionalCompositeMethod() {
+        repository.saveRecipe(
+            "Chicken Bowl",
+            listOf(
+                NewRecipeIngredient(
+                    catalogFoodId = 7L, foodName = "Chicken Breast",
+                    quantityGrams = 150.0, unit = "g",
+                    calories = 180.0, proteinG = 34.5,
+                    carbsG = 0.75, fatG = 3.0, fiberG = 0.0
+                )
+            )
+        )
+
+        // The recipe+ingredient pair must go through the atomic @Transaction DAO method.
+        assertEquals(1, fakeDao.transactionalInsertCalls)
+        assertEquals(0, fakeDao.directInsertRecipeCalls)
+    }
+
+    @Test
     fun getRecipes_noActiveProfile_returnsEmpty_neverTouchesDao() {
         fakeSession.profileId = null
 
@@ -105,8 +124,27 @@ class RecipeRepositoryImplTest {
         var getByProfileCalled = false
         var lastDeletedRecipeId: String? = null
         var lastDeletedRecipeProfile: String? = null
+        var transactionalInsertCalls = 0
+        var directInsertRecipeCalls = 0
+
+        override fun insertRecipeWithIngredients(
+            recipe: RecipeEntity,
+            ingredients: List<RecipeIngredientEntity>
+        ) {
+            // Record the composite entry point, then apply the same state changes the
+            // primitives would (without touching the direct-call counter).
+            transactionalInsertCalls++
+            lastRecipe = recipe
+            recipes.removeAll { it.id == recipe.id }
+            recipes.add(recipe)
+            insertedIngredients = ingredients
+            ingredients.forEach {
+                ingredientsByRecipe.getOrPut(it.recipeId) { mutableListOf() }.add(it)
+            }
+        }
 
         override fun insertRecipe(recipe: RecipeEntity) {
+            directInsertRecipeCalls++
             lastRecipe = recipe
             recipes.removeAll { it.id == recipe.id }
             recipes.add(recipe)
