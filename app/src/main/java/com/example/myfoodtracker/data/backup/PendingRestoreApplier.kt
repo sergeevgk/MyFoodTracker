@@ -9,11 +9,14 @@ import com.example.myfoodtracker.data.db.RecipeDao
 import com.example.myfoodtracker.data.db.RestoredCustomFood
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
+import com.example.myfoodtracker.data.entity.CatalogFoodServingUnitEntity
 import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
 import com.example.myfoodtracker.domain.model.CustomFoodBackup
+import com.example.myfoodtracker.domain.model.ServingUnitBackup
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.CUSTOM_FOODS_TABLE
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.MAIN_DB_NAME
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.META_TABLE
+import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.SERVING_UNITS_TABLE
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -93,7 +96,30 @@ class PendingRestoreApplier(
         recipeDao: RecipeDao,
         foods: List<CustomFoodBackup>
     ) {
+        // Units of a food that carries no source_catalog_id have no owner on the
+        // restore side (the id is the only link back to the backup) — dropped,
+        // counted once (5.2 invariant: a restore never crashes on startup).
+        val droppedUnitCount = foods.sumOf { food ->
+            if (food.sourceCatalogId == null) food.servingUnits.size else 0
+        }
+        if (droppedUnitCount > 0) {
+            Log.w(
+                LOG_TAG,
+                "Dropping $droppedUnitCount serving-unit rows: their food carries no source_catalog_id"
+            )
+        }
         val restored = foods.map { food ->
+            val units = if (food.sourceCatalogId != null) {
+                food.servingUnits.map { unit ->
+                    CatalogFoodServingUnitEntity(
+                        foodId = 0,
+                        unitName = unit.unitName,
+                        gramsPerUnit = unit.gramsPerUnit
+                    )
+                }
+            } else {
+                emptyList()
+            }
             RestoredCustomFood(
                 food = CatalogFoodEntity(
                     name = food.name,
@@ -116,7 +142,8 @@ class PendingRestoreApplier(
                     sugarG = food.sugarG,
                     sodiumMg = food.sodiumMg
                 ),
-                sourceId = food.sourceCatalogId
+                sourceId = food.sourceCatalogId,
+                servingUnits = units
             )
         }
         val mapping = foodCatalogDao.replaceCustomFoods(restored)
@@ -126,9 +153,9 @@ class PendingRestoreApplier(
     // --- Internals --------------------------------------------------------------------
 
     /**
-     * Reads the carried custom foods and strips the two backup-only tables from
-     * the staged copy, so the file that replaces the live database has exactly
-     * the live schema.
+     * Reads the carried custom foods and strips the three backup-only tables
+     * from the staged copy, so the file that replaces the live database has
+     * exactly the live schema.
      *
      * Returns `null` when the staged file cannot be opened or fails its own
      * integrity check.
@@ -154,16 +181,47 @@ class PendingRestoreApplier(
             if (!isIntegrityOk(database)) return null
 
             val customFoods = readCustomFoods(database)
+            // Read before the drop — the v2 serving-unit table disappears with
+            // the other backup-only tables below (story 6.3).
+            val servingUnits = readCustomServingUnits(database)
+            val customFoodsWithUnits = if (servingUnits.isEmpty()) {
+                customFoods
+            } else {
+                val validFoodIds = customFoods.mapNotNull { it.sourceCatalogId }.toSet()
+                val droppedOrphanCount = servingUnits.count { it.sourceCatalogId !in validFoodIds }
+                if (droppedOrphanCount > 0) {
+                    Log.w(
+                        LOG_TAG,
+                        "Dropping $droppedOrphanCount serving-unit rows: no matching source_catalog_id in custom foods"
+                    )
+                }
+                val unitsByFoodId = servingUnits.groupBy { it.sourceCatalogId }
+                customFoods.map { food ->
+                    val foodUnits = food.sourceCatalogId?.let { unitsByFoodId[it] }.orEmpty()
+                    if (foodUnits.isEmpty()) {
+                        food
+                    } else {
+                        food.copy(
+                            servingUnits = foodUnits.map {
+                                ServingUnitBackup(it.unitName, it.gramsPerUnit)
+                            }
+                        )
+                    }
+                }
+            }
 
             database.beginTransaction()
             try {
                 database.execSQL("DROP TABLE IF EXISTS $META_TABLE")
                 database.execSQL("DROP TABLE IF EXISTS $CUSTOM_FOODS_TABLE")
+                // Backup-only since format v2; `IF EXISTS` keeps every pre-6.3
+                // (v1) staged file working verbatim.
+                database.execSQL("DROP TABLE IF EXISTS $SERVING_UNITS_TABLE")
                 database.setTransactionSuccessful()
             } finally {
                 database.endTransaction()
             }
-            return customFoods
+            return customFoodsWithUnits
         } catch (e: SQLiteException) {
             Log.e(LOG_TAG, "Could not prepare the staged restore", e)
             return null
@@ -234,6 +292,48 @@ class PendingRestoreApplier(
             emptyList()
         }
 
+    // --- Serving-unit read (format v2, story 6.3) ----------------------------------------
+
+    /**
+     * Data-layer-only projection row for one `myfoodtracker_custom_serving_units`
+     * line of a v2 backup. `sourceCatalogId` links back to the carried custom
+     * food; restore re-allocates the catalog unit id.
+     */
+    private data class ServingUnitBackupFoodKey(
+        val sourceCatalogId: Long,
+        val unitName: String,
+        val gramsPerUnit: Double
+    )
+
+    /**
+     * Reads the serving units of the carried custom foods. **A missing table is
+     * the v1 case and must degrade silently** (unlike `readCustomFoods`'s
+     * missing *column* re-throwing one tier): there is no second tier here —
+     * the table is simply absent in every pre-6.3 file.
+     */
+    private fun readCustomServingUnits(database: SQLiteDatabase): List<ServingUnitBackupFoodKey> =
+        try {
+            database.rawQuery(
+                "SELECT source_catalog_id, unit_name, grams_per_unit FROM $SERVING_UNITS_TABLE",
+                null
+            ).use { cursor ->
+                val units = mutableListOf<ServingUnitBackupFoodKey>()
+                while (cursor.moveToNext()) {
+                    units.add(
+                        ServingUnitBackupFoodKey(
+                            sourceCatalogId = cursor.getLong(0),
+                            unitName = cursor.getString(1),
+                            gramsPerUnit = cursor.getDouble(2)
+                        )
+                    )
+                }
+                units
+            }
+        } catch (e: SQLiteException) {
+            Log.w(LOG_TAG, "The staged backup carries no serving-unit table (v1 file)", e)
+            emptyList()
+        }
+
     private fun isIntegrityOk(database: SQLiteDatabase): Boolean =
         try {
             database.rawQuery("PRAGMA integrity_check", null).use { cursor ->
@@ -297,6 +397,7 @@ class PendingRestoreApplier(
     companion object {
         /** App-private staging location; must survive a process kill, not a cache wipe. */
         const val STAGING_DIRECTORY_NAME = "pending_restore"
+
 
         private const val LOG_TAG = "PendingRestoreApplier"
     }

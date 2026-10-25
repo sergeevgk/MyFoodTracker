@@ -1,5 +1,5 @@
 # generated: 2026-09-06T20:24:40+02:00
-# last_updated: 2026-10-25T17:43:00+01:00
+# last_updated: 2026-10-25T21:48:00+01:00
 # project: MyFoodTracker
 # project_key: NOKEY
 # tracking_system: file-system
@@ -74,10 +74,10 @@ development_status:
   5-1-csv-and-txt-log-export: done
   5-2-offline-full-database-backup-and-restore: done
   epic-5-retrospective: optional
-  epic-6: in-progress
+  epic-6: done
   6-1-unify-atomic-room-transactions: done
   6-2-remap-custom-food-ids-after-restore: done
-  6-3-catalog-db-migration-and-backup-format-hardening: backlog
+  6-3-catalog-db-migration-and-backup-format-hardening: done
   epic-6-retrospective: optional
   epic-7: backlog
   7-1-passcode-kdf-upgrade-and-lockout: backlog

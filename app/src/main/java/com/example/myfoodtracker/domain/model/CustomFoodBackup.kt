@@ -10,7 +10,9 @@ package com.example.myfoodtracker.domain.model
  * old→new remap from it. Nullable-defaulted so backups written before story 6.2
  * (no ids carried) still read: the link then degrades to the dangling sweep.
  * `isDeleted` mirrors `catalog_foods.is_deleted`, so a soft-deleted custom food
- * stays soft-deleted after a restore.
+ * stays soft-deleted after a restore. `servingUnits` carries the food's
+ * `catalog_food_serving_units` rows since format v2 (story 6.3, AC #3) —
+ * empty for a v1 file.
  *
  * Pure Kotlin/JVM (AD-1).
  */
@@ -30,5 +32,6 @@ data class CustomFoodBackup(
     val sodiumMg: Double,
     val createdAt: Long,
     val updatedAt: Long,
-    val sourceCatalogId: Long? = null
+    val sourceCatalogId: Long? = null,
+    val servingUnits: List<ServingUnitBackup> = emptyList()
 )

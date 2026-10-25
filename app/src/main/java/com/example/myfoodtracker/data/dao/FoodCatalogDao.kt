@@ -9,6 +9,7 @@ import com.example.myfoodtracker.data.db.FoodSearchRow
 import com.example.myfoodtracker.data.db.RestoredCustomFood
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
+import com.example.myfoodtracker.data.entity.CatalogFoodServingUnitEntity
 
 @Dao
 interface FoodCatalogDao {
@@ -59,6 +60,17 @@ interface FoodCatalogDao {
     )
     fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity>
 
+    /** Serving-unit rows of the user's own foods — carried by backup v2 (story 6.3). */
+    @Query(
+        "SELECT * FROM catalog_food_serving_units " +
+            "WHERE food_id IN (SELECT id FROM catalog_foods WHERE is_custom = 1)"
+    )
+    fun getCustomFoodServingUnits(): List<CatalogFoodServingUnitEntity>
+
+    /** Plain insert — fresh autoGenerate ids; children die with the food by the FK CASCADE. */
+    @Insert
+    fun insertServingUnits(units: List<CatalogFoodServingUnitEntity>)
+
     /**
      * Replaces the device's custom foods during a restore. The nutrient children
      * are removed by the `ON DELETE CASCADE` foreign key — never by hand.
@@ -74,11 +86,15 @@ interface FoodCatalogDao {
     }
 
     /**
-     * Atomically replaces the user's custom foods during a restore.
-     * Deletion of old foods and insertion of all restored foods occur within
-     * a single transaction. Returns the **old→new id mapping**: a re-insert
+     * Atomically replaces the user's custom foods during a restore. Deletion of
+     * old foods and insertion of all restored foods occur within a single
+     * transaction. Returns the **old→new id mapping**: a re-insert
      * allocates a fresh id, and the applier needs to remap the restored
      * `recipe_ingredients` references (story 6.2) before the first recipe read.
+     *
+     * Since format v2 (story 6.3) each restored food's serving units are
+     * inserted in the same transaction (fresh unit ids; children die with the
+     * food by the FK CASCADE).
      */
     @Transaction
     fun replaceCustomFoods(foods: List<RestoredCustomFood>): List<Pair<Long, Long>> {
@@ -87,6 +103,9 @@ interface FoodCatalogDao {
         foods.forEach { item ->
             val id = insertFood(item.food)
             insertNutrients(item.nutrient.copy(foodId = id))
+            if (item.servingUnits.isNotEmpty()) {
+                insertServingUnits(item.servingUnits.map { it.copy(foodId = id) })
+            }
             item.sourceId?.let { mapping.add(it to id) }
         }
         return mapping

@@ -9,6 +9,7 @@ import com.example.myfoodtracker.data.db.RecipeEntity
 import com.example.myfoodtracker.data.db.RecipeIngredientEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
+import com.example.myfoodtracker.data.entity.CatalogFoodServingUnitEntity
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -227,6 +228,10 @@ class RecipeIngredientLinkRemapperTest {
         override fun deleteFoodById(foodId: Long) = TODO("not used by the remapper")
         override fun getCustomFoods(): List<CatalogFoodEntity> = TODO("not used by the remapper")
         override fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity> =
+            TODO("not used by the remapper")
+        override fun getCustomFoodServingUnits(): List<CatalogFoodServingUnitEntity> =
+            TODO("not used by the remapper")
+        override fun insertServingUnits(units: List<CatalogFoodServingUnitEntity>) =
             TODO("not used by the remapper")
         override fun deleteCustomFoods() = TODO("not used by the remapper")
     }

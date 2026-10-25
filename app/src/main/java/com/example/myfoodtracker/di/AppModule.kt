@@ -3,6 +3,7 @@ package com.example.myfoodtracker.di
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.myfoodtracker.data.db.AppDatabase
+import com.example.myfoodtracker.data.db.CatalogMigrations
 import com.example.myfoodtracker.data.db.FoodCatalogDatabase
 import com.example.myfoodtracker.data.backup.DatabaseBackupManager
 import com.example.myfoodtracker.data.repository.FoodCatalogRepositoryImpl
@@ -72,11 +73,21 @@ val appModule = module {
     single { get<AppDatabase>().waterLogDao() }
 
     // Food catalog database — FTS5 requires the bundled SQLite driver
+    //
+    // Catalog schema is seeded from a bundled asset and extended by user data
+    // (`is_custom = 1` rows in `catalog_foods`). A destructive fallback would
+    // re-copy or blank the asset on a version bump and kill those custom foods.
+    // A future version bump MUST ship an explicit `Migration` in
+    // `CatalogMigrations.ALL` — `CatalogCustomFoodPreserver` does the
+    // preservation work there (story 6.3 / deferred-work 3.1-F1).
+    //
+    // The main database builder above KEEPS `fallbackToDestructiveMigration()`
+    // (project-context rule; do not "clean it up" here).
     single {
         Room.databaseBuilder(get(), FoodCatalogDatabase::class.java, "food_catalog")
             .setDriver(BundledSQLiteDriver())
             .createFromAsset("databases/food_catalog.db")
-            .fallbackToDestructiveMigration()
+            .addMigrations(*CatalogMigrations.ALL)
             .allowMainThreadQueries()
             .build()
     }

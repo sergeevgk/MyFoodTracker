@@ -13,6 +13,7 @@ import java.time.LocalDate
  * layer collects a [BackupFacts] snapshot, this use case decides. The checks run
  * in a fixed order and the **first** failure wins, so the user always sees the
  * most specific reason (a text file is "not a backup", not a version problem).
+ * Check 3 accepts v1 and v2: a v1 file simply carries no serving-unit data.
  *
  * Pure Kotlin/JVM: no Android imports, no `suspend`, no coroutines (AD-1, AD-2).
  * Registered in Koin as a `factory` (AD-4).
@@ -32,8 +33,9 @@ class BackupDatabaseUseCase {
         if (!facts.integrityOk) {
             return BackupValidation.Invalid(BackupErrorReason.INTEGRITY_CHECK_FAILED)
         }
-        // 3. Only format version 1 is understood.
-        if (facts.formatVersion != FORMAT_VERSION) {
+        // 3. Only supported format versions are understood (v2 since story 6.3;
+        //    v1 files predate serving units and remain valid).
+        if (facts.formatVersion == null || facts.formatVersion !in SUPPORTED_FORMAT_VERSIONS) {
             return BackupValidation.Invalid(BackupErrorReason.UNSUPPORTED_BACKUP_VERSION)
         }
         // 4. The file must be self-consistent: declared version == real version.
@@ -73,7 +75,23 @@ class BackupDatabaseUseCase {
         /** The single source of truth for the backup file format. */
         const val META_TABLE = "myfoodtracker_backup_meta"
         const val CUSTOM_FOODS_TABLE = "myfoodtracker_custom_foods"
-        const val FORMAT_VERSION = 1
+        /** Backup-only since format v2 (story 6.3); absent in every v1 file. */
+        const val SERVING_UNITS_TABLE = "myfoodtracker_custom_serving_units"
+
+        /**
+         * The version this app version **writes** (the single source of truth
+         * for the file format).
+         *
+         * v1: custom foods + nutrients (+ `source_catalog_id` since 6.2).
+         * v2 (story 6.3): additionally carries `myfoodtracker_custom_serving_units`
+         * rows (the serving units of the custom foods). Only [FORMAT_VERSION]
+         * declares what a *writer* produces; **validation** accepts every
+         * version in [SUPPORTED_FORMAT_VERSIONS].
+         */
+        const val FORMAT_VERSION = 2
+
+        /** Format versions the restore validation accepts. */
+        val SUPPORTED_FORMAT_VERSIONS = listOf(1, 2)
 
         const val META_KEY_FORMAT_VERSION = "format_version"
         const val META_KEY_APP_VERSION = "app_version"

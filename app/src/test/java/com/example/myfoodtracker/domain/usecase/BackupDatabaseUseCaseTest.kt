@@ -91,7 +91,32 @@ class BackupDatabaseUseCaseTest {
     fun wrongFormatVersion_returnsUnsupportedBackupVersion() {
         assertInvalid(
             BackupErrorReason.UNSUPPORTED_BACKUP_VERSION,
-            validFacts().copy(formatVersion = 2)
+            validFacts().copy(formatVersion = 99)
+        )
+    }
+
+    @Test
+    fun backupFormatVersion2_stillValid() {
+        assertEquals(
+            BackupValidation.Valid,
+            useCase(validFacts().copy(formatVersion = 2))
+        )
+    }
+
+    @Test
+    fun backupFormatVersion1_stillValid() {
+        // v1 files predate serving units but remain accepted (AC #4).
+        assertEquals(
+            BackupValidation.Valid,
+            useCase(validFacts().copy(formatVersion = 1))
+        )
+    }
+
+    @Test
+    fun formatVersionThree_returnsUnsupportedBackupVersion() {
+        assertInvalid(
+            BackupErrorReason.UNSUPPORTED_BACKUP_VERSION,
+            validFacts().copy(formatVersion = 3)
         )
     }
 

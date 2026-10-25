@@ -4,6 +4,7 @@ import com.example.myfoodtracker.data.dao.FoodCatalogDao
 import com.example.myfoodtracker.data.db.FoodSearchRow
 import com.example.myfoodtracker.data.entity.CatalogFoodEntity
 import com.example.myfoodtracker.data.entity.CatalogFoodNutrientEntity
+import com.example.myfoodtracker.data.entity.CatalogFoodServingUnitEntity
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -258,6 +259,8 @@ class FoodCatalogRepositoryImplTest {
         var lastInsertedNutrients: CatalogFoodNutrientEntity? = null
         var customFoodRows: List<CatalogFoodEntity> = emptyList()
         var customFoodNutrientRows: List<CatalogFoodNutrientEntity> = emptyList()
+        var customFoodServingUnitRows: List<CatalogFoodServingUnitEntity> = emptyList()
+        var lastInsertedServingUnits: List<CatalogFoodServingUnitEntity>? = null
         var deleteCustomFoodsCallCount = 0
 
         override fun search(matchQuery: String, limit: Int): List<FoodSearchRow> {
@@ -293,6 +296,13 @@ class FoodCatalogRepositoryImplTest {
 
         override fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity> =
             customFoodNutrientRows
+
+        override fun getCustomFoodServingUnits(): List<CatalogFoodServingUnitEntity> =
+            customFoodServingUnitRows
+
+        override fun insertServingUnits(units: List<CatalogFoodServingUnitEntity>) {
+            lastInsertedServingUnits = units
+        }
 
         override fun deleteCustomFoods() {
             deleteCustomFoodsCallCount++

@@ -10,6 +10,7 @@ import com.example.myfoodtracker.data.dao.FoodCatalogDao
 import com.example.myfoodtracker.domain.model.BackupFacts
 import com.example.myfoodtracker.domain.model.BackupValidation
 import com.example.myfoodtracker.domain.model.CustomFoodBackup
+import com.example.myfoodtracker.domain.model.ServingUnitBackup
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.CUSTOM_FOODS_TABLE
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.EXPECTED_USER_VERSION
@@ -24,6 +25,7 @@ import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.META_KEY_MAIN_USER_VERSION
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.META_TABLE
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.REQUIRED_TABLES
+import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase.Companion.SERVING_UNITS_TABLE
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -222,7 +224,7 @@ class DatabaseBackupManager(
         }
 
     /**
-     * Appends the two backup-only tables to the copied database.
+     * Appends the three backup-only tables to the copied database.
      *
      * The copy keeps the WAL flag of the live database in its header, so it must
      * be switched to a rollback journal first — otherwise the writes land in a
@@ -239,6 +241,7 @@ class DatabaseBackupManager(
             switchToRollbackJournal(database)
             database.execSQL(CREATE_META_TABLE_SQL)
             database.execSQL(CREATE_CUSTOM_FOODS_SQL)
+            database.execSQL(CREATE_SERVING_UNITS_TABLE_SQL)
 
             val userVersion = readUserVersion(database)
             val identityHash = readIdentityHash(database)
@@ -247,6 +250,17 @@ class DatabaseBackupManager(
             try {
                 writeMeta(database, userVersion, identityHash, customFoods.size)
                 customFoods.forEach { insertCustomFood(database, it) }
+                customFoods.flatMap { food ->
+                    food.servingUnits.map { unit ->
+                        Triple(food.sourceCatalogId, unit.unitName, unit.gramsPerUnit)
+                    }
+                }.forEach { (sourceCatalogId, unitName, gramsPerUnit) ->
+                    // Skip rows whose source_catalog_id is null — a v2 backup
+                    // always carries ids unless a row was constructed manually.
+                    if (sourceCatalogId != null) {
+                        insertServingUnit(database, sourceCatalogId, unitName, gramsPerUnit)
+                    }
+                }
                 database.setTransactionSuccessful()
             } finally {
                 database.endTransaction()
@@ -301,6 +315,8 @@ class DatabaseBackupManager(
         val foods = foodCatalogDao.getCustomFoods()
         if (foods.isEmpty()) return emptyList()
         val nutrients = foodCatalogDao.getCustomFoodNutrients().associateBy { it.foodId }
+        // Serving units of the custom foods — carried since format v2 (story 6.3).
+        val units = foodCatalogDao.getCustomFoodServingUnits().groupBy { it.foodId }
         return foods.map { food ->
             val nutrient = nutrients[food.id]
             CustomFoodBackup(
@@ -321,7 +337,10 @@ class DatabaseBackupManager(
                 updatedAt = food.updatedAt,
                 // The catalog id the restored recipe_ingredients rows reference;
                 // the restore path builds its old→new remap from it (story 6.2).
-                sourceCatalogId = food.id
+                sourceCatalogId = food.id,
+                servingUnits = units[food.id].orEmpty().map {
+                    ServingUnitBackup(it.unitName, it.gramsPerUnit)
+                }
             )
         }
     }
@@ -351,6 +370,24 @@ class DatabaseBackupManager(
                 food.updatedAt,
                 food.sourceCatalogId
             )
+        )
+    }
+
+    /**
+     * One `myfoodtracker_custom_serving_units` row (format v2, story 6.3). The
+     * auto-generated catalog row id is deliberately not carried — restore
+     * re-allocates it; the food link is the `source_catalog_id`.
+     */
+    private fun insertServingUnit(
+        database: SQLiteDatabase,
+        sourceCatalogId: Long,
+        unitName: String,
+        gramsPerUnit: Double
+    ) {
+        database.execSQL(
+            "INSERT INTO $SERVING_UNITS_TABLE (source_catalog_id, unit_name, grams_per_unit) " +
+                "VALUES (?, ?, ?)",
+            arrayOf<Any?>(sourceCatalogId, unitName, gramsPerUnit)
         )
     }
 
@@ -553,6 +590,9 @@ class DatabaseBackupManager(
         private const val CANDIDATE_FILE_NAME = "candidate.db"
         private const val FALLBACK_APP_VERSION = "1.0"
 
+
+
+
         private val CREATE_META_TABLE_SQL = """
             CREATE TABLE IF NOT EXISTS $META_TABLE (
                 key   TEXT PRIMARY KEY,
@@ -578,6 +618,18 @@ class DatabaseBackupManager(
                 created_at        INTEGER NOT NULL,
                 updated_at        INTEGER NOT NULL,
                 source_catalog_id INTEGER
+            )
+        """.trimIndent()
+
+        /**
+         * Backup-only since format v2 (story 6.3): the serving units of the
+         * carried custom foods, keyed by the backup-side catalog id.
+         */
+        private val CREATE_SERVING_UNITS_TABLE_SQL = """
+            CREATE TABLE IF NOT EXISTS $SERVING_UNITS_TABLE (
+                source_catalog_id INTEGER NOT NULL,
+                unit_name         TEXT    NOT NULL,
+                grams_per_unit    REAL    NOT NULL
             )
         """.trimIndent()
     }
