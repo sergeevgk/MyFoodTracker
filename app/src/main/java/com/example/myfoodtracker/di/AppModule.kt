@@ -4,6 +4,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.myfoodtracker.data.db.AppDatabase
 import com.example.myfoodtracker.data.db.FoodCatalogDatabase
+import com.example.myfoodtracker.data.backup.DatabaseBackupManager
 import com.example.myfoodtracker.data.repository.FoodCatalogRepositoryImpl
 import com.example.myfoodtracker.data.repository.MealRepositoryImpl
 import com.example.myfoodtracker.data.repository.SessionRepositoryImpl
@@ -19,6 +20,7 @@ import com.example.myfoodtracker.domain.repository.WaterRepository
 import com.example.myfoodtracker.data.repository.WaterRepositoryImpl
 import com.example.myfoodtracker.domain.usecase.AddMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
+import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.CreateProfileUseCase
 import com.example.myfoodtracker.domain.usecase.DeleteMealEntryUseCase
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
@@ -119,9 +121,11 @@ val appModule = module {
     factory { RestoreMealEntryUseCase(get()) }
     factory { LogRecipeUseCase(get(), get()) }
     factory { ExportLogsUseCase(get()) }
+    factory { BackupDatabaseUseCase() }
 
     // Infrastructure
     single { LogExportFileWriter(androidContext()) }
+    single { DatabaseBackupManager(androidContext(), get(), get()) }
 
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
@@ -130,5 +134,5 @@ val appModule = module {
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
 }

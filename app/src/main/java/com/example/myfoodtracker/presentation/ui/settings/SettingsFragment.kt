@@ -2,22 +2,32 @@ package com.example.myfoodtracker.presentation.ui.settings
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Process
+import android.provider.OpenableColumns
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.myfoodtracker.R
+import com.example.myfoodtracker.data.backup.DatabaseBackupManager
 import com.example.myfoodtracker.data.export.LogExportFileWriter
 import com.example.myfoodtracker.databinding.FragmentSettingsBinding
+import com.example.myfoodtracker.domain.model.BackupErrorReason
+import com.example.myfoodtracker.domain.model.BackupValidation
 import com.example.myfoodtracker.domain.model.ExportFormat
 import com.example.myfoodtracker.domain.model.ExportPayload
+import com.example.myfoodtracker.presentation.ui.settings.model.BackupState
 import com.example.myfoodtracker.presentation.ui.settings.model.DateRange
 import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
+import com.example.myfoodtracker.presentation.ui.settings.model.RestoreState
 import com.example.myfoodtracker.presentation.viewmodel.SettingsViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -30,8 +40,9 @@ import java.util.Locale
 /**
  * Settings & Data Management screen.
  *
- * The screen hosts the log export: a format toggle, a date-range picker and the
- * two export destinations (Android Sharesheet and the system document picker).
+ * The screen hosts the log export (format toggle, date-range picker, Sharesheet
+ * and the system document picker) and, below it, the database backup/restore
+ * section.
  *
  * The Fragment — not the ViewModel — performs the file IO and launches the
  * Intents, because both need a `Context` (project rule).
@@ -43,12 +54,19 @@ class SettingsFragment : Fragment() {
 
     private val viewModel: SettingsViewModel by viewModel()
     private val fileWriter: LogExportFileWriter by inject()
+    private val backupManager: DatabaseBackupManager by inject()
 
     /** Which export destination the user asked for. */
     private var pendingAction: ExportAction? = null
 
     /** The payload waiting to be written into the user-picked document. */
     private var pendingSavePayload: ExportPayload? = null
+
+    /**
+     * The currently shown backup/restore dialog. Kept so a re-dispatch of the
+     * retained restore state cannot stack a second dialog on top.
+     */
+    private var restoreDialog: AlertDialog? = null
 
     private val createDocumentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -74,6 +92,23 @@ class SettingsFragment : Fragment() {
                 )
                 showError(getString(R.string.export_error_save_failed))
             }
+        }
+
+    /**
+     * The system create-document picker for a database backup. The launched
+     * argument becomes `EXTRA_TITLE`, i.e. the pre-filled file name.
+     */
+    private val createBackupDocumentLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument(MIME_TYPE_SQLITE)) { uri ->
+            handleBackupDestination(uri)
+        }
+
+    /** The system open-document picker for a restore candidate. */
+    private val openBackupDocumentLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            // A cancelled picker writes nothing, changes nothing and shows no error.
+            if (uri == null) return@registerForActivityResult
+            validateAndAskToRestore(uri)
         }
 
     override fun onCreateView(
@@ -160,6 +195,20 @@ class SettingsFragment : Fragment() {
                 viewModel.clearExportState()
             }
         }
+
+        binding.btnBackupDatabase.setOnClickListener { startBackup() }
+        binding.btnRestoreDatabase.setOnClickListener { launchRestorePicker() }
+
+        // Only the dialog states are rendered from the observer: ConfirmRequired
+        // and Staged deliberately stay in the ViewModel so a rotation re-shows
+        // the prompt instead of stranding the user with a staged restore.
+        viewModel.restoreState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is RestoreState.ConfirmRequired -> showRestoreConfirmDialog(state.candidateName)
+                RestoreState.Staged -> showRestartDialog()
+                else -> dismissRestoreDialog()
+            }
+        }
     }
 
     override fun onResume() {
@@ -231,6 +280,199 @@ class SettingsFragment : Fragment() {
             pendingSavePayload = null
             showError(getString(R.string.export_error_failed))
         }
+    }
+
+    // --- Backup & restore ------------------------------------------------------------
+
+    /**
+     * Materialises the backup in the app cache and opens the create-document
+     * picker. Nothing is written to the user's chosen location until the picker
+     * returns a URI.
+     */
+    private fun startBackup() {
+        if (!isAdded) return
+        viewModel.onBackupPreparing()
+        val fileName = viewModel.backupFileName()
+        try {
+            backupManager.createBackupFile(fileName)
+            viewModel.onBackupReady(fileName)
+            createBackupDocumentLauncher.launch(fileName)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to prepare the database backup [fileName=$fileName]", e)
+            backupManager.deleteCachedBackup(fileName)
+            viewModel.onBackupFailed(BackupErrorReason.IO_ERROR)
+            showMessage(getString(R.string.backup_error_prepare))
+        }
+    }
+
+    /**
+     * Called when the create-document picker returns. `Ready(fileName)` — not a
+     * Fragment field — is the source of the deterministic cache path, so a
+     * rotation cannot lose the prepared backup.
+     */
+    private fun handleBackupDestination(uri: Uri?) {
+        val fileName = (viewModel.backupState.value as? BackupState.Ready)?.fileName ?: return
+        if (uri == null) {
+            // The user cancelled: delete the cache artifact and show no error.
+            backupManager.deleteCachedBackup(fileName)
+            viewModel.cancelBackup()
+            return
+        }
+        try {
+            backupManager.writeBackupTo(uri, fileName)
+            backupManager.deleteCachedBackup(fileName)
+            viewModel.onBackupSaved(fileName)
+            showBackupSuccess(fileName)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to write the database backup [fileName=$fileName, uri=$uri]", e)
+            backupManager.deleteCachedBackup(fileName)
+            viewModel.onBackupFailed(BackupErrorReason.IO_ERROR)
+            showMessage(getString(R.string.backup_error_write))
+        }
+    }
+
+    private fun launchRestorePicker() {
+        if (!isAdded) return
+        try {
+            openBackupDocumentLauncher.launch(BACKUP_MIME_TYPES)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to launch the restore file picker", e)
+            viewModel.onRestoreFailed(BackupErrorReason.IO_ERROR)
+            showMessage(getString(R.string.restore_error_failed))
+        }
+    }
+
+    /** Copies the picked file into the cache and validates it before anything is touched. */
+    private fun validateAndAskToRestore(uri: Uri) {
+        if (!isAdded) return
+        viewModel.onRestoreValidating()
+        val candidateName = resolveDisplayName(uri) ?: DEFAULT_CANDIDATE_NAME
+        val validation = try {
+            backupManager.validateCandidate(uri)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to read the selected backup [uri=$uri]", e)
+            backupManager.deleteCachedCandidate()
+            viewModel.onRestoreFailed(BackupErrorReason.IO_ERROR)
+            showMessage(getString(R.string.backup_error_read))
+            return
+        }
+        when (validation) {
+            is BackupValidation.Valid -> viewModel.onRestoreCandidateReady(candidateName)
+            is BackupValidation.Invalid -> {
+                backupManager.deleteCachedCandidate()
+                viewModel.onRestoreInvalid(validation.reason)
+                showRestoreError(validation.reason)
+            }
+        }
+    }
+
+    private fun showRestoreConfirmDialog(candidateName: String) {
+        if (!isAdded || restoreDialog?.isShowing == true) return
+        // The exact overwrite wording is required; the picked file's display name
+        // is appended so the user knows what is about to be restored.
+        val message = getString(R.string.restore_confirm_message) + "\n\n" + candidateName
+        restoreDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.restore_confirm_title)
+            .setMessage(message)
+            .setNegativeButton(R.string.action_cancel) { _, _ -> abortRestore() }
+            .setPositiveButton(R.string.restore_confirm_positive) { _, _ ->
+                viewModel.confirmRestore()
+                stageRestore()
+            }
+            .setOnCancelListener { abortRestore() }
+            .show()
+    }
+
+    /**
+     * The commit point: the validated candidate is durably written to
+     * `filesDir/pending_restore/` before the restart prompt is shown.
+     */
+    private fun stageRestore() {
+        restoreDialog = null
+        try {
+            backupManager.stageRestore(backupManager.cachedCandidateFile())
+            backupManager.deleteCachedCandidate()
+            viewModel.onRestoreStaged()
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to stage the database restore", e)
+            backupManager.discardStagedRestore()
+            viewModel.onRestoreFailed(BackupErrorReason.IO_ERROR)
+            showMessage(getString(R.string.restore_error_failed))
+        }
+    }
+
+    private fun showRestartDialog() {
+        if (!isAdded || restoreDialog?.isShowing == true) return
+        // AC #6: the prompt must make clear that the local data is replaced.
+        val message = getString(R.string.restore_restart_message) + "\n\n" +
+            getString(R.string.restore_restart_message_replace_notice)
+        restoreDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.restore_restart_title)
+            .setMessage(message)
+            .setNegativeButton(R.string.action_cancel) { _, _ -> abortRestore() }
+            .setPositiveButton(R.string.restore_restart_positive) { _, _ ->
+                backupManager.deleteCachedCandidate()
+                Process.killProcess(Process.myPid())
+            }
+            .setOnCancelListener { abortRestore() }
+            .show()
+    }
+
+    /** Cancelling either dialog discards the staged restore and cached candidate. */
+    private fun abortRestore() {
+        viewModel.cancelRestore()
+        backupManager.discardStagedRestore()
+        backupManager.deleteCachedCandidate()
+    }
+
+    private fun dismissRestoreDialog() {
+        restoreDialog?.dismiss()
+        restoreDialog = null
+    }
+
+    /** Uses the picked file's display name; never shows a raw path. */
+    private fun resolveDisplayName(uri: Uri): String? = try {
+        requireContext().contentResolver
+            .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+            }
+    } catch (e: Exception) {
+        Log.w(LOG_TAG, "Could not read the display name of $uri", e)
+        null
+    }
+
+    private fun showRestoreError(reason: BackupErrorReason) {
+        if (!isAdded) return
+        val message = getString(restoreErrorString(reason))
+        binding.root.announceForAccessibility(
+            getString(R.string.a11y_restore_invalid, message)
+        )
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun showBackupSuccess(fileName: String) {
+        if (!isAdded) return
+        binding.root.announceForAccessibility(
+            getString(R.string.a11y_backup_success, fileName)
+        )
+        Snackbar.make(
+            binding.root,
+            getString(R.string.backup_success_format, fileName),
+            Snackbar.LENGTH_LONG
+        ).show()
+    }
+
+    private fun restoreErrorString(reason: BackupErrorReason): Int = when (reason) {
+        BackupErrorReason.NOT_A_DATABASE -> R.string.restore_error_not_a_database
+        BackupErrorReason.INTEGRITY_CHECK_FAILED -> R.string.restore_error_integrity
+        BackupErrorReason.UNSUPPORTED_BACKUP_VERSION -> R.string.restore_error_version
+        BackupErrorReason.SCHEMA_VERSION_MISMATCH -> R.string.restore_error_schema_version
+        BackupErrorReason.SCHEMA_MISMATCH -> R.string.restore_error_schema
+        BackupErrorReason.MISSING_TABLES -> R.string.restore_error_missing_tables
+        BackupErrorReason.INCOMPLETE_BACKUP -> R.string.restore_error_incomplete
+        BackupErrorReason.IO_ERROR -> R.string.restore_error_failed
     }
 
     // --- Date range ----------------------------------------------------------------
@@ -336,6 +578,7 @@ class SettingsFragment : Fragment() {
         DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
 
     override fun onDestroyView() {
+        dismissRestoreDialog()
         super.onDestroyView()
         _binding = null
     }
@@ -345,5 +588,17 @@ class SettingsFragment : Fragment() {
     companion object {
         private const val LOG_TAG = "SettingsFragment"
         private const val TAG_DATE_RANGE_PICKER = "EXPORT_DATE_RANGE"
+        private const val DEFAULT_CANDIDATE_NAME = "backup"
+        private const val MIME_TYPE_SQLITE = "application/vnd.sqlite3"
+
+        /**
+         * Many providers report `.db` files as `application/octet-stream`, so the
+         * filter accepts the SQLite types as well (Dev Notes: MIME type).
+         */
+        private val BACKUP_MIME_TYPES = arrayOf(
+            "application/vnd.sqlite3",
+            "application/x-sqlite3",
+            "application/octet-stream"
+        )
     }
 }

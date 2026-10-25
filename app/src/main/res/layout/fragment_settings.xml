@@ -161,6 +161,63 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Backup &amp; Restore -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_section"
+            app:cardBackgroundColor="@color/surface_card_bg"
+            app:cardCornerRadius="@dimen/radius_card_medium"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_card">
+
+                <TextView
+                    android:id="@+id/tv_backup_section_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/margin_small"
+                    android:text="@string/settings_section_backup"
+                    android:textColor="@color/primary_forest"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_backup_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_backup_description"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_backup_database"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_section"
+                    android:contentDescription="@string/a11y_backup_button"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/settings_backup_button" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_restore_database"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:contentDescription="@string/a11y_restore_button"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/settings_restore_button" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Attribution &amp; privacy notice — closes deferred item 3.5-D1 -->
         <TextView
             android:id="@+id/tv_settings_attribution"

@@ -218,4 +218,33 @@
     <string name="a11y_export_date_range">Select export date range, currently %1$s</string>
     <string name="a11y_export_success">Exported %1$d rows to %2$s</string>
     <string name="settings_attribution">Food catalog data: BLS data © Max Rubner-Institut, licensed CC BY 4.0 (DOI 10.25826/Data20251217-134202-0); OFF data © Open Food Facts contributors, licensed ODbL 1.0. All data stays on this device.</string>
+
+    <!-- Backup &amp; Restore (Epic 5, Story 5.2) -->
+    <string name="settings_section_backup">Backup &amp; Restore</string>
+    <string name="settings_backup_description">Create a full local copy of your database, or restore one from a backup file. Everything stays on this device.</string>
+    <string name="settings_backup_button">Backup Database</string>
+    <string name="settings_restore_button">Restore Database</string>
+    <string name="backup_success_format">Database backed up to %1$s</string>
+    <string name="backup_error_prepare">Could not prepare the database backup</string>
+    <string name="backup_error_write">Could not save the database backup</string>
+    <string name="backup_error_read">Could not read the selected file</string>
+    <string name="restore_confirm_title">Restore Database?</string>
+    <string name="restore_confirm_message">Restoring a database backup will overwrite your current local logs. Proceed?</string>
+    <string name="restore_confirm_positive">Overwrite &amp; Restore</string>
+    <string name="restore_restart_title">Restart required</string>
+    <string name="restore_restart_message">MyFoodTracker must restart to apply the restored data. Restart now?</string>
+    <string name="restore_restart_message_replace_notice">Your current local data (profiles, logs and custom foods) will be replaced.</string>
+    <string name="restore_restart_positive">Restart now</string>
+    <string name="restore_error_not_a_database">The selected file is not a MyFoodTracker backup</string>
+    <string name="restore_error_integrity">The selected backup is damaged and cannot be restored</string>
+    <string name="restore_error_version">This backup was created by an incompatible app version</string>
+    <string name="restore_error_schema_version">This backup was created with a different database schema version</string>
+    <string name="restore_error_schema">This backup was created with a different database schema</string>
+    <string name="restore_error_missing_tables">This backup is missing required tables</string>
+    <string name="restore_error_incomplete">This backup is incomplete and cannot be restored</string>
+    <string name="restore_error_failed">Could not restore the database</string>
+    <string name="a11y_backup_button">Back up the local database to a file</string>
+    <string name="a11y_restore_button">Restore the local database from a backup file</string>
+    <string name="a11y_backup_success">Database backup saved as %1$s</string>
+    <string name="a11y_restore_invalid">This file cannot be restored: %1$s</string>
 </resources>

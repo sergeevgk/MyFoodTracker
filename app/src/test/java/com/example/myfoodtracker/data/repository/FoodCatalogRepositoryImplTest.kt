@@ -256,6 +256,9 @@ class FoodCatalogRepositoryImplTest {
         var lastLimit: Int? = null
         var lastInsertedFood: CatalogFoodEntity? = null
         var lastInsertedNutrients: CatalogFoodNutrientEntity? = null
+        var customFoodRows: List<CatalogFoodEntity> = emptyList()
+        var customFoodNutrientRows: List<CatalogFoodNutrientEntity> = emptyList()
+        var deleteCustomFoodsCallCount = 0
 
         override fun search(matchQuery: String, limit: Int): List<FoodSearchRow> {
             searchCalled = true
@@ -285,5 +288,14 @@ class FoodCatalogRepositoryImplTest {
         }
 
         override fun deleteFoodById(foodId: Long) = Unit
+
+        override fun getCustomFoods(): List<CatalogFoodEntity> = customFoodRows
+
+        override fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity> =
+            customFoodNutrientRows
+
+        override fun deleteCustomFoods() {
+            deleteCustomFoodsCallCount++
+        }
     }
 }

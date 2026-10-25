@@ -4,11 +4,15 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.myfoodtracker.domain.model.BackupErrorReason
 import com.example.myfoodtracker.domain.model.ExportFormat
 import com.example.myfoodtracker.domain.repository.SessionRepository
+import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
+import com.example.myfoodtracker.presentation.ui.settings.model.BackupState
 import com.example.myfoodtracker.presentation.ui.settings.model.DateRange
 import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
+import com.example.myfoodtracker.presentation.ui.settings.model.RestoreState
 import com.example.myfoodtracker.presentation.ui.settings.model.SettingsUiState
 import java.time.LocalDate
 
@@ -16,12 +20,14 @@ import java.time.LocalDate
  * Backs the Settings & Data Management screen.
  *
  * The ViewModel holds no `Context`, no `File` and no `Uri` (project rule): it
- * returns the export payload and the Fragment performs the file IO and the
- * Intents. The selected date range lives here, so it survives a rotation.
+ * returns the export payload and drives the backup/restore state machine, while
+ * the Fragment performs the file IO and the Intents. The selected date range and
+ * the pending restore dialogs live here, so they survive a rotation.
  */
 class SettingsViewModel(
     private val exportLogsUseCase: ExportLogsUseCase,
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val backupDatabaseUseCase: BackupDatabaseUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData<SettingsUiState>()
@@ -29,6 +35,12 @@ class SettingsViewModel(
 
     private val _exportState = MutableLiveData<ExportState>(ExportState.Idle)
     val exportState: LiveData<ExportState> = _exportState
+
+    private val _backupState = MutableLiveData<BackupState>(BackupState.Idle)
+    val backupState: LiveData<BackupState> = _backupState
+
+    private val _restoreState = MutableLiveData<RestoreState>(RestoreState.Idle)
+    val restoreState: LiveData<RestoreState> = _restoreState
 
     private val _format = MutableLiveData(ExportFormat.CSV)
     val format: LiveData<ExportFormat> = _format
@@ -96,6 +108,73 @@ class SettingsViewModel(
     /** Resets the export state so a rotation does not re-trigger the Intent. */
     fun clearExportState() {
         _exportState.value = ExportState.Idle
+    }
+
+    // --- Backup ----------------------------------------------------------------------
+
+    /** `myfoodtracker_backup_<yyyy-MM-dd>.db`, device-local date by default. */
+    fun backupFileName(date: LocalDate = LocalDate.now()): String =
+        backupDatabaseUseCase.backupFileName(date)
+
+    fun onBackupPreparing() {
+        _backupState.value = BackupState.Preparing
+    }
+
+    fun onBackupReady(fileName: String) {
+        _backupState.value = BackupState.Ready(fileName)
+    }
+
+    fun onBackupSaved(fileName: String) {
+        _backupState.value = BackupState.Saved(fileName)
+    }
+
+    fun onBackupFailed(reason: BackupErrorReason) {
+        _backupState.value = BackupState.Error(reason)
+    }
+
+    fun cancelBackup() {
+        _backupState.value = BackupState.Idle
+    }
+
+    // --- Restore ---------------------------------------------------------------------
+
+    fun onRestoreValidating() {
+        _restoreState.value = RestoreState.Validating
+    }
+
+    fun onRestoreCandidateReady(candidateName: String) {
+        _restoreState.value = RestoreState.ConfirmRequired(candidateName)
+    }
+
+    fun onRestoreInvalid(reason: BackupErrorReason) {
+        _restoreState.value = RestoreState.Invalid(reason)
+    }
+
+    /**
+     * Advances the state machine to the committed restore.
+     *
+     * Unlike the export state, [RestoreState.ConfirmRequired] and
+     * [RestoreState.Staged] are **not** cleared after being observed: the
+     * Fragment re-shows the dialogs from the retained state after a rotation.
+     */
+    fun onRestoreStaged() {
+        _restoreState.value = RestoreState.Staged
+    }
+
+    fun onRestoreFailed(reason: BackupErrorReason) {
+        _restoreState.value = RestoreState.Error(reason)
+    }
+
+    /** The user accepted the overwrite warning. */
+    fun confirmRestore() {
+        if (_restoreState.value is RestoreState.ConfirmRequired) {
+            _restoreState.value = RestoreState.Staged
+        }
+    }
+
+    /** The user cancelled either dialog: nothing is pending any more. */
+    fun cancelRestore() {
+        _restoreState.value = RestoreState.Idle
     }
 
     private fun logExportException(

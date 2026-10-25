@@ -1,6 +1,7 @@
 package com.example.myfoodtracker.presentation.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.example.myfoodtracker.domain.model.BackupErrorReason
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.ExportFormat
 import com.example.myfoodtracker.domain.model.Food
@@ -8,8 +9,11 @@ import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
+import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
+import com.example.myfoodtracker.presentation.ui.settings.model.BackupState
 import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
+import com.example.myfoodtracker.presentation.ui.settings.model.RestoreState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -27,6 +31,7 @@ class SettingsViewModelTest {
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeMealRepository: FakeMealRepository
     private lateinit var exportLogsUseCase: ExportLogsUseCase
+    private lateinit var backupDatabaseUseCase: BackupDatabaseUseCase
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = UserProfile(
@@ -45,9 +50,11 @@ class SettingsViewModelTest {
         fakeSessionRepository.setActiveProfile(testUser)
         fakeMealRepository = FakeMealRepository()
         exportLogsUseCase = ExportLogsUseCase(fakeMealRepository)
+        backupDatabaseUseCase = BackupDatabaseUseCase()
         viewModel = SettingsViewModel(
             exportLogsUseCase = exportLogsUseCase,
-            sessionRepository = fakeSessionRepository
+            sessionRepository = fakeSessionRepository,
+            backupDatabaseUseCase = backupDatabaseUseCase
         )
     }
 
@@ -238,6 +245,181 @@ class SettingsViewModelTest {
         // re-dispatch of Idle — then it settles.
         assertEquals(3, notifications)
         assertEquals(ExportState.Idle, viewModel.exportState.value)
+    }
+
+    // --- Backup state ---------------------------------------------------------------
+
+    @Test
+    fun backup_initialStateIsIdle() {
+        assertEquals(BackupState.Idle, viewModel.backupState.value)
+    }
+
+    @Test
+    fun backupFileName_usesTheDeviceLocalDateAndIsoFormat() {
+        assertEquals(
+            "myfoodtracker_backup_2026-10-21.db",
+            viewModel.backupFileName(LocalDate.of(2026, 10, 21))
+        )
+    }
+
+    @Test
+    fun backupFileName_defaultsToToday() {
+        assertEquals(
+            "myfoodtracker_backup_${LocalDate.now()}.db",
+            viewModel.backupFileName()
+        )
+    }
+
+    @Test
+    fun onBackupPreparing_movesToPreparing() {
+        viewModel.onBackupPreparing()
+
+        assertEquals(BackupState.Preparing, viewModel.backupState.value)
+    }
+
+    @Test
+    fun onBackupReady_carriesTheDeterministicFileName() {
+        viewModel.onBackupReady("myfoodtracker_backup_2026-10-21.db")
+
+        assertEquals(
+            BackupState.Ready("myfoodtracker_backup_2026-10-21.db"),
+            viewModel.backupState.value
+        )
+    }
+
+    @Test
+    fun onBackupSaved_carriesTheFileName() {
+        viewModel.onBackupSaved("myfoodtracker_backup_2026-10-21.db")
+
+        assertEquals(
+            BackupState.Saved("myfoodtracker_backup_2026-10-21.db"),
+            viewModel.backupState.value
+        )
+    }
+
+    @Test
+    fun onBackupFailed_carriesTheReason() {
+        viewModel.onBackupFailed(BackupErrorReason.IO_ERROR)
+
+        assertEquals(
+            BackupState.Error(BackupErrorReason.IO_ERROR),
+            viewModel.backupState.value
+        )
+    }
+
+    @Test
+    fun cancelBackup_resetsToIdle() {
+        viewModel.onBackupReady("myfoodtracker_backup_2026-10-21.db")
+
+        viewModel.cancelBackup()
+
+        assertEquals(BackupState.Idle, viewModel.backupState.value)
+    }
+
+    // --- Restore state --------------------------------------------------------------
+
+    @Test
+    fun restore_initialStateIsIdle() {
+        assertEquals(RestoreState.Idle, viewModel.restoreState.value)
+    }
+
+    @Test
+    fun onRestoreValidating_movesToValidating() {
+        viewModel.onRestoreValidating()
+
+        assertEquals(RestoreState.Validating, viewModel.restoreState.value)
+    }
+
+    @Test
+    fun onRestoreCandidateReady_movesToConfirmRequiredWithTheDisplayName() {
+        viewModel.onRestoreCandidateReady("myfoodtracker_backup_2026-10-21.db")
+
+        assertEquals(
+            RestoreState.ConfirmRequired("myfoodtracker_backup_2026-10-21.db"),
+            viewModel.restoreState.value
+        )
+    }
+
+    @Test
+    fun onRestoreInvalid_carriesTheReason() {
+        viewModel.onRestoreInvalid(BackupErrorReason.NOT_A_DATABASE)
+
+        assertEquals(
+            RestoreState.Invalid(BackupErrorReason.NOT_A_DATABASE),
+            viewModel.restoreState.value
+        )
+    }
+
+    @Test
+    fun onRestoreStaged_movesToStaged() {
+        viewModel.onRestoreStaged()
+
+        assertEquals(RestoreState.Staged, viewModel.restoreState.value)
+    }
+
+    @Test
+    fun onRestoreFailed_carriesTheReason() {
+        viewModel.onRestoreFailed(BackupErrorReason.IO_ERROR)
+
+        assertEquals(
+            RestoreState.Error(BackupErrorReason.IO_ERROR),
+            viewModel.restoreState.value
+        )
+    }
+
+    @Test
+    fun confirmRestore_advancesConfirmRequiredToStaged() {
+        viewModel.onRestoreCandidateReady("backup.db")
+
+        viewModel.confirmRestore()
+
+        assertEquals(RestoreState.Staged, viewModel.restoreState.value)
+    }
+
+    @Test
+    fun confirmRestore_outsideConfirmRequired_isIgnored() {
+        viewModel.onRestoreInvalid(BackupErrorReason.MISSING_TABLES)
+
+        viewModel.confirmRestore()
+
+        assertEquals(
+            RestoreState.Invalid(BackupErrorReason.MISSING_TABLES),
+            viewModel.restoreState.value
+        )
+    }
+
+    @Test
+    fun cancelRestore_resetsToIdle() {
+        viewModel.onRestoreCandidateReady("backup.db")
+
+        viewModel.cancelRestore()
+
+        assertEquals(RestoreState.Idle, viewModel.restoreState.value)
+    }
+
+    @Test
+    fun restoreDialogStates_areNotClearedByObservation() {
+        // Regression guard for the "dialog lost on rotation" disaster: unlike the
+        // export state, ConfirmRequired and Staged are only cleared by an explicit
+        // user action, so re-attaching the observer re-shows the prompt.
+        viewModel.onRestoreCandidateReady("backup.db")
+
+        var observed: RestoreState? = null
+        val observer = androidx.lifecycle.Observer<RestoreState> { observed = it }
+        viewModel.restoreState.observeForever(observer)
+
+        assertEquals(RestoreState.ConfirmRequired("backup.db"), observed)
+        assertEquals(
+            RestoreState.ConfirmRequired("backup.db"),
+            viewModel.restoreState.value
+        )
+
+        viewModel.confirmRestore()
+
+        assertEquals(RestoreState.Staged, observed)
+        assertEquals(RestoreState.Staged, viewModel.restoreState.value)
+
+        viewModel.restoreState.removeObserver(observer)
     }
 
     // --- Helpers -------------------------------------------------------------------

@@ -48,7 +48,8 @@
 ## Forward notes from: story 3-1-sqlite-fts5-search-engine-and-pre-populated-food-database (2026-10-03)
 
 - **3.1-F1: Catalog version bump + `fallbackToDestructiveMigration` would wipe custom foods** - `FoodCatalogDatabase` uses `fallbackToDestructiveMigration()` with `createFromAsset`. When Story 3.3 stores user-created custom foods in `catalog_foods` (`is_custom = 1`), any future catalog `version` bump will destructively recopy the asset and delete those rows. Before bumping the catalog version, implement a migration that preserves `is_custom = 1` rows (export + re-import) or move custom foods to a separate table/DB. [di/AppModule.kt]
-- **3.1-F2: Story 5.2 backup/restore must cover two databases** - Backup/restore currently assumes a single `meals_database`; it must later include the `food_catalog` file (at minimum the `is_custom = 1` rows, since the bundled asset itself is reinstallable).
+- **3.1-F2: Story 5.2 backup/restore must cover two databases** - RESOLVED by story 5-2-offline-full-database-backup-and-restore. The backup file carries a `myfoodtracker_custom_foods` table with every `catalog_foods` row where `is_custom = 1` (plus its `catalog_food_nutrients` row); the seeded catalog is not copied because the bundled asset is reinstallable. On restore the custom foods are re-inserted through `FoodCatalogDao` with freshly allocated ids, so a different catalog asset version cannot collide with the seeded rows.
+  - Known limitation carried forward as **5.2-F1** below: `catalog_food_serving_units` rows of custom foods are not part of the backup format.
 
 ## Deferred from: code review of 3-2-food-search-quantity-modal-and-meal-slot-logging (2026-10-04)
 
@@ -85,5 +86,19 @@
 - **5.1-F1: Water logs are not part of the log export** - The export header is fixed by FR-12 (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) and has no water column, so `water_logs` rows are not exported. Adding a water section (or a second file) is a product decision for a future story. [domain/usecase/ExportLogsUseCase.kt]
 - **5.1-F2: "Save to file…" payload is held in a Fragment field and is lost on rotation** - While the system document picker is open, the pending `ExportPayload` lives in a `SettingsFragment` field (per the story contract). A configuration change while the picker is open therefore loses the payload; the activity result then reports "Could not save the log file" instead of writing the file. Moving the pending payload into the ViewModel (or `onSaveInstanceState`) would remove this edge case. [presentation/ui/settings/SettingsFragment.kt]
 - Note: deferred item `1.2-D3` (logout action in the settings screen) stays **open** — Story 5.1 did not add a logout button; the dashboard logout is unchanged.
+
+## Forward notes from: story 5-2-offline-full-database-backup-and-restore (2026-10-22)
+
+- **5.2-F1: `catalog_food_serving_units` of custom foods are not backed up** - The backup format carries `catalog_foods` (`is_custom = 1`) plus `catalog_food_nutrients`, but not serving units. Custom foods are currently created without serving units, so nothing is lost today; if custom foods ever gain serving units, `format_version` must be bumped and the format extended. [data/backup/DatabaseBackupManager.kt]
+- **5.2-F2: The SQLite-level restore path is only covered by JVM tests up to the validation decision table** - The WAL checkpoint, the journal-mode conversion of the copy, the identity-hash comparison against the live file, the `Context.deleteDatabase` swap and the cold-start custom-food re-insert can only be exercised on a device. No emulator run was performed (project policy); the manual checks are listed in the story's Completion Notes. [data/backup/PendingRestoreApplier.kt]
+- **5.2-F3: The backup/restore flow runs synchronously on the main thread** - By design (AD-2, no coroutines) and acceptable because only the user's own logs (< 1 MB) are copied; the ~10–20 MB catalog is never copied. If an on-device measurement ever exceeds ~1 s, only the file copy may move to a `java.util.concurrent.Executor`, and the checkpoint/copy pair must then be serialized against Room writes. [presentation/ui/settings/SettingsFragment.kt]
+- **5.2-F4: A staged restore may be included in the platform auto-backup** - With the unchanged `backup_rules.xml` / `data_extraction_rules.xml`, `allowBackup="true"` includes `files/`, so `filesDir/pending_restore/` could be uploaded by the OS between staging and restart. This is the user's own data and was accepted consciously; harden the backup rules if that changes. [MainApplication.kt, res/xml/backup_rules.xml]
+
+## Deferred from: code review of story-5.2 (2026-10-22)
+
+- **5.2-D1: Discarded custom food IDs in `recipe_ingredients` after restore** - When custom foods are restored into `FoodCatalogDao`, fresh IDs are allocated to prevent collision with the seeded catalog asset, leaving `catalog_food_id` in `recipe_ingredients` unlinked to the new IDs. [RecipeIngredientEntity.kt]
+- **5.2-D2: Synchronous main-thread execution of backup and restore operations** - Backup/restore runs synchronously on the main thread per project architectural constraint AD-2 (no coroutines). Tracked as forward note 5.2-F3. [SettingsFragment.kt]
+
+
 
 
