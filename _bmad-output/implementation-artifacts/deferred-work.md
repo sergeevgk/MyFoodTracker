@@ -48,11 +48,57 @@
 ## Forward notes from: story 3-1-sqlite-fts5-search-engine-and-pre-populated-food-database (2026-10-03)
 
 - **3.1-F1: Catalog version bump + `fallbackToDestructiveMigration` would wipe custom foods** - `FoodCatalogDatabase` uses `fallbackToDestructiveMigration()` with `createFromAsset`. When Story 3.3 stores user-created custom foods in `catalog_foods` (`is_custom = 1`), any future catalog `version` bump will destructively recopy the asset and delete those rows. Before bumping the catalog version, implement a migration that preserves `is_custom = 1` rows (export + re-import) or move custom foods to a separate table/DB. [di/AppModule.kt]
-- **3.1-F2: Story 5.2 backup/restore must cover two databases** - Backup/restore currently assumes a single `meals_database`; it must later include the `food_catalog` file (at minimum the `is_custom = 1` rows, since the bundled asset itself is reinstallable).
+- **3.1-F2: Story 5.2 backup/restore must cover two databases** - RESOLVED by story 5-2-offline-full-database-backup-and-restore. The backup file carries a `myfoodtracker_custom_foods` table with every `catalog_foods` row where `is_custom = 1` (plus its `catalog_food_nutrients` row); the seeded catalog is not copied because the bundled asset is reinstallable. On restore the custom foods are re-inserted through `FoodCatalogDao` with freshly allocated ids, so a different catalog asset version cannot collide with the seeded rows.
+  - Known limitation carried forward as **5.2-F1** below: `catalog_food_serving_units` rows of custom foods are not part of the backup format.
 
 ## Deferred from: code review of 3-2-food-search-quantity-modal-and-meal-slot-logging (2026-10-04)
 
 - **3.2-D1: Non-atomic composite meal logging (`insertMeal` and `insertFoods`)** - `MealRepositoryImpl.logFoodEntry` performs two separate DAO operations without an atomic Room `@Transaction`. Continues pre-existing DAO design debt 2.4-D1 / 2.5-D1, to be addressed when meal DAO operations are overhauled with unified transaction support. [MealRepositoryImpl.kt:80]
 - **3.2-D2: Instrumented test coverage for `FoodCatalogDao` projection additions** - `FoodCatalogDao` added `base_serving_size` and `base_serving_unit` to the search projection. Integration verified via JVM unit tests; on-device instrumented test execution deferred per project policy forbidding automated emulator runs. Flagged for manual on-device verification. [FoodCatalogFtsTest.kt:50]
+
+
+
+## Deferred from: code review of 3-3-custom-food-creation-and-relevance-ranking (2026-10-06)
+
+- **3.3-D1: Main-thread synchronous `MealRepository` scan on every search keystroke** - `SearchFoodUseCase` scans all meal entries synchronously on the main thread during typing without debounce. Documented in Dev Notes §2: acceptable for small history; if manual on-device timing exceeds the 50ms average threshold, a future optimization should add an optimized `COUNT/GROUP BY` query to `MealDao`. [SearchFoodUseCase.kt:21]
+
+## Deferred from: code review of 3-5-german-and-european-food-catalog-seed-pipeline (2026-10-07)
+
+- **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - Bundeslebensmittelschlüssel 4.0 is licensed under CC BY 4.0 (© Max Rubner-Institut, DOI 10.25826/Data20251217-134202-0) and Open Food Facts is licensed under ODbL 1.0 (© Open Food Facts contributors). When an About/Credits or Settings screen is introduced in a future story, attribution and licensing notices must be displayed to satisfy license requirements. [tools/seed/README.md]
+
+## Deferred from: code review of 4-1-recipe-builder-and-ingredient-grouping (2026-10-15)
+
+- **4.1-D1: Shared `FoodSearchBottomSheet` shows "Quick Add" button that displays unavailable snackbar in recipe flow** - The shared `FoodSearchBottomSheet` component exposes the "Quick Add" button even when opened from `RecipeBuilderFragment`. Tapping it dismisses the sheet and displays a snackbar. Modifying `FoodSearchBottomSheet` to conditionally hide Quick Add is deferred as a cross-cutting component enhancement. [RecipeBuilderFragment.kt:95-102]
+- **4.1-D2: Recipe card in `RecipeListFragment` has no detail/inspection view for existing recipe ingredients** - Tapping a saved recipe card in the list does not show its ingredient breakdown or quantities (only the macro sum). Recipe inspection/editing is deferred to Story 4.2 / future stories as Story 4.1 is scoped to creation and listing. [RecipeListFragment.kt:34]
+- **4.1-D3: Preserve builder drafts across screen rotation / configuration changes** - Drafts are currently held in Fragment memory during the build session; saving draft state across process recreation or configuration change is deferred as post-MVP presentation state refinement. [RecipeBuilderFragment.kt:33]
+- **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48]
+
+## Deferred from: code review of 4-2-one-tap-recipe-logging (2026-10-17)
+
+- **4.2-D1: Check lifecycle and context before accessing resources in `scroll.post`** - `LogRecipeDialogFragment.capIngredientScrollHeight` calls `resources.getDimensionPixelSize` in a posted runnable without an `isAdded` / `context != null` guard. Deferred per user decision as edge-case lifecycle hardening. [LogRecipeDialogFragment.kt:94]
+
+## Resolved by: story 5-1-csv-and-txt-log-export (2026-10-21)
+
+- **3.5-D1: Legal attribution for BLS 4.0 (CC BY 4.0) and Open Food Facts (ODbL) in UI** - RESOLVED. Story 5.1 introduced the first Settings screen ("Settings & Data Management", reachable from the dashboard overflow menu) and displays the attribution/privacy notice verbatim as `@string/settings_attribution` in `fragment_settings.xml`: "Food catalog data: BLS data © Max Rubner-Institut, licensed CC BY 4.0 (DOI 10.25826/Data20251217-134202-0); OFF data © Open Food Facts contributors, licensed ODbL 1.0. All data stays on this device." The notice is static text, visible without scrolling into a hidden tab, and independent of the export state.
+
+## Forward notes from: story 5-1-csv-and-txt-log-export (2026-10-21)
+
+- **5.1-F1: Water logs are not part of the log export** - The export header is fixed by FR-12 (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) and has no water column, so `water_logs` rows are not exported. Adding a water section (or a second file) is a product decision for a future story. [domain/usecase/ExportLogsUseCase.kt]
+- **5.1-F2: "Save to file…" payload is held in a Fragment field and is lost on rotation** - While the system document picker is open, the pending `ExportPayload` lives in a `SettingsFragment` field (per the story contract). A configuration change while the picker is open therefore loses the payload; the activity result then reports "Could not save the log file" instead of writing the file. Moving the pending payload into the ViewModel (or `onSaveInstanceState`) would remove this edge case. [presentation/ui/settings/SettingsFragment.kt]
+- Note: deferred item `1.2-D3` (logout action in the settings screen) stays **open** — Story 5.1 did not add a logout button; the dashboard logout is unchanged.
+
+## Forward notes from: story 5-2-offline-full-database-backup-and-restore (2026-10-22)
+
+- **5.2-F1: `catalog_food_serving_units` of custom foods are not backed up** - The backup format carries `catalog_foods` (`is_custom = 1`) plus `catalog_food_nutrients`, but not serving units. Custom foods are currently created without serving units, so nothing is lost today; if custom foods ever gain serving units, `format_version` must be bumped and the format extended. [data/backup/DatabaseBackupManager.kt]
+- **5.2-F2: The SQLite-level restore path is only covered by JVM tests up to the validation decision table** - The WAL checkpoint, the journal-mode conversion of the copy, the identity-hash comparison against the live file, the `Context.deleteDatabase` swap and the cold-start custom-food re-insert can only be exercised on a device. No emulator run was performed (project policy); the manual checks are listed in the story's Completion Notes. [data/backup/PendingRestoreApplier.kt]
+- **5.2-F3: The backup/restore flow runs synchronously on the main thread** - By design (AD-2, no coroutines) and acceptable because only the user's own logs (< 1 MB) are copied; the ~10–20 MB catalog is never copied. If an on-device measurement ever exceeds ~1 s, only the file copy may move to a `java.util.concurrent.Executor`, and the checkpoint/copy pair must then be serialized against Room writes. [presentation/ui/settings/SettingsFragment.kt]
+- **5.2-F4: A staged restore may be included in the platform auto-backup** - With the unchanged `backup_rules.xml` / `data_extraction_rules.xml`, `allowBackup="true"` includes `files/`, so `filesDir/pending_restore/` could be uploaded by the OS between staging and restart. This is the user's own data and was accepted consciously; harden the backup rules if that changes. [MainApplication.kt, res/xml/backup_rules.xml]
+
+## Deferred from: code review of story-5.2 (2026-10-22)
+
+- **5.2-D1: Discarded custom food IDs in `recipe_ingredients` after restore** - When custom foods are restored into `FoodCatalogDao`, fresh IDs are allocated to prevent collision with the seeded catalog asset, leaving `catalog_food_id` in `recipe_ingredients` unlinked to the new IDs. [RecipeIngredientEntity.kt]
+- **5.2-D2: Synchronous main-thread execution of backup and restore operations** - Backup/restore runs synchronously on the main thread per project architectural constraint AD-2 (no coroutines). Tracked as forward note 5.2-F3. [SettingsFragment.kt]
+
+
 
 

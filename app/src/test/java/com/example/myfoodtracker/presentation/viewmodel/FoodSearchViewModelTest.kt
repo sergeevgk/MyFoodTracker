@@ -5,6 +5,7 @@ import com.example.myfoodtracker.domain.model.FoodItem
 import com.example.myfoodtracker.domain.repository.FoodCatalogRepository
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.model.MealEntry
+import com.example.myfoodtracker.domain.usecase.CreateCustomFoodUseCase
 import com.example.myfoodtracker.domain.usecase.SearchFoodUseCase
 import org.junit.Assert.*
 import org.junit.Before
@@ -25,8 +26,9 @@ class FoodSearchViewModelTest {
         fakeCatalogRepository = FakeFoodCatalogRepository()
         fakeMealRepository = FakeMealRepository()
         viewModel = FoodSearchViewModel(
-            SearchFoodUseCase(fakeCatalogRepository),
-            fakeMealRepository
+            SearchFoodUseCase(fakeCatalogRepository, fakeMealRepository),
+            fakeMealRepository,
+            CreateCustomFoodUseCase(fakeCatalogRepository)
         )
     }
 
@@ -199,6 +201,59 @@ class FoodSearchViewModelTest {
         assertNull(viewModel.error.value)
     }
 
+    @Test
+    fun createCustomFood_validInput_returnsCreatedItemAndClearsError() {
+        val created = viewModel.createCustomFood(
+            name = "  MyProtein Whey  ",
+            brand = "MyProtein",
+            baseServingSize = 30.0,
+            baseServingUnit = "g",
+            calories = 120.0,
+            proteinG = 24.0,
+            carbsG = 3.0,
+            fatG = 1.0
+        )
+
+        assertNotNull(created)
+        assertEquals("MyProtein Whey", created!!.name)
+        assertTrue(created.isCustom)
+        assertNull(viewModel.error.value)
+    }
+
+    @Test
+    fun createCustomFood_blankName_returnsNullAndSurfacesError() {
+        val created = viewModel.createCustomFood(
+            name = "   ",
+            brand = null,
+            baseServingSize = 100.0,
+            baseServingUnit = "g",
+            calories = 100.0,
+            proteinG = 10.0,
+            carbsG = 5.0,
+            fatG = 2.0
+        )
+
+        assertNull(created)
+        assertEquals("Enter a name", viewModel.error.value)
+    }
+
+    @Test
+    fun createCustomFood_negativeMacro_returnsNullAndSurfacesError() {
+        val created = viewModel.createCustomFood(
+            name = "Oats",
+            brand = null,
+            baseServingSize = 100.0,
+            baseServingUnit = "g",
+            calories = -5.0,
+            proteinG = 10.0,
+            carbsG = 5.0,
+            fatG = 2.0
+        )
+
+        assertNull(created)
+        assertNotNull(viewModel.error.value)
+    }
+
     private fun foodItem(id: Long, name: String) = FoodItem(
         id = id,
         name = name,
@@ -224,6 +279,41 @@ class FoodSearchViewModelTest {
             lastLimit = limit
             if (query.isBlank()) return emptyList()
             return results
+        }
+
+        override fun createCustomFood(
+            name: String,
+            brand: String?,
+            baseServingSize: Double,
+            baseServingUnit: String,
+            calories: Double,
+            proteinG: Double,
+            carbsG: Double,
+            fatG: Double,
+            fiberG: Double,
+            sugarG: Double,
+            sodiumMg: Double
+        ): FoodItem {
+            val trimmedName = name.trim()
+            require(trimmedName.isNotBlank()) { "Enter a name" }
+            require(baseServingSize.isFinite() && baseServingSize > 0) { "Enter a serving size greater than 0" }
+            require(calories >= 0 && proteinG >= 0 && carbsG >= 0 && fatG >= 0) { "Enter 0 or more" }
+            return FoodItem(
+                id = 99L,
+                name = trimmedName,
+                brand = brand?.trim()?.ifBlank { null },
+                barcode = null,
+                isCustom = true,
+                calories = calories,
+                proteinG = proteinG,
+                carbsG = carbsG,
+                fatG = fatG,
+                fiberG = fiberG,
+                sugarG = sugarG,
+                sodiumMg = sodiumMg,
+                baseServingSize = baseServingSize,
+                baseServingUnit = baseServingUnit.trim().lowercase().ifBlank { "g" }
+            )
         }
     }
 

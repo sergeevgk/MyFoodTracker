@@ -522,6 +522,16 @@
 
                 </LinearLayout>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_recipes"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/min_touch_target"
+                    android:layout_marginBottom="@dimen/padding_card_small"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/action_recipes"
+                    android:contentDescription="@string/cd_recipes" />
+
                 <!-- Empty Meals State -->
                 <TextView
                     android:id="@+id/tv_empty_meals"

@@ -23,6 +23,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Exposes the export files in cacheDir/exports/ as content:// URIs so they
+          can be shared with other apps. No permission is declared: the app has
+          none at all, and the temporary read grant on the shared Intent is enough.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.myfoodtracker.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

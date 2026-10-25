@@ -283,6 +283,22 @@ So that I can skip the passcode login screen on subsequent app launches until I 
 **And** subsequent app launches detect the remembered profile, automatically restore the active session, and navigate directly to the dashboard, skipping the passcode screen.
 **And** when the user explicitly taps "Log Out" on the dashboard, both the in-memory session and the remembered device session are cleared, returning to the login screen for future launches until re-checked.
 
+### Story 3.5: German & European Food Catalog Seed Pipeline (BLS 4.0 + Open Food Facts Germany)
+
+As a user in Germany/Europe,
+I want the bundled offline food catalog to contain familiar German staple foods and popular supermarket branded items,
+So that my offline food search immediately finds local German foods, brands, and measurements.
+
+**Acceptance Criteria:**
+
+**Given** the seed pipeline script (`tools/seed/build_food_catalog_db.py` or dedicated script),
+**When** run with standard Python 3,
+**Then** it downloads, caches, and deterministically builds `food_catalog.db` combining the German national Bundeslebensmittelschlüssel (BLS 4.0) dataset (~7,140 generic foods) and curated German Open Food Facts products (15,000–25,000 branded items with barcodes).
+**And** all foods conform to the `FoodCatalogDatabase` version 1 schema (`catalog_foods`, `catalog_food_nutrients`, `catalog_food_serving_units`, `catalog_foods_fts`) with Room FTS5 triggers intact.
+**And** per-100g nutrient values (energy/kcal, protein, carbohydrates, fat, dietary fiber, sugar, sodium) are populated accurately with missing/unknown fields defaulted to 0.0.
+**And** common German search terms (e.g., "Vollmilch", "Haferflocken", "Magerquark") and brand names (e.g., "Alpro", "Haribo") return matching results in `< 50ms`.
+**And** the generated database asset `app/src/main/assets/databases/food_catalog.db` passes SQLite integrity checks and JVM unit tests without breaking existing Room 3 functionality.
+
 ---
 
 ## Epic 4: Reusable Recipe Management

@@ -116,6 +116,26 @@
     <string name="log_food_preview_format">%1$.0f kcal &#183; P %2$.0fg &#183; C %3$.0fg &#183; F %4$.0fg</string>
     <string name="log_food_logged_format">Logged %1$s %2$s to %3$s</string>
 
+    <!-- Create-custom-food editor -->
+    <string name="custom_food_title">New Custom Food</string>
+    <string name="custom_food_hint_name">Food name</string>
+    <string name="custom_food_hint_brand">Brand (optional)</string>
+    <string name="custom_food_hint_serving_size">Serving size (e.g. 100)</string>
+    <string name="custom_food_hint_serving_unit">Serving unit</string>
+    <string name="custom_food_hint_calories">Calories per 100 g (kcal)</string>
+    <string name="custom_food_hint_protein">Protein per 100 g (g)</string>
+    <string name="custom_food_hint_carbs">Carbs per 100 g (g)</string>
+    <string name="custom_food_hint_fat">Fat per 100 g (g)</string>
+    <string name="custom_food_hint_fiber">Fiber per 100 g (g, optional)</string>
+    <string name="custom_food_hint_sugar">Sugar per 100 g (g, optional)</string>
+    <string name="custom_food_hint_sodium">Sodium per 100 g (mg, optional)</string>
+    <string name="custom_food_error_name">Enter a name</string>
+    <string name="custom_food_error_serving_size">Enter a serving size greater than 0</string>
+    <string name="custom_food_error_number">Enter 0 or more</string>
+    <string name="custom_food_error_required">Enter a value</string>
+    <string name="custom_food_error_save">Could not save — check the fields and retry</string>
+    <string name="custom_food_saved_format">Saved %1$s to Custom Library</string>
+
     <!-- Accessibility (TalkBack) announcement templates -->
     <string name="a11y_calories_with_target">Calories: %1$s of %2$s kilocalories consumed, %3$d percent</string>
     <string name="a11y_calories_no_target">Calories: %1$s kilocalories consumed, no target set</string>
@@ -128,6 +148,103 @@
     <string name="a11y_meal_item">%1$s, %2$s, %3$d kilocalories</string>
     <string name="a11y_food_search_result">%1$s, %2$s, %3$d kilocalories per 100 grams</string>
     <string name="a11y_log_food_preview">%1$s kilocalories, protein %2$s grams, carbs %3$s grams, fat %4$s grams</string>
+    <string name="a11y_custom_food_saved">Custom food %1$s saved to library</string>
     <string name="a11y_deleted">Deleted %1$s from %2$s</string>
     <string name="a11y_restored">Restored %1$s to %2$s</string>
+
+    <!-- Recipe builder (Epic 4) -->
+    <string name="recipe_list_title">My Recipes</string>
+    <string name="recipe_builder_title">Build Recipe</string>
+    <string name="recipe_empty">No recipes yet — tap + to build one</string>
+    <string name="recipe_empty_ingredients">No ingredients yet — add foods from search</string>
+    <string name="recipe_hint_name">Recipe name (e.g. Breakfast bowl)</string>
+    <string name="recipe_error_name">Enter a recipe name</string>
+    <string name="recipe_error_empty">Add at least one ingredient</string>
+    <string name="recipe_add_ingredient">＋ Add ingredient</string>
+    <string name="recipe_ingredient_quantity_title">Ingredient Quantity</string>
+    <string name="recipe_ingredient_quantity_format">%1$s %2$s</string>
+    <string name="recipe_row_summary_format">%1$d ingredients &#183; %2$.0f kcal &#183; P %3$.0fg &#183; C %4$.0fg &#183; F %5$.0fg</string>
+    <string name="recipe_totals_format">%1$d ingredients &#183; %2$.0f kcal &#183; P %3$.0fg &#183; C %4$.0fg &#183; F %5$.0fg</string>
+    <string name="recipe_saved_format">Recipe \'%1$s\' saved</string>
+    <string name="recipe_deleted_format">Deleted recipe \'%1$s\'</string>
+    <string name="dialog_delete_recipe_title">Delete Recipe?</string>
+    <string name="dialog_delete_recipe_message">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="recipe_quick_add_unavailable">Quick-add isn\'t available for recipe ingredients — pick a food instead</string>
+    <string name="action_save_recipe">Save Recipe</string>
+    <string name="action_recipes">Recipes</string>
+
+    <!-- Recipe content descriptions -->
+    <string name="cd_recipes">Open recipe manager</string>
+    <string name="cd_recipe_list">Saved recipes</string>
+    <string name="cd_add_recipe">Add new recipe</string>
+    <string name="cd_add_ingredient">Add ingredient from food search</string>
+    <string name="cd_delete_recipe">Delete recipe</string>
+    <string name="cd_remove_ingredient">Remove ingredient</string>
+    <string name="a11y_recipe_item">%1$s, %2$d ingredients, %3$d kilocalories</string>
+
+    <!-- Recipe logging (Story 4.2) -->
+    <string name="action_log">Log</string>
+    <string name="log_recipe_title">Log Recipe</string>
+    <string name="log_recipe_logged_format">Logged %1$s to %2$s</string>
+    <string name="log_recipe_error_missing">Recipe not found</string>
+    <string name="log_recipe_error_date">Missing log date</string>
+    <string name="log_recipe_ingredient_line">%1$s &#183; %2$s %3$s &#183; %4$.0f kcal</string>
+    <string name="a11y_recipe_logged">Logged %1$s to %2$s, %3$d foods added</string>
+    <string name="a11y_recipe_log_row">Log %1$s, %2$d ingredients, %3$d kilocalories</string>
+
+    <!-- Settings &amp; Data Management (Epic 5, Story 5.1) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_export">Export Logs</string>
+    <string name="settings_signed_in_format">Signed in as %1$s</string>
+    <string name="settings_format_label">Format</string>
+    <string name="settings_format_csv">CSV</string>
+    <string name="settings_format_txt">TXT</string>
+    <string name="settings_date_range_label">Date range</string>
+    <string name="settings_date_range_default">Select a date range</string>
+    <string name="settings_date_range_format">%1$s – %2$s</string>
+    <string name="settings_export_share">Export CSV Logs</string>
+    <string name="settings_export_share_txt">Export TXT Logs</string>
+    <string name="settings_export_save">Save to file…</string>
+    <string name="export_share_title">Share nutrition log</string>
+    <string name="export_share_subject">MyFoodTracker nutrition log</string>
+    <string name="export_success_format">Exported %1$d rows</string>
+    <string name="export_success_csv">Exported %1$d rows to CSV</string>
+    <string name="export_success_txt">Exported %1$d rows to TXT</string>
+    <string name="export_empty">No logs in the selected range</string>
+    <string name="export_error_range">Invalid date range</string>
+    <string name="export_error_profile">No active profile</string>
+    <string name="export_error_failed">Could not export the log file</string>
+    <string name="export_error_save_failed">Could not save the log file</string>
+    <string name="a11y_export_date_range">Select export date range, currently %1$s</string>
+    <string name="a11y_export_success">Exported %1$d rows to %2$s</string>
+    <string name="settings_attribution">Food catalog data: BLS data © Max Rubner-Institut, licensed CC BY 4.0 (DOI 10.25826/Data20251217-134202-0); OFF data © Open Food Facts contributors, licensed ODbL 1.0. All data stays on this device.</string>
+
+    <!-- Backup &amp; Restore (Epic 5, Story 5.2) -->
+    <string name="settings_section_backup">Backup &amp; Restore</string>
+    <string name="settings_backup_description">Create a full local copy of your database, or restore one from a backup file. Everything stays on this device.</string>
+    <string name="settings_backup_button">Backup Database</string>
+    <string name="settings_restore_button">Restore Database</string>
+    <string name="backup_success_format">Database backed up to %1$s</string>
+    <string name="backup_error_prepare">Could not prepare the database backup</string>
+    <string name="backup_error_write">Could not save the database backup</string>
+    <string name="backup_error_read">Could not read the selected file</string>
+    <string name="restore_confirm_title">Restore Database?</string>
+    <string name="restore_confirm_message">Restoring a database backup will overwrite your current local logs. Proceed?</string>
+    <string name="restore_confirm_positive">Overwrite &amp; Restore</string>
+    <string name="restore_restart_title">Restart required</string>
+    <string name="restore_restart_message">MyFoodTracker must restart to apply the restored data. Restart now?</string>
+    <string name="restore_restart_message_replace_notice">Your current local data (profiles, logs and custom foods) will be replaced.</string>
+    <string name="restore_restart_positive">Restart now</string>
+    <string name="restore_error_not_a_database">The selected file is not a MyFoodTracker backup</string>
+    <string name="restore_error_integrity">The selected backup is damaged and cannot be restored</string>
+    <string name="restore_error_version">This backup was created by an incompatible app version</string>
+    <string name="restore_error_schema_version">This backup was created with a different database schema version</string>
+    <string name="restore_error_schema">This backup was created with a different database schema</string>
+    <string name="restore_error_missing_tables">This backup is missing required tables</string>
+    <string name="restore_error_incomplete">This backup is incomplete and cannot be restored</string>
+    <string name="restore_error_failed">Could not restore the database</string>
+    <string name="a11y_backup_button">Back up the local database to a file</string>
+    <string name="a11y_restore_button">Restore the local database from a backup file</string>
+    <string name="a11y_backup_success">Database backup saved as %1$s</string>
+    <string name="a11y_restore_invalid">This file cannot be restored: %1$s</string>
 </resources>

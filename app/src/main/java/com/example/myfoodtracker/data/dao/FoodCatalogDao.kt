@@ -44,10 +44,45 @@ interface FoodCatalogDao {
     @Query("DELETE FROM catalog_foods WHERE id = :foodId")
     fun deleteFoodById(foodId: Long)
 
+    /**
+     * Rows the user created themselves. These are the only catalog rows a
+     * database backup carries; the seeded catalog is reinstallable from the
+     * bundled asset.
+     */
+    @Query("SELECT * FROM catalog_foods WHERE is_custom = 1")
+    fun getCustomFoods(): List<CatalogFoodEntity>
+
+    @Query(
+        "SELECT * FROM catalog_food_nutrients " +
+            "WHERE food_id IN (SELECT id FROM catalog_foods WHERE is_custom = 1)"
+    )
+    fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity>
+
+    /**
+     * Replaces the device's custom foods during a restore. The nutrient children
+     * are removed by the `ON DELETE CASCADE` foreign key — never by hand.
+     */
+    @Query("DELETE FROM catalog_foods WHERE is_custom = 1")
+    fun deleteCustomFoods()
+
     @Transaction
     fun insertFoodWithNutrients(food: CatalogFoodEntity, nutrients: CatalogFoodNutrientEntity): Long {
         val id = insertFood(food)
         insertNutrients(nutrients.copy(foodId = id))
         return id
+    }
+
+    /**
+     * Atomically replaces the user's custom foods during a restore.
+     * Deletion of old foods and insertion of all restored foods occur within
+     * a single transaction.
+     */
+    @Transaction
+    fun replaceCustomFoods(foods: List<Pair<CatalogFoodEntity, CatalogFoodNutrientEntity>>) {
+        deleteCustomFoods()
+        foods.forEach { (food, nutrient) ->
+            val id = insertFood(food)
+            insertNutrients(nutrient.copy(foodId = id))
+        }
     }
 }

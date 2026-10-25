@@ -34,6 +34,47 @@ class FoodCatalogRepositoryImplTest {
     }
 
     @Test
+    fun search_germanSingleTerm_buildsPrefixMatch() {
+        repository.search("Vollmilch")
+
+        assertEquals("\"Vollmilch\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_germanMultiTerm_buildsPerTermPrefixMatch() {
+        repository.search("Haferflocken Alpro")
+
+        assertEquals("\"Haferflocken\"* \"Alpro\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_umlautTerm_buildsPrefixMatch() {
+        repository.search("Müller")
+
+        assertEquals("\"Müller\"*", fakeDao.lastMatchQuery)
+    }
+
+    @Test
+    fun search_germanBrandedRow_mapsNameBrandBarcode() {
+        fakeDao.rows = listOf(
+            FoodSearchRow(
+                id = 8001L, name = "Vollmilch 3,5%", brand = "Alpro",
+                barcode = "4001234567890",
+                isCustom = 0, calories = 64.0, proteinG = 3.3, carbsG = 4.8,
+                fatG = 3.5, fiberG = 0.0, sugarG = 4.8, sodiumMg = 50.0
+            )
+        )
+
+        val results = repository.search("Vollmilch")
+
+        assertEquals(1, results.size)
+        assertEquals("Vollmilch 3,5%", results[0].name)
+        assertEquals("Alpro", results[0].brand)
+        assertEquals("4001234567890", results[0].barcode)
+        assertFalse(results[0].isCustom)
+    }
+
+    @Test
     fun search_embeddedQuote_escapesByDoubling() {
         repository.search("a\"b")
 
@@ -163,12 +204,61 @@ class FoodCatalogRepositoryImplTest {
         assertNull(results[0].barcode)
     }
 
+    @Test
+    fun createCustomFood_persistsCustomFlagViaInsertTransaction() {
+        val item = repository.createCustomFood(
+            name = "MyProtein Whey",
+            brand = "MyProtein",
+            baseServingSize = 30.0,
+            baseServingUnit = "g",
+            calories = 120.0,
+            proteinG = 24.0,
+            carbsG = 3.0,
+            fatG = 1.0
+        )
+
+        assertEquals(77L, item.id)
+        assertTrue(item.isCustom)
+        assertEquals("MyProtein Whey", item.name)
+        assertEquals("MyProtein", item.brand)
+        assertEquals(1, fakeDao.lastInsertedFood?.isCustom)
+        assertEquals("MyProtein Whey", fakeDao.lastInsertedFood?.name)
+        assertNull(fakeDao.lastInsertedFood?.barcode)
+        assertEquals(0, fakeDao.lastInsertedFood?.isDeleted)
+    }
+
+    @Test
+    fun createCustomFood_linksNutrientsToGeneratedId() {
+        repository.createCustomFood(
+            name = "Oats",
+            brand = null,
+            baseServingSize = 100.0,
+            baseServingUnit = "g",
+            calories = 350.0,
+            proteinG = 10.0,
+            carbsG = 60.0,
+            fatG = 5.0,
+            fiberG = 8.0,
+            sugarG = 1.0,
+            sodiumMg = 5.0
+        )
+
+        assertEquals(77L, fakeDao.lastInsertedNutrients?.foodId)
+        assertEquals(350.0, fakeDao.lastInsertedNutrients!!.calories, 0.001)
+        assertEquals(8.0, fakeDao.lastInsertedNutrients!!.fiberG, 0.001)
+    }
+
     /** Hand-written fake mirroring FoodCatalogDao behavior for search/count. */
     private class FakeFoodCatalogDao : FoodCatalogDao {
         var rows: List<FoodSearchRow> = emptyList()
         var searchCalled = false
         var lastMatchQuery: String? = null
         var lastLimit: Int? = null
+        var lastInsertedFood: CatalogFoodEntity? = null
+        var lastInsertedNutrients: CatalogFoodNutrientEntity? = null
+        var customFoodRows: List<CatalogFoodEntity> = emptyList()
+        var customFoodNutrientRows: List<CatalogFoodNutrientEntity> = emptyList()
+        var deleteCustomFoodsCallCount = 0
 
         override fun search(matchQuery: String, limit: Int): List<FoodSearchRow> {
             searchCalled = true
@@ -179,10 +269,33 @@ class FoodCatalogRepositoryImplTest {
 
         override fun countFoods(): Int = rows.size
 
-        override fun insertFood(food: CatalogFoodEntity): Long = 0L
+        override fun insertFood(food: CatalogFoodEntity): Long {
+            lastInsertedFood = food
+            return 77L
+        }
 
-        override fun insertNutrients(nutrients: CatalogFoodNutrientEntity) = Unit
+        override fun insertNutrients(nutrients: CatalogFoodNutrientEntity) {
+            lastInsertedNutrients = nutrients
+        }
+
+        override fun insertFoodWithNutrients(
+            food: CatalogFoodEntity,
+            nutrients: CatalogFoodNutrientEntity
+        ): Long {
+            val id = insertFood(food)
+            insertNutrients(nutrients.copy(foodId = id))
+            return id
+        }
 
         override fun deleteFoodById(foodId: Long) = Unit
+
+        override fun getCustomFoods(): List<CatalogFoodEntity> = customFoodRows
+
+        override fun getCustomFoodNutrients(): List<CatalogFoodNutrientEntity> =
+            customFoodNutrientRows
+
+        override fun deleteCustomFoods() {
+            deleteCustomFoodsCallCount++
+        }
     }
 }

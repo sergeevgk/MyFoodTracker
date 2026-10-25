@@ -1,5 +1,5 @@
 # generated: 2026-09-06T20:24:40+02:00
-# last_updated: 2026-09-06T20:24:40+02:00
+# last_updated: 2026-10-22T20:50:00+02:00
 # project: MyFoodTracker
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-09-06T20:24:40+02:00
-last_updated: 2026-10-04T17:02:00+02:00
+last_updated: 2026-10-22T20:50:00+02:00
 project: MyFoodTracker
 project_key: NOKEY
 tracking_system: file-system
@@ -60,17 +60,18 @@ development_status:
   2-5-swipe-to-delete-intake-logs-with-undo: done
   2-6-centralize-colors-strings-and-ui-resources: done
   epic-2-retrospective: optional
-  epic-3: in-progress
+  epic-3: done
   3-1-sqlite-fts5-search-engine-and-pre-populated-food-database: done
   3-2-food-search-quantity-modal-and-meal-slot-logging: done
-  3-3-custom-food-creation-and-relevance-ranking: backlog
+  3-3-custom-food-creation-and-relevance-ranking: done
   3-4-remember-user-session-on-device: done
+  3-5-german-and-european-food-catalog-seed-pipeline: done
   epic-3-retrospective: optional
-  epic-4: backlog
-  4-1-recipe-builder-and-ingredient-grouping: backlog
-  4-2-one-tap-recipe-logging: backlog
+  epic-4: done
+  4-1-recipe-builder-and-ingredient-grouping: done
+  4-2-one-tap-recipe-logging: done
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-csv-and-txt-log-export: backlog
-  5-2-offline-full-database-backup-and-restore: backlog
+  epic-5: in-progress
+  5-1-csv-and-txt-log-export: done
+  5-2-offline-full-database-backup-and-restore: done
   epic-5-retrospective: optional

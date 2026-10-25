@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_card">
+
+        <!-- Food Name Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_name"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_name"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text"
+                android:maxLength="100"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Brand Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_brand"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_brand"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_brand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text"
+                android:maxLength="100"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Base Serving Size Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_serving_size"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_serving_size"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_serving_size"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Serving Unit Selector Dropdown -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_unit"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_serving_unit"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <AutoCompleteTextView
+                android:id="@+id/spinner_custom_food_unit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Calories Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_calories"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_calories"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_calories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Protein Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_protein"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_protein"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_protein"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Carbs Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_carbs"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_carbs"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_carbs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Fat Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_fat"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_fat"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_fat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Fiber Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_fiber"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_fiber"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_fiber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Sugar Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_sugar"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_sugar"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_sugar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Sodium Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_custom_food_sodium"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_card_small"
+            android:hint="@string/custom_food_hint_sodium"
+            app:errorEnabled="true"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusBottomStart="@dimen/radius_card_small"
+            app:boxCornerRadiusTopEnd="@dimen/radius_card_small"
+            app:boxCornerRadiusTopStart="@dimen/radius_card_small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_custom_food_sodium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+</ScrollView>
