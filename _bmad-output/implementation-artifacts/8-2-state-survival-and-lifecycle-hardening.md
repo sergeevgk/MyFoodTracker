@@ -2,7 +2,7 @@
 story_id: 8.2
 story_key: 8-2-state-survival-and-lifecycle-hardening
 epic: 8
-status: ready-for-dev
+status: done
 created: 2026-10-25
 context_refreshed: 2026-10-30
 baseline_commit: e276e4fe2beaf2123a137c2e2ba695c29bff22f2 (Implement Story 7.2)
@@ -10,7 +10,7 @@ baseline_commit: e276e4fe2beaf2123a137c2e2ba695c29bff22f2 (Implement Story 7.2)
 
 # Story 8.2: State Survival & Lifecycle Hardening
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -28,24 +28,34 @@ So that long in-progress actions survive routine screen state changes.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Recipe draft → `RecipeBuilderViewModel` (AC: #1)
-  - [ ] 1.1 Create `presentation/viewmodel/RecipeBuilderViewModel.kt` holding: `drafts` (`MutableLiveData<List<NewRecipeIngredient>>`, init `emptyList()`), `name` (`MutableLiveData<String>`, init `""`) and a `saveError` (`MutableLiveData<String?>`, init `null`). Inject the existing `SaveRecipeUseCase` (factory-registered in `AppModule.kt:134`).
-  - [ ] 1.2 Implement: `addIngredient(NewRecipeIngredient)`, `removeIngredient(position: Int)`, `setName(String)`, `saveRecipe(name: String): Boolean` mirroring `RecipeViewModel.saveRecipe`'s try/catch-`IllegalArgumentException` → `saveError` contract (do NOT touch `RecipeViewModel` itself).
-  - [ ] 1.3 Rewrite `RecipeBuilderFragment` to read/write the draft via the VM: remove the `drafts` fragment field, drive `refreshDrafts()` from observing `viewModel.drafts`, restore `binding.etRecipeName` from `viewModel.name` on view creation, write back in `doAfterTextChanged` (restore the text **before** attaching the text watcher).
-  - [ ] 1.4 Register `viewModel { RecipeBuilderViewModel(get()) }` in `AppModule.kt` next to the other recipe ViewModels (≈ line 152).
-- [ ] Task 2: Export payload → ViewModel (AC: #2)
-  - [ ] 2.1 In `SettingsViewModel` add the pending-save carrier: `setPendingSavePayload(ExportPayload)` and `consumePendingSavePayload(): ExportPayload?` (returns and clears; a second consume returns `null`). Keep it a plain field + methods — the VM must not hold any `Uri`/`File` (project rule).
-  - [ ] 2.2 In `SettingsFragment`: delete the `pendingSavePayload` field; `startSaveToFile` stores the payload in the VM; the `createDocumentLauncher` callback calls `consumePendingSavePayload()` first and keeps the existing behavior exactly (RESULT_OK check, null-uri → `export_error_save_failed`, write via `fileWriter.writeToUri`, success snackbar, log literals).
-  - [ ] 2.3 Do NOT move `pendingAction` (`ExportAction.SHARE/SAVE`) into the VM: `export()` is synchronous, so `handleReady` fires in the same main-thread frame — there is no rotation window for it (Dev Notes explains). Leave it as a Fragment field.
-- [ ] Task 3: Lifecycle guard (AC: #3)
-  - [ ] 3.1 In `LogRecipeDialogFragment.capIngredientScrollHeight`, inside `scroll.post { … }` add as first lines: `if (!isAdded) return@post` (covers the detached `resources` access; `_binding?.scrollLogRecipeIngredients ?: return` at the top already covers the null-binding case).
-- [ ] Task 4: Tests (AC: #1, #2) — JVM only, per project policy (no emulator).
-  - [ ] 4.1 New `presentation/viewmodel/RecipeBuilderViewModelTest.kt`: hand-rolled `FakeRecipeRepository` (reuse the `RecordingMealRepository`/fake pattern from `RecipeViewModelTest`) under `InstantTaskExecutorRule`; cover add → drafts emitted, remove by position, remove with invalid index no-ops, save success → true + no error, save with blank-name `IllegalArgumentException` → false + `saveError` set.
-  - [ ] 4.2 Extend `SettingsViewModelTest`: `setPendingSavePayload` then `consumePendingSavePayload` returns the payload and clears it; second consume returns `null`; if never set, consume returns `null`.
-  - [ ] 4.3 Guard logic of Task 3 is not JVM-testable (Fragment resources) — cover it by compile check + the manual-verification notice below.
-  - [ ] 4.4 Verify: `./gradlew :app:compileDebugSources` and `./gradlew :app:testDebugUnitTest` (WSL; Windows: `gradlew.bat`). All existing tests stay green.
-  - [ ] 4.5 On completion, append `**RESOLVED** by story 8-2 (2026-XX-XX)` paragraphs to deferred-work items **4.1-D3**, **5.1-F2**, **4.2-D1** (match the established format, e.g. 6-1's resolutions). Do not change `sprint-status.yaml` statuses as the dev (dev-story → code-review flow owns them).
+- [x] Task 1: Recipe draft → `RecipeBuilderViewModel` (AC: #1)
+  - [x] 1.1 Create `presentation/viewmodel/RecipeBuilderViewModel.kt` holding: `drafts` (`MutableLiveData<List<NewRecipeIngredient>>`, init `emptyList()`), `name` (`MutableLiveData<String>`, init `""`) and a `saveError` (`MutableLiveData<String?>`, init `null`). Inject the existing `SaveRecipeUseCase` (factory-registered in `AppModule.kt:134`).
+  - [x] 1.2 Implement: `addIngredient(NewRecipeIngredient)`, `removeIngredient(position: Int)`, `setName(String)`, `saveRecipe(name: String): Boolean` mirroring `RecipeViewModel.saveRecipe`'s try/catch-`IllegalArgumentException` → `saveError` contract (do NOT touch `RecipeViewModel` itself).
+  - [x] 1.3 Rewrite `RecipeBuilderFragment` to read/write the draft via the VM: remove the `drafts` fragment field, drive `refreshDrafts()` from observing `viewModel.drafts`, restore `binding.etRecipeName` from `viewModel.name` on view creation, write back in `doAfterTextChanged` (restore the text **before** attaching the text watcher).
+  - [x] 1.4 Register `viewModel { RecipeBuilderViewModel(get()) }` in `AppModule.kt` next to the other recipe ViewModels (≈ line 152).
+- [x] Task 2: Export payload → ViewModel (AC: #2)
+  - [x] 2.1 In `SettingsViewModel` add the pending-save carrier: `setPendingSavePayload(ExportPayload)` and `consumePendingSavePayload(): ExportPayload?` (returns and clears; a second consume returns `null`). Keep it a plain field + methods — the VM must not hold any `Uri`/`File` (project rule).
+  - [x] 2.2 In `SettingsFragment`: delete the `pendingSavePayload` field; `startSaveToFile` stores the payload in the VM; the `createDocumentLauncher` callback calls `consumePendingSavePayload()` first and keeps the existing behavior exactly (RESULT_OK check, null-uri → `export_error_save_failed`, write via `fileWriter.writeToUri`, success snackbar, log literals).
+  - [x] 2.3 Do NOT move `pendingAction` (`ExportAction.SHARE/SAVE`) into the VM: `export()` is synchronous, so `handleReady` fires in the same main-thread frame — there is no rotation window for it (Dev Notes explains). Leave it as a Fragment field.
+- [x] Task 3: Lifecycle guard (AC: #3)
+  - [x] 3.1 In `LogRecipeDialogFragment.capIngredientScrollHeight`, inside `scroll.post { … }` add as first lines: `if (!isAdded) return@post` (covers the detached `resources` access; `_binding?.scrollLogRecipeIngredients ?: return` at the top already covers the null-binding case).
+- [x] Task 4: Tests (AC: #1, #2) — JVM only, per project policy (no emulator).
+  - [x] 4.1 New `presentation/viewmodel/RecipeBuilderViewModelTest.kt`: hand-rolled `FakeRecipeRepository` (reuse the `RecordingMealRepository`/fake pattern from `RecipeViewModelTest`) under `InstantTaskExecutorRule`; cover add → drafts emitted, remove by position, remove with invalid index no-ops, save success → true + no error, save with blank-name `IllegalArgumentException` → false + `saveError` set.
+  - [x] 4.2 Extend `SettingsViewModelTest`: `setPendingSavePayload` then `consumePendingSavePayload` returns the payload and clears it; second consume returns `null`; if never set, consume returns `null`.
+  - [x] 4.3 Guard logic of Task 3 is not JVM-testable (Fragment resources) — cover it by compile check + the manual-verification notice below.
+  - [x] 4.4 Verify: `./gradlew :app:compileDebugSources` and `./gradlew :app:testDebugUnitTest` (WSL; Windows: `gradlew.bat`). All existing tests stay green.
+  - [x] 4.5 On completion, append `**RESOLVED** by story 8-2 (2026-XX-XX)` paragraphs to deferred-work items **4.1-D3**, **5.1-F2**, **4.2-D1** (match the established format, e.g. 6-1's resolutions). Do not change `sprint-status.yaml` statuses as the dev (dev-story → code-review flow owns them).
 - [ ] Manual notice (explicit per project policy): rotation paths are UI-level and cannot be emulator-tested — on-device walk-through required: (a) build a recipe draft (name + ≥2 ingredients), rotate, confirm name/list/totals intact and Save still completes; (b) open an export, tap "Save to file…", rotate with the picker foregrounded, pick a destination, confirm the file is written with the success snackbar (no "Could not save the log file"); (c) log a long recipe (> cap height) and rotate while the dialog is open — no crash.
+
+### Review Findings
+
+- [x] [Review][Patch] Restore cursor position to end of text on rotation [app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeBuilderFragment.kt:55]
+- [x] [Review][Patch] Clear sticky saveError on user draft/name edits to prevent error resurrection on rotation [app/src/main/java/com/example/myfoodtracker/presentation/viewmodel/RecipeBuilderViewModel.kt:29, app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeBuilderFragment.kt:58]
+- [x] [Review][Defer] Fragmented and redundant pre-validation in Fragment layer [app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeBuilderFragment.kt:80] — deferred, pre-existing
+- [x] [Review][Defer] Locale-intolerant error comparison for recipe save error [app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeBuilderFragment.kt:62] — deferred, pre-existing
+- [x] [Review][Defer] Macro sums and count aggregation calculated in Fragment during rendering [app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeBuilderFragment.kt:130] — deferred, pre-existing
+- [x] [Review][Defer] DiffUtil item equality collisions on identical draft ingredients [app/src/main/java/com/example/myfoodtracker/presentation/ui/recipe/RecipeIngredientAdapter.kt:66] — deferred, pre-existing
+- [x] [Review][Defer] Test fake duplication across unit test suites [app/src/test/java/com/example/myfoodtracker/presentation/viewmodel/RecipeBuilderViewModelTest.kt:164] — deferred, pre-existing
 
 ## Dev Notes
 

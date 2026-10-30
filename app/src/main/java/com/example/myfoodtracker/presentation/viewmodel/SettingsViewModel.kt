@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.myfoodtracker.domain.model.BackupErrorReason
 import com.example.myfoodtracker.domain.model.ExportFormat
+import com.example.myfoodtracker.domain.model.ExportPayload
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
@@ -108,6 +109,31 @@ class SettingsViewModel(
     /** Resets the export state so a rotation does not re-trigger the Intent. */
     fun clearExportState() {
         _exportState.value = ExportState.Idle
+    }
+
+    // --- Pending "Save to file…" payload (story 8.2, AC #2) ---------------------------
+
+    /**
+     * The payload waiting to be written into the user-picked document, kept
+     * in the ViewModel (not in a Fragment field) so it survives the rotation
+     * that may happen while the system document picker is foregrounded.
+     * Plain field on purpose: no `Uri`, no `File`, no LiveData re-dispatch.
+     */
+    private var pendingSavePayload: ExportPayload? = null
+
+    /** Arms the carrier before the document picker is launched. */
+    fun setPendingSavePayload(payload: ExportPayload) {
+        pendingSavePayload = payload
+    }
+
+    /**
+     * Returns and clears the pending payload — a single-use carrier, so a
+     * second consume (or a consume that was never armed) returns `null`.
+     */
+    fun consumePendingSavePayload(): ExportPayload? {
+        val payload = pendingSavePayload
+        pendingSavePayload = null
+        return payload
     }
 
     // --- Backup ----------------------------------------------------------------------

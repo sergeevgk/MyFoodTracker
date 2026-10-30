@@ -17,7 +17,7 @@ import com.example.myfoodtracker.domain.model.ServingUnit
 import com.example.myfoodtracker.presentation.ui.recipe.RecipeListFragment.Companion.EXTRA_RECIPE_NAME
 import com.example.myfoodtracker.presentation.ui.recipe.RecipeListFragment.Companion.REQUEST_RECIPE_SAVED
 import com.example.myfoodtracker.presentation.ui.search.FoodSearchBottomSheet
-import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
+import com.example.myfoodtracker.presentation.viewmodel.RecipeBuilderViewModel
 import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.time.LocalDate
@@ -29,9 +29,8 @@ class RecipeBuilderFragment : Fragment(),
     private var _binding: FragmentRecipeBuilderBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: RecipeViewModel by viewModel()
+    private val viewModel: RecipeBuilderViewModel by viewModel()
     private lateinit var adapter: RecipeIngredientAdapter
-    private val drafts = mutableListOf<NewRecipeIngredient>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,21 +45,33 @@ class RecipeBuilderFragment : Fragment(),
         super.onViewCreated(view, savedInstanceState)
 
         adapter = RecipeIngredientAdapter { position ->
-            if (position in drafts.indices) {
-                drafts.removeAt(position)
-                refreshDrafts()
-            }
+            viewModel.clearSaveError()
+            binding.tvDraftsError.visibility = View.GONE
+            viewModel.removeIngredient(position)
         }
         binding.rvRecipeIngredients.adapter = adapter
 
-        binding.etRecipeName.doAfterTextChanged {
+        // Restore the draft name BEFORE attaching the text watcher, so the
+        // restoration does not clear the validation error or re-write into
+        // the ViewModel.
+        binding.etRecipeName.setText(viewModel.name.value.orEmpty())
+        binding.etRecipeName.setSelection(binding.etRecipeName.text?.length ?: 0)
+        binding.etRecipeName.doAfterTextChanged { text ->
+            viewModel.setName(text?.toString().orEmpty())
+            viewModel.clearSaveError()
             binding.tilRecipeName.error = null
+        }
+
+        viewModel.drafts.observe(viewLifecycleOwner) { drafts ->
+            refreshDrafts(drafts)
         }
 
         viewModel.saveError.observe(viewLifecycleOwner) { error ->
             if (error != null) {
                 if (error == getString(R.string.recipe_error_name) || binding.etRecipeName.text.isNullOrBlank()) {
-                    binding.tilRecipeName.error = error
+                    if (binding.etRecipeName.text.isNullOrBlank()) {
+                        binding.tilRecipeName.error = error
+                    }
                 } else {
                     binding.tvDraftsError.text = error
                     binding.tvDraftsError.visibility = View.VISIBLE
@@ -87,7 +98,7 @@ class RecipeBuilderFragment : Fragment(),
             } else {
                 binding.tilRecipeName.error = null
             }
-            if (drafts.isEmpty()) {
+            if (viewModel.drafts.value.orEmpty().isEmpty()) {
                 binding.tvDraftsError.text = getString(R.string.recipe_error_empty)
                 binding.tvDraftsError.visibility = View.VISIBLE
                 valid = false
@@ -95,13 +106,11 @@ class RecipeBuilderFragment : Fragment(),
                 binding.tvDraftsError.visibility = View.GONE
             }
             if (!valid) return@setOnClickListener
-            if (viewModel.saveRecipe(name, drafts.toList())) {
+            if (viewModel.saveRecipe(name)) {
                 setFragmentResult(REQUEST_RECIPE_SAVED, bundleOf(EXTRA_RECIPE_NAME to name.trim()))
                 findNavController().popBackStack()
             }
         }
-
-        refreshDrafts()
     }
 
     override fun onFoodSelected(food: FoodItem) {
@@ -121,13 +130,14 @@ class RecipeBuilderFragment : Fragment(),
 
     override fun onIngredientConfirmed(food: FoodItem, quantity: Double, unit: ServingUnit) {
         if (!isAdded) return
-        drafts.add(NewRecipeIngredient.fromFoodItem(food, quantity, unit))
-        refreshDrafts()
+        viewModel.clearSaveError()
+        binding.tvDraftsError.visibility = View.GONE
+        viewModel.addIngredient(NewRecipeIngredient.fromFoodItem(food, quantity, unit))
     }
 
-    private fun refreshDrafts() {
+    private fun refreshDrafts(drafts: List<NewRecipeIngredient>) {
         if (_binding == null) return
-        adapter.submitList(drafts.toList())
+        adapter.submitList(drafts)
         if (drafts.isEmpty()) {
             binding.tvEmptyIngredients.visibility = View.VISIBLE
             binding.rvRecipeIngredients.visibility = View.GONE

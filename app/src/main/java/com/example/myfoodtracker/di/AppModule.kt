@@ -46,6 +46,7 @@ import com.example.myfoodtracker.presentation.viewmodel.DashboardViewModel
 import com.example.myfoodtracker.presentation.viewmodel.FoodSearchViewModel
 import com.example.myfoodtracker.presentation.viewmodel.PasscodeAuthViewModel
 import com.example.myfoodtracker.presentation.viewmodel.ProfileSetupViewModel
+import com.example.myfoodtracker.presentation.viewmodel.RecipeBuilderViewModel
 import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
 import com.example.myfoodtracker.presentation.viewmodel.SettingsViewModel
 import android.content.Context
@@ -150,6 +151,7 @@ val appModule = module {
     viewModel { PasscodeAuthViewModel(get(), get(), get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
+    viewModel { RecipeBuilderViewModel(get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get(), get()) }
 }

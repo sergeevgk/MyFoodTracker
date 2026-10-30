@@ -59,9 +59,6 @@ class SettingsFragment : Fragment() {
     /** Which export destination the user asked for. */
     private var pendingAction: ExportAction? = null
 
-    /** The payload waiting to be written into the user-picked document. */
-    private var pendingSavePayload: ExportPayload? = null
-
     /**
      * The currently shown backup/restore dialog. Kept so a re-dispatch of the
      * retained restore state cannot stack a second dialog on top.
@@ -70,8 +67,7 @@ class SettingsFragment : Fragment() {
 
     private val createDocumentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val payload = pendingSavePayload
-            pendingSavePayload = null
+            val payload = viewModel.consumePendingSavePayload()
             if (result.resultCode != Activity.RESULT_OK) {
                 // The user cancelled — nothing is written and no error is shown.
                 return@registerForActivityResult
@@ -263,7 +259,10 @@ class SettingsFragment : Fragment() {
      */
     private fun startSaveToFile(payload: ExportPayload) {
         if (!isAdded) return
-        pendingSavePayload = payload
+        // The pending payload lives in the ViewModel, not in a Fragment field,
+        // so a rotation while the picker is foregrounded cannot lose it
+        // (bug 5.1-F2 / story 8.2 AC #2).
+        viewModel.setPendingSavePayload(payload)
         try {
             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -277,7 +276,9 @@ class SettingsFragment : Fragment() {
                 "Failed to launch document picker [fileName=${payload.fileName}, format=${payload.format}]",
                 e
             )
-            pendingSavePayload = null
+            // The picker never opened, so the result callback will not run:
+            // disarm the carrier so a stale payload cannot be consumed later.
+            viewModel.consumePendingSavePayload()
             showError(getString(R.string.export_error_failed))
         }
     }

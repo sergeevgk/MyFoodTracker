@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.myfoodtracker.domain.model.BackupErrorReason
 import com.example.myfoodtracker.domain.model.DailyGoal
 import com.example.myfoodtracker.domain.model.ExportFormat
+import com.example.myfoodtracker.domain.model.ExportPayload
 import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.model.UserProfile
@@ -16,6 +17,7 @@ import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
 import com.example.myfoodtracker.presentation.ui.settings.model.RestoreState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -421,7 +423,51 @@ class SettingsViewModelTest {
         viewModel.restoreState.removeObserver(observer)
     }
 
+    // --- Pending save payload carrier (story 8.2, AC #2) ----------------------------
+
+    @Test
+    fun pendingSavePayload_neverSet_consumeReturnsNull() {
+        assertNull(viewModel.consumePendingSavePayload())
+    }
+
+    @Test
+    fun pendingSavePayload_setThenConsume_returnsThePayloadAndClearsIt() {
+        viewModel.setPendingSavePayload(payload)
+
+        val consumed = viewModel.consumePendingSavePayload()
+
+        assertEquals(payload, consumed)
+    }
+
+    @Test
+    fun pendingSavePayload_secondConsume_returnsNull() {
+        viewModel.setPendingSavePayload(payload)
+        viewModel.consumePendingSavePayload()
+
+        assertNull(viewModel.consumePendingSavePayload())
+    }
+
+    @Test
+    fun pendingSavePayload_clearedPayload_survivesAsCleared() {
+        // Rotation case: the payload is set before the picker is foregrounded
+        // and consumed once when the activity result returns (or the user
+        // cancels); must not be re-delivered afterwards.
+        viewModel.setPendingSavePayload(payload)
+        viewModel.consumePendingSavePayload()
+        viewModel.setPendingSavePayload(payload)
+        viewModel.consumePendingSavePayload()
+
+        assertNull(viewModel.consumePendingSavePayload())
+    }
+
     // --- Helpers -------------------------------------------------------------------
+
+    private val payload = ExportPayload(
+        fileName = "myfoodtracker_logs_2026-10-01_2026-10-21.csv",
+        content = "col\nrow\n",
+        rowCount = 1,
+        format = ExportFormat.CSV
+    )
 
     private fun meal(id: String, date: String, time: String) = MealEntry(
         id = id,

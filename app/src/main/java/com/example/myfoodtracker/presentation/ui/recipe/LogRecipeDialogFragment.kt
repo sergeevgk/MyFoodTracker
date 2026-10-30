@@ -93,6 +93,10 @@ class LogRecipeDialogFragment : DialogFragment() {
     private fun capIngredientScrollHeight() {
         val scroll = _binding?.scrollLogRecipeIngredients ?: return
         scroll.post {
+            // The runnable can execute after the dialog fragment was detached
+            // (4.2-D1): `Fragment.resources` is unavailable then, and the
+            // captured `scroll` view reference is stale.
+            if (!isAdded) return@post
             val maxHeight = resources.getDimensionPixelSize(
                 R.dimen.dialog_log_recipe_ingredients_max_height
             )
