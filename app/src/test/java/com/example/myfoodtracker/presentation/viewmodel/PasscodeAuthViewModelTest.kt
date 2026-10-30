@@ -6,6 +6,7 @@ import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.security.PasscodeHasher
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.FakeAuthUserRepository
+import com.example.myfoodtracker.domain.usecase.FakePasscodeAttemptStore
 import com.example.myfoodtracker.domain.usecase.FakeSessionRepository
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import org.junit.Assert.*
@@ -20,6 +21,7 @@ class PasscodeAuthViewModelTest {
 
     private lateinit var fakeUserRepository: FakeAuthUserRepository
     private lateinit var fakeSessionRepository: FakeSessionRepository
+    private lateinit var fakeAttemptStore: FakePasscodeAttemptStore
     private lateinit var authenticateUserUseCase: AuthenticateUserUseCase
     private lateinit var restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase
     private lateinit var viewModel: PasscodeAuthViewModel
@@ -31,12 +33,18 @@ class PasscodeAuthViewModelTest {
     fun setUp() {
         fakeUserRepository = FakeAuthUserRepository()
         fakeSessionRepository = FakeSessionRepository()
-        authenticateUserUseCase = AuthenticateUserUseCase(fakeUserRepository, fakeSessionRepository)
+        fakeAttemptStore = FakePasscodeAttemptStore()
+        authenticateUserUseCase = AuthenticateUserUseCase(
+            fakeUserRepository,
+            fakeSessionRepository,
+            fakeAttemptStore
+        )
         restoreRememberedSessionUseCase = RestoreRememberedSessionUseCase(fakeSessionRepository)
         viewModel = PasscodeAuthViewModel(
             fakeUserRepository,
             authenticateUserUseCase,
-            restoreRememberedSessionUseCase
+            restoreRememberedSessionUseCase,
+            fakeAttemptStore
         )
     }
 
@@ -94,7 +102,7 @@ class PasscodeAuthViewModelTest {
     }
 
     @Test
-    fun authenticate_incorrectPasscode_setsPasscodeError() {
+    fun authenticate_incorrectPasscode_setsPasscodeErrorWithoutLockout() {
         user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
         viewModel.loadProfiles()
 
@@ -105,6 +113,32 @@ class PasscodeAuthViewModelTest {
         val content = state as PasscodeAuthState.Content
         assertEquals("Incorrect passcode", content.passcodeError)
         assertFalse(fakeSessionRepository.isLoggedIn())
+        assertEquals(0, content.lockoutRemainingSeconds)
+    }
+
+    @Test
+    fun authenticate_underLockout_mapsLockoutExceptionIntoState() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        viewModel.loadProfiles()
+
+        // 1st wrong attempt: free (count 0 → 1)
+        viewModel.authenticate("0000")
+        var content = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals("Incorrect passcode", content.passcodeError)
+        assertEquals(0, content.lockoutRemainingSeconds)
+
+        // 2nd wrong attempt: still accepted (count 1 → 2)
+        viewModel.authenticate("0000")
+        content = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals("Incorrect passcode", content.passcodeError)
+        assertEquals(0, content.lockoutRemainingSeconds)
+
+        // 3rd attempt: locked (+1 s after 2nd failure) — mapped into the Content state
+        viewModel.authenticate("0000")
+        content = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals(1, content.lockoutRemainingSeconds)
+        assertNull(content.passcodeError)
+        assertFalse(content.isAuthenticating)
     }
 
     @Test
@@ -174,5 +208,50 @@ class PasscodeAuthViewModelTest {
         val state = viewModel.state.value
         assertTrue(state is PasscodeAuthState.Authenticated)
         assertNull(fakeSessionRepository.getRememberedProfileId())
+    }
+    @Test
+    fun loadProfiles_profileUnderLockout_setsLockoutRemainingSecondsProactively() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        // Seed 3 failures -> +5s delay owed
+        fakeAttemptStore.seedFailures(user1.id, 3, System.currentTimeMillis())
+
+        viewModel.loadProfiles()
+
+        val state = viewModel.state.value as PasscodeAuthState.Content
+        assertTrue(state.lockoutRemainingSeconds > 0)
+        assertNull(state.passcodeError)
+    }
+
+    @Test
+    fun selectProfile_cleansesLockoutStateAndDoesNotContaminateOtherProfile() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        user2 = fakeUserRepository.createProfile("Anna", PasscodeHasher.hashPasscode("5678"), DailyGoal())
+        // User1 is locked out
+        fakeAttemptStore.seedFailures(user1.id, 3, System.currentTimeMillis())
+
+        viewModel.loadProfiles()
+        var state = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals(user1.id, state.selectedProfile?.id)
+        assertTrue(state.lockoutRemainingSeconds > 0)
+
+        // Select User2 -> lockout must NOT carry over
+        viewModel.selectProfile(user2.id)
+        state = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals(user2.id, state.selectedProfile?.id)
+        assertEquals(0, state.lockoutRemainingSeconds)
+    }
+
+    @Test
+    fun clearLockout_resetsLockoutRemainingSeconds() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        fakeAttemptStore.seedFailures(user1.id, 3, System.currentTimeMillis())
+        viewModel.loadProfiles()
+
+        var state = viewModel.state.value as PasscodeAuthState.Content
+        assertTrue(state.lockoutRemainingSeconds > 0)
+
+        viewModel.clearLockout()
+        state = viewModel.state.value as PasscodeAuthState.Content
+        assertEquals(0, state.lockoutRemainingSeconds)
     }
 }

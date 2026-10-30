@@ -86,12 +86,73 @@ class UserRepositoryImplTest {
 
     @Test
     fun verifyPasscode_matchesAgainstPasscodeHasher() {
-        val hashedPasscode = com.example.myfoodtracker.domain.security.PasscodeHasher.hashPasscode("1234")
+        val hashedPasscode = com.example.myfoodtracker.domain.security.PasscodeHasher.hashPasscode(
+            "1234",
+            iterations = 1_000
+        )
         val created = repository.createProfile("Georgii", hashedPasscode, DailyGoal())
 
         assertTrue(repository.verifyPasscode(created.id, "1234"))
         assertFalse(repository.verifyPasscode(created.id, "0000"))
         assertFalse(repository.verifyPasscode("non-existent-id", "1234"))
+    }
+
+    @Test
+    fun verifyPasscode_legacyHash_upgradesToPrefixedFormatAfterSuccess() {
+        val legacyHash = legacyHash("1234")
+        val created = repository.createProfile("Georgii", legacyHash, DailyGoal())
+
+        // Legacy fast-path verification succeeds and the stored hash is transparently upgraded
+        assertTrue(repository.verifyPasscode(created.id, "1234"))
+
+        val upgraded = repository.getProfileById(created.id)?.passcodeHash
+        assertNotNull(upgraded)
+        assertNotEquals(legacyHash, upgraded)
+        assertTrue(upgraded?.startsWith(com.example.myfoodtracker.domain.security.PasscodeHasher.FORMAT_PREFIX) == true)
+        // The upgraded hash still verifies against the same passcode
+        assertTrue(repository.verifyPasscode(created.id, "1234"))
+    }
+
+    @Test
+    fun verifyPasscode_wrongPasscodeAgainstLegacyHash_doesNotUpgrade() {
+        val legacyHash = legacyHash("1234")
+        val created = repository.createProfile("Georgii", legacyHash, DailyGoal())
+
+        assertFalse(repository.verifyPasscode(created.id, "0000"))
+
+        assertEquals(legacyHash, repository.getProfileById(created.id)?.passcodeHash)
+    }
+
+    @Test
+    fun verifyPasscode_prefixedHash_isNotRewritten() {
+        val prefixedHash = com.example.myfoodtracker.domain.security.PasscodeHasher.hashPasscode(
+            "1234",
+            iterations = 1_000
+        )
+        val created = repository.createProfile("Georgii", prefixedHash, DailyGoal())
+
+        assertTrue(repository.verifyPasscode(created.id, "1234"))
+
+        assertEquals(prefixedHash, repository.getProfileById(created.id)?.passcodeHash)
+    }
+
+    @Test
+    fun updatePasscodeHash_updatesStoredHash() {
+        val created = repository.createProfile("Georgii", legacyHash("1234"), DailyGoal())
+
+        fakeDao.updatePasscodeHash(created.id, "new-prefixed-hash")
+
+        assertEquals("new-prefixed-hash", repository.getProfileById(created.id)?.passcodeHash)
+    }
+
+    /** Legacy salt:sha256 construction (matches the legacy algorithm preserved in PasscodeHasher). */
+    private fun legacyHash(passcode: String): String {
+        val saltHex = "00112233445566778899aabbccddeeff"
+        val digest = java.security.MessageDigest
+            .getInstance("SHA-256")
+            .digest((saltHex + passcode).toByteArray(Charsets.UTF_8))
+        val hashHex = digest.joinToString("") { "%02x".format(it) }
+        return "$saltHex:$hashHex"
     }
 }
 
@@ -129,5 +190,12 @@ class FakeUserProfileDao : UserProfileDao {
 
     override fun isUsernameTaken(username: String): Boolean {
         return users.any { it.username.equals(username, ignoreCase = true) }
+    }
+
+    override fun updatePasscodeHash(id: String, hash: String) {
+        val index = users.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            users[index] = users[index].copy(passcodeHash = hash)
+        }
     }
 }

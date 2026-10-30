@@ -4,7 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.myfoodtracker.domain.model.UserProfile
+import com.example.myfoodtracker.domain.repository.PasscodeAttemptStore
 import com.example.myfoodtracker.domain.repository.UserRepository
+import com.example.myfoodtracker.domain.security.LockoutPolicy
+import com.example.myfoodtracker.domain.security.PasscodeLockoutException
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 
@@ -15,7 +18,9 @@ sealed class PasscodeAuthState {
         val profiles: List<UserProfile>,
         val selectedProfile: UserProfile?,
         val passcodeError: String? = null,
-        val isAuthenticating: Boolean = false
+        val isAuthenticating: Boolean = false,
+        /** Non-zero while a failed-attempt lockout wait is running (VM stays Context-free). */
+        val lockoutRemainingSeconds: Int = 0
     ) : PasscodeAuthState()
     data class Authenticated(val profile: UserProfile) : PasscodeAuthState()
 }
@@ -23,7 +28,8 @@ sealed class PasscodeAuthState {
 class PasscodeAuthViewModel(
     private val userRepository: UserRepository,
     private val authenticateUserUseCase: AuthenticateUserUseCase,
-    private val restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase
+    private val restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase,
+    private val attemptStore: PasscodeAttemptStore
 ) : ViewModel() {
 
     private val _state = MutableLiveData<PasscodeAuthState>(PasscodeAuthState.Loading)
@@ -45,21 +51,25 @@ class PasscodeAuthViewModel(
 
         val currentSelected = (state.value as? PasscodeAuthState.Content)?.selectedProfile
         val selectedProfile = profiles.find { it.id == currentSelected?.id } ?: profiles.first()
+        val remainingWait = calculateLockoutRemaining(selectedProfile.id)
 
         _state.value = PasscodeAuthState.Content(
             profiles = profiles,
             selectedProfile = selectedProfile,
             passcodeError = null,
-            isAuthenticating = false
+            isAuthenticating = false,
+            lockoutRemainingSeconds = remainingWait
         )
     }
 
     fun selectProfile(profileId: String) {
         val currentState = _state.value as? PasscodeAuthState.Content ?: return
         val profile = currentState.profiles.find { it.id == profileId } ?: return
+        val remainingWait = calculateLockoutRemaining(profile.id)
         _state.value = currentState.copy(
             selectedProfile = profile,
-            passcodeError = null
+            passcodeError = null,
+            lockoutRemainingSeconds = remainingWait
         )
     }
 
@@ -67,9 +77,20 @@ class PasscodeAuthViewModel(
         val currentState = _state.value as? PasscodeAuthState.Content ?: return
         val selectedProfile = currentState.selectedProfile ?: return
 
+        val remainingWait = calculateLockoutRemaining(selectedProfile.id)
+        if (remainingWait > 0) {
+            _state.value = currentState.copy(
+                isAuthenticating = false,
+                passcodeError = null,
+                lockoutRemainingSeconds = remainingWait
+            )
+            return
+        }
+
         if (passcode.length != 4 || !passcode.all { it.isDigit() }) {
             _state.value = currentState.copy(
-                passcodeError = "Incorrect passcode"
+                passcodeError = "Incorrect passcode",
+                lockoutRemainingSeconds = 0
             )
             return
         }
@@ -82,10 +103,20 @@ class PasscodeAuthViewModel(
                 _state.value = PasscodeAuthState.Authenticated(profile)
             },
             onFailure = { error ->
-                _state.value = currentState.copy(
-                    isAuthenticating = false,
-                    passcodeError = error.message ?: "Incorrect passcode"
-                )
+                if (error is PasscodeLockoutException) {
+                    // Explicit lockout path: the UI counts down via lockoutRemainingSeconds
+                    _state.value = currentState.copy(
+                        isAuthenticating = false,
+                        passcodeError = null,
+                        lockoutRemainingSeconds = error.remainingSeconds
+                    )
+                } else {
+                    _state.value = currentState.copy(
+                        isAuthenticating = false,
+                        passcodeError = error.message ?: "Incorrect passcode",
+                        lockoutRemainingSeconds = 0
+                    )
+                }
             }
         )
     }
@@ -95,5 +126,21 @@ class PasscodeAuthViewModel(
         if (currentState.passcodeError != null) {
             _state.value = currentState.copy(passcodeError = null)
         }
+    }
+
+    fun clearLockout() {
+        val currentState = _state.value as? PasscodeAuthState.Content ?: return
+        if (currentState.lockoutRemainingSeconds > 0) {
+            _state.value = currentState.copy(lockoutRemainingSeconds = 0)
+        }
+    }
+
+    private fun calculateLockoutRemaining(profileId: String): Int {
+        val attemptState = attemptStore.getFailureState(profileId) ?: return 0
+        return LockoutPolicy.remainingWaitSeconds(
+            failureCount = attemptState.first,
+            lastFailureAtMillis = attemptState.second,
+            nowMillis = System.currentTimeMillis()
+        ).toInt()
     }
 }

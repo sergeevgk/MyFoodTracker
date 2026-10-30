@@ -53,6 +53,7 @@
     <string name="auth_hint_profile">Select Profile</string>
     <string name="auth_hint_passcode">4-Digit Passcode</string>
     <string name="auth_cb_remember_device">Remember user for this device</string>
+    <string name="auth_error_lockout">Too many attempts. Try again in %1$d s</string>
 
     <!-- Profile setup screen -->
     <string name="profile_title_create">Create Local Profile</string>

@@ -47,4 +47,7 @@ interface UserProfileDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(username) = LOWER(:username))")
     fun isUsernameTaken(username: String): Boolean
+
+    @Query("UPDATE users SET passcode_hash = :hash WHERE id = :id")
+    fun updatePasscodeHash(id: String, hash: String)
 }

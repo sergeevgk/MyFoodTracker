@@ -33,7 +33,7 @@ class CreateProfileUseCaseTest {
         assertNotNull(profile)
         assertEquals("Georgii", profile?.username)
         assertNotEquals("1234", profile?.passcodeHash)
-        assertTrue(profile?.passcodeHash?.contains(":") == true)
+        assertTrue(profile?.passcodeHash?.startsWith("pbkdf2$") == true)
         assertNotNull(profile?.dailyGoal)
         assertEquals(2000.0, profile?.dailyGoal?.targetCalories)
         assertEquals(150.0, profile?.dailyGoal?.targetProteinG)

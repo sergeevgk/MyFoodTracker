@@ -55,7 +55,18 @@ class UserRepositoryImpl(
 
     override fun verifyPasscode(profileId: String, passcode: String): Boolean {
         val user = getProfileById(profileId) ?: return false
-        return PasscodeHasher.verifyPasscode(passcode, user.passcodeHash)
+        val verified = PasscodeHasher.verifyPasscode(passcode, user.passcodeHash)
+
+        // Transparent legacy → prefixed upgrade (deferred-work 1.2-D1): re-hash and
+        // persist only after a successful LEGACY verification. Prefixed hashes are
+        // never re-hashed. Best-effort: a failed upgrade write must not fail the
+        // login itself — the upgrade retries on the next successful login.
+        if (verified && !user.passcodeHash.startsWith(PasscodeHasher.FORMAT_PREFIX)) {
+            runCatching {
+                userProfileDao.updatePasscodeHash(profileId, PasscodeHasher.hashPasscode(passcode))
+            }
+        }
+        return verified
     }
 
     override fun hasProfiles(): Boolean {

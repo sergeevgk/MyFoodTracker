@@ -50,6 +50,8 @@ import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
 import com.example.myfoodtracker.presentation.viewmodel.SettingsViewModel
 import android.content.Context
 import com.example.myfoodtracker.data.local.SharedPrefsSessionStorage
+import com.example.myfoodtracker.data.local.SharedPrefsPasscodeAttemptTracker
+import com.example.myfoodtracker.domain.repository.PasscodeAttemptStore
 import com.example.myfoodtracker.domain.repository.SessionStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -105,6 +107,10 @@ val appModule = module {
     }
     single<SessionStorage> { SharedPrefsSessionStorage(get()) }
 
+    // Passcode attempt tracking (lockout, story 7.1) — same SharedPreferences
+    // singleton as the session storage; no Room table, no schema bump.
+    single<PasscodeAttemptStore> { SharedPrefsPasscodeAttemptTracker(get()) }
+
     // Repositories
     single<SessionRepository> { SessionRepositoryImpl(get()) }
     single<MealRepository> { MealRepositoryImpl(get(), get()) }
@@ -119,7 +125,7 @@ val appModule = module {
     factory { UpdateMealEntryUseCase(get()) }
     factory { DeleteMealEntryUseCase(get()) }
     factory { CreateProfileUseCase(get()) }
-    factory { AuthenticateUserUseCase(get(), get()) }
+    factory { AuthenticateUserUseCase(get(), get(), get()) }
     factory { LogoutUseCase(get()) }
     factory { RestoreRememberedSessionUseCase(get()) }
     factory { LogWaterUseCase(get()) }
@@ -141,7 +147,7 @@ val appModule = module {
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
-    viewModel { PasscodeAuthViewModel(get(), get(), get()) }
+    viewModel { PasscodeAuthViewModel(get(), get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }

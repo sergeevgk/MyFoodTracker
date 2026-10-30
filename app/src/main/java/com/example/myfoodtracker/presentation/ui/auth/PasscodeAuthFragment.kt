@@ -1,6 +1,7 @@
 package com.example.myfoodtracker.presentation.ui.auth
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,11 @@ class PasscodeAuthFragment : Fragment() {
 
     private var currentProfiles: List<UserProfile> = emptyList()
 
+    // Per-second lockout countdown runs in the Fragment (Timer side of the View layer):
+    // the VM only reports the initial wait via PasscodeAuthState.Content.lockoutRemainingSeconds.
+    private var lockoutTimer: CountDownTimer? = null
+    private var lockoutRemainingSeconds = 0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -48,8 +54,11 @@ class PasscodeAuthFragment : Fragment() {
 
     private fun setupListeners() {
         binding.etPasscode.doAfterTextChanged {
-            binding.tilPasscode.error = null
-            viewModel.clearError()
+            // While the lockout countdown is active the wait message must survive typing
+            if (lockoutTimer == null) {
+                binding.tilPasscode.error = null
+                viewModel.clearError()
+            }
         }
 
         binding.btnUnlock.setOnClickListener {
@@ -65,6 +74,11 @@ class PasscodeAuthFragment : Fragment() {
         binding.actvProfileSelector.setOnItemClickListener { _, _, position, _ ->
             if (position in currentProfiles.indices) {
                 val selected = currentProfiles[position]
+                lockoutTimer?.cancel()
+                lockoutTimer = null
+                lockoutRemainingSeconds = 0
+                binding.tilPasscode.error = null
+                binding.btnUnlock.isEnabled = true
                 viewModel.selectProfile(selected.id)
                 binding.etPasscode.text?.clear()
                 binding.cbRememberDevice.isChecked = false
@@ -94,7 +108,6 @@ class PasscodeAuthFragment : Fragment() {
                 }
                 is PasscodeAuthState.Content -> {
                     binding.progressBar.visibility = View.GONE
-                    binding.btnUnlock.isEnabled = !state.isAuthenticating
 
                     if (binding.actvProfileSelector.adapter == null || currentProfiles != state.profiles) {
                         currentProfiles = state.profiles
@@ -112,7 +125,19 @@ class PasscodeAuthFragment : Fragment() {
                         }
                     }
 
-                    binding.tilPasscode.error = state.passcodeError
+                    if (lockoutTimer != null) {
+                        // Countdown already running: keep Unlock disabled and the
+                        // remaining-wait visible regardless of intermediate state emissions
+                        binding.btnUnlock.isEnabled = false
+                        updateLockoutError()
+                    } else {
+                        binding.btnUnlock.isEnabled = !state.isAuthenticating && state.lockoutRemainingSeconds == 0
+                        if (state.lockoutRemainingSeconds > 0) {
+                            startLockoutCountdown(state.lockoutRemainingSeconds)
+                        } else {
+                            binding.tilPasscode.error = state.passcodeError
+                        }
+                    }
                 }
                 is PasscodeAuthState.Authenticated -> {
                     binding.progressBar.visibility = View.GONE
@@ -128,6 +153,34 @@ class PasscodeAuthFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        lockoutTimer?.cancel()
+        lockoutTimer = null
         _binding = null
+    }
+
+    private fun startLockoutCountdown(seconds: Int) {
+        if (seconds <= 0) return
+        lockoutTimer?.cancel()
+        lockoutRemainingSeconds = seconds
+        updateLockoutError()
+        lockoutTimer = object : CountDownTimer(seconds * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                lockoutRemainingSeconds = ((millisUntilFinished + 999) / 1000).toInt().coerceAtLeast(1)
+                updateLockoutError()
+            }
+
+            override fun onFinish() {
+                lockoutTimer = null
+                lockoutRemainingSeconds = 0
+                binding.tilPasscode.error = null
+                binding.btnUnlock.isEnabled = true
+                viewModel.clearLockout()
+            }
+        }.start()
+    }
+
+    private fun updateLockoutError() {
+        binding.tilPasscode.error =
+            getString(R.string.auth_error_lockout, lockoutRemainingSeconds)
     }
 }
