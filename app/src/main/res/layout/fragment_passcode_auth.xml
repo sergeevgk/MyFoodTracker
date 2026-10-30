@@ -48,6 +48,31 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="@dimen/padding_card" />
 
+                <!-- Restored-session gate (story 7.2): "Continue as <username>" / "Not you?" -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_continue_as"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:textColor="@color/surface_card_bg"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="Continue as Georgii"
+                    app:backgroundTint="@color/primary_forest"
+                    app:cornerRadius="@dimen/radius_button_large" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_not_you"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/padding_card"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/auth_not_you"
+                    android:textColor="@color/primary_forest"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
                 <!-- Profile Selector Dropdown -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilProfileSelector"

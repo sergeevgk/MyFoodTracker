@@ -236,16 +236,19 @@ private class VerifyTrackingRepository(
 
 class FakeAuthUserRepository : UserRepository {
     private val profiles = mutableListOf<UserProfile>()
+    private val storedHashes = mutableMapOf<String, String>()
 
     override fun createProfile(username: String, passcodeHash: String, dailyGoal: DailyGoal): UserProfile {
         val id = UUID.randomUUID().toString()
         val profile = UserProfile(
             id = id,
             username = username,
-            passcodeHash = passcodeHash,
             dailyGoal = dailyGoal.copy(profileId = id)
         )
         profiles.add(profile)
+        // The hash is captured at the data-layer boundary; the domain model no
+        // longer carries it (story 7.2, 1.2-D5).
+        storedHashes[id] = passcodeHash
         return profile
     }
 
@@ -256,8 +259,8 @@ class FakeAuthUserRepository : UserRepository {
     }
 
     override fun verifyPasscode(profileId: String, passcode: String): Boolean {
-        val profile = getProfileById(profileId) ?: return false
-        return PasscodeHasher.verifyPasscode(passcode, profile.passcodeHash)
+        val storedHash = storedHashes[profileId] ?: return false
+        return PasscodeHasher.verifyPasscode(passcode, storedHash)
     }
 
     override fun hasProfiles(): Boolean = profiles.isNotEmpty()

@@ -147,7 +147,7 @@ val appModule = module {
     // ViewModels
     viewModel { MealViewModel(get(), get(), get(), get()) }
     viewModel { ProfileSetupViewModel(get()) }
-    viewModel { PasscodeAuthViewModel(get(), get(), get(), get()) }
+    viewModel { PasscodeAuthViewModel(get(), get(), get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }

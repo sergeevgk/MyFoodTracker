@@ -8,6 +8,7 @@ import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
 import com.example.myfoodtracker.domain.usecase.FakeAuthUserRepository
 import com.example.myfoodtracker.domain.usecase.FakePasscodeAttemptStore
 import com.example.myfoodtracker.domain.usecase.FakeSessionRepository
+import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 import org.junit.Assert.*
 import org.junit.Before
@@ -44,7 +45,8 @@ class PasscodeAuthViewModelTest {
             fakeUserRepository,
             authenticateUserUseCase,
             restoreRememberedSessionUseCase,
-            fakeAttemptStore
+            fakeAttemptStore,
+            LogoutUseCase(fakeSessionRepository)
         )
     }
 
@@ -157,19 +159,46 @@ class PasscodeAuthViewModelTest {
     }
 
     @Test
-    fun loadProfiles_withRememberedProfile_emitsAuthenticatedDirectly() {
+    fun loadProfiles_withRememberedProfile_emitsRestoredSessionGateWithoutNavigating() {
         user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
         // Seed the persisted ID only, so the restored session is created by the ViewModel.
         fakeSessionRepository.seedRememberedProfile(user1.id)
 
         viewModel.loadProfiles()
 
+        // Story 7.2 (3.4-D2): the remembered path now GATES on an explicit user
+        // decision instead of emitting Authenticated silently.
         val state = viewModel.state.value
-        assertTrue(state is PasscodeAuthState.Authenticated)
-        val authState = state as PasscodeAuthState.Authenticated
-        assertEquals(user1.id, authState.profile.id)
+        assertTrue(state is PasscodeAuthState.RestoredSession)
+        val gateState = state as PasscodeAuthState.RestoredSession
+        assertEquals(user1.id, gateState.profileId)
+        assertEquals("Georgii", gateState.username)
+        // The session IS activated, so "Continue" needs no passcode re-entry.
         assertTrue(fakeSessionRepository.isLoggedIn())
+        assertEquals(user1.id, fakeSessionRepository.getActiveProfileId())
         assertEquals(user1.id, fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun declineRestoredSession_clearsSessionAndRememberedIdThenReEmitsContent() {
+        user1 = fakeUserRepository.createProfile("Georgii", PasscodeHasher.hashPasscode("1234"), DailyGoal())
+        user2 = fakeUserRepository.createProfile("Alex", PasscodeHasher.hashPasscode("5678"), DailyGoal())
+        fakeSessionRepository.seedRememberedProfile(user1.id)
+        viewModel.loadProfiles()
+        assertTrue(viewModel.state.value is PasscodeAuthState.RestoredSession)
+
+        viewModel.declineRestoredSession()
+
+        // In-memory session cleared AND persisted remembered ID cleared.
+        assertNull(fakeSessionRepository.getActiveProfile())
+        assertNull(fakeSessionRepository.getRememberedProfileId())
+        assertFalse(fakeSessionRepository.isLoggedIn())
+        // Back to the normal profile/passcode selection.
+        val state = viewModel.state.value
+        assertTrue(state is PasscodeAuthState.Content)
+        val content = state as PasscodeAuthState.Content
+        assertEquals(2, content.profiles.size)
+        assertEquals(user1.id, content.selectedProfile?.id)
     }
 
     @Test

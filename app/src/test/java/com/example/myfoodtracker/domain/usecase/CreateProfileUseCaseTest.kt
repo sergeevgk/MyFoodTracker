@@ -32,9 +32,13 @@ class CreateProfileUseCaseTest {
         val profile = result.getOrNull()
         assertNotNull(profile)
         assertEquals("Georgii", profile?.username)
-        assertNotEquals("1234", profile?.passcodeHash)
-        assertTrue(profile?.passcodeHash?.startsWith("pbkdf2$") == true)
-        assertNotNull(profile?.dailyGoal)
+        // The stored-hash format assertion now reads the captured hash argument at
+        // the repository boundary (story 7.2: the model no longer carries the hash).
+        val storedHash = fakeUserRepository.storedHashFor(profile!!.id)
+        assertNotNull(storedHash)
+        assertNotEquals("1234", storedHash)
+        assertTrue(storedHash?.startsWith("pbkdf2$") == true)
+        assertNotNull(profile.dailyGoal)
         assertEquals(2000.0, profile?.dailyGoal?.targetCalories)
         assertEquals(150.0, profile?.dailyGoal?.targetProteinG)
         assertNull(profile?.dailyGoal?.targetCarbsG)
@@ -115,18 +119,24 @@ class CreateProfileUseCaseTest {
 
 class FakeUserRepository : UserRepository {
     private val profiles = mutableListOf<UserProfile>()
+    private val storedHashes = mutableMapOf<String, String>()
 
     override fun createProfile(username: String, passcodeHash: String, dailyGoal: DailyGoal): UserProfile {
         val userId = UUID.randomUUID().toString()
         val profile = UserProfile(
             id = userId,
             username = username,
-            passcodeHash = passcodeHash,
             dailyGoal = dailyGoal.copy(profileId = userId)
         )
         profiles.add(profile)
+        // The hash is captured at the data-layer boundary; the domain model no
+        // longer carries it (story 7.2, 1.2-D5).
+        storedHashes[userId] = passcodeHash
         return profile
     }
+
+    /** Test-only access to the hash as it was stored through [createProfile]. */
+    fun storedHashFor(profileId: String): String? = storedHashes[profileId]
 
     override fun getProfiles(): List<UserProfile> = profiles
 
@@ -135,8 +145,8 @@ class FakeUserRepository : UserRepository {
     }
 
     override fun verifyPasscode(profileId: String, passcode: String): Boolean {
-        val profile = getProfileById(profileId) ?: return false
-        return com.example.myfoodtracker.domain.security.PasscodeHasher.verifyPasscode(passcode, profile.passcodeHash)
+        val storedHash = storedHashes[profileId] ?: return false
+        return com.example.myfoodtracker.domain.security.PasscodeHasher.verifyPasscode(passcode, storedHash)
     }
 
     override fun hasProfiles(): Boolean = profiles.isNotEmpty()

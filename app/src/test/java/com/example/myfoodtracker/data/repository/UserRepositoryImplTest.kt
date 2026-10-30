@@ -33,7 +33,9 @@ class UserRepositoryImplTest {
         assertNotNull(profile)
         assertTrue(profile.id.isNotEmpty())
         assertEquals("Georgii", profile.username)
-        assertEquals("hashed_passcode_123", profile.passcodeHash)
+        // The hash flows INTO the data layer and is stored on the entity — it is
+        // no longer carried back out on the domain model (story 7.2, 1.2-D5).
+        assertEquals("hashed_passcode_123", fakeDao.getUserById(profile.id)?.user?.passcodeHash)
         assertNotNull(profile.dailyGoal)
         assertEquals(profile.id, profile.dailyGoal?.profileId)
         assertEquals(2200.0, profile.dailyGoal?.targetCalories)
@@ -105,7 +107,7 @@ class UserRepositoryImplTest {
         // Legacy fast-path verification succeeds and the stored hash is transparently upgraded
         assertTrue(repository.verifyPasscode(created.id, "1234"))
 
-        val upgraded = repository.getProfileById(created.id)?.passcodeHash
+        val upgraded = fakeDao.getUserById(created.id)?.user?.passcodeHash
         assertNotNull(upgraded)
         assertNotEquals(legacyHash, upgraded)
         assertTrue(upgraded?.startsWith(com.example.myfoodtracker.domain.security.PasscodeHasher.FORMAT_PREFIX) == true)
@@ -120,7 +122,7 @@ class UserRepositoryImplTest {
 
         assertFalse(repository.verifyPasscode(created.id, "0000"))
 
-        assertEquals(legacyHash, repository.getProfileById(created.id)?.passcodeHash)
+        assertEquals(legacyHash, fakeDao.getUserById(created.id)?.user?.passcodeHash)
     }
 
     @Test
@@ -133,7 +135,7 @@ class UserRepositoryImplTest {
 
         assertTrue(repository.verifyPasscode(created.id, "1234"))
 
-        assertEquals(prefixedHash, repository.getProfileById(created.id)?.passcodeHash)
+        assertEquals(prefixedHash, fakeDao.getUserById(created.id)?.user?.passcodeHash)
     }
 
     @Test
@@ -142,7 +144,7 @@ class UserRepositoryImplTest {
 
         fakeDao.updatePasscodeHash(created.id, "new-prefixed-hash")
 
-        assertEquals("new-prefixed-hash", repository.getProfileById(created.id)?.passcodeHash)
+        assertEquals("new-prefixed-hash", fakeDao.getUserById(created.id)?.user?.passcodeHash)
     }
 
     /** Legacy salt:sha256 construction (matches the legacy algorithm preserved in PasscodeHasher). */

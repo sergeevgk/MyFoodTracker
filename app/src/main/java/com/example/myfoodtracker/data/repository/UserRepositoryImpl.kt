@@ -39,7 +39,6 @@ class UserRepositoryImpl(
         return UserProfile(
             id = userId,
             username = username,
-            passcodeHash = passcodeHash,
             createdAt = userEntity.createdAt,
             dailyGoal = dailyGoal.copy(profileId = userId)
         )
@@ -54,14 +53,16 @@ class UserRepositoryImpl(
     }
 
     override fun verifyPasscode(profileId: String, passcode: String): Boolean {
-        val user = getProfileById(profileId) ?: return false
-        val verified = PasscodeHasher.verifyPasscode(passcode, user.passcodeHash)
+        // The hash lives in the data layer only: it is read from the Room entity
+        // directly and never carried through the domain model (story 7.2, 1.2-D5).
+        val storedHash = userProfileDao.getUserById(profileId)?.user?.passcodeHash ?: return false
+        val verified = PasscodeHasher.verifyPasscode(passcode, storedHash)
 
         // Transparent legacy → prefixed upgrade (deferred-work 1.2-D1): re-hash and
         // persist only after a successful LEGACY verification. Prefixed hashes are
         // never re-hashed. Best-effort: a failed upgrade write must not fail the
         // login itself — the upgrade retries on the next successful login.
-        if (verified && !user.passcodeHash.startsWith(PasscodeHasher.FORMAT_PREFIX)) {
+        if (verified && !storedHash.startsWith(PasscodeHasher.FORMAT_PREFIX)) {
             runCatching {
                 userProfileDao.updatePasscodeHash(profileId, PasscodeHasher.hashPasscode(passcode))
             }
@@ -81,7 +82,6 @@ class UserRepositoryImpl(
         return UserProfile(
             id = user.id,
             username = user.username,
-            passcodeHash = user.passcodeHash,
             createdAt = user.createdAt,
             dailyGoal = goal?.toDomain()
         )

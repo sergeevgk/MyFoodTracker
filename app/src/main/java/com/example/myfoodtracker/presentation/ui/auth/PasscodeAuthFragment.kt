@@ -71,6 +71,18 @@ class PasscodeAuthFragment : Fragment() {
             findNavController().navigate(R.id.action_passcodeAuthFragment_to_profileSetupFragment)
         }
 
+        binding.btnContinueAs.setOnClickListener {
+            // Same nav guard as the Authenticated branch: only navigate while the
+            // auth screen is actually the current destination.
+            if (findNavController().currentDestination?.id == R.id.passcodeAuthFragment) {
+                findNavController().navigate(R.id.action_passcodeAuthFragment_to_dashboardFragment)
+            }
+        }
+
+        binding.btnNotYou.setOnClickListener {
+            viewModel.declineRestoredSession()
+        }
+
         binding.actvProfileSelector.setOnItemClickListener { _, _, position, _ ->
             if (position in currentProfiles.indices) {
                 val selected = currentProfiles[position]
@@ -88,6 +100,11 @@ class PasscodeAuthFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.state.observe(viewLifecycleOwner) { state ->
+            if (state !is PasscodeAuthState.Content) {
+                // Any non-Content state cancels a running lockout countdown; the
+                // next Content emission re-derives the remaining wait from the store.
+                cancelLockoutCountdown()
+            }
             when (state) {
                 is PasscodeAuthState.Loading -> {
                     binding.progressBar.visibility = View.VISIBLE
@@ -108,6 +125,7 @@ class PasscodeAuthFragment : Fragment() {
                 }
                 is PasscodeAuthState.Content -> {
                     binding.progressBar.visibility = View.GONE
+                    showAuthControls()
 
                     if (binding.actvProfileSelector.adapter == null || currentProfiles != state.profiles) {
                         currentProfiles = state.profiles
@@ -147,6 +165,19 @@ class PasscodeAuthFragment : Fragment() {
                         findNavController().navigate(R.id.action_passcodeAuthFragment_to_dashboardFragment)
                     }
                 }
+                is PasscodeAuthState.RestoredSession -> {
+                    // Restored-session confirmation gate (story 7.2): hide the manual
+                    // login controls and offer "Continue as <username>" / "Not you?".
+                    binding.progressBar.visibility = View.GONE
+                    binding.tvSubtitle.visibility = View.GONE
+                    binding.tilProfileSelector.visibility = View.GONE
+                    binding.tilPasscode.visibility = View.GONE
+                    binding.cbRememberDevice.visibility = View.GONE
+                    binding.btnUnlock.visibility = View.GONE
+                    binding.btnContinueAs.text = getString(R.string.auth_continue_as, state.username)
+                    binding.btnContinueAs.visibility = View.VISIBLE
+                    binding.btnNotYou.visibility = View.VISIBLE
+                }
             }
         }
     }
@@ -156,6 +187,27 @@ class PasscodeAuthFragment : Fragment() {
         lockoutTimer?.cancel()
         lockoutTimer = null
         _binding = null
+    }
+
+    /** Stops the running lockout countdown and clears its UI residue. */
+    private fun cancelLockoutCountdown() {
+        lockoutTimer?.cancel()
+        lockoutTimer = null
+        lockoutRemainingSeconds = 0
+        if (_binding != null) {
+            binding.tilPasscode.error = null
+        }
+    }
+
+    /** Restores the manual-login controls after the restored-session gate is dismissed. */
+    private fun showAuthControls() {
+        binding.tvSubtitle.visibility = View.VISIBLE
+        binding.tilProfileSelector.visibility = View.VISIBLE
+        binding.tilPasscode.visibility = View.VISIBLE
+        binding.cbRememberDevice.visibility = View.VISIBLE
+        binding.btnUnlock.visibility = View.VISIBLE
+        binding.btnContinueAs.visibility = View.GONE
+        binding.btnNotYou.visibility = View.GONE
     }
 
     private fun startLockoutCountdown(seconds: Int) {

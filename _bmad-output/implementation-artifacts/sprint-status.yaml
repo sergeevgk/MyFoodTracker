@@ -1,5 +1,5 @@
 # generated: 2026-09-06T20:24:40+02:00
-# last_updated: 2026-10-30T16:50:00+01:00
+# last_updated: 2026-10-30T17:30:00+01:00
 # project: MyFoodTracker
 # project_key: NOKEY
 # tracking_system: file-system
@@ -79,9 +79,9 @@ development_status:
   6-2-remap-custom-food-ids-after-restore: done
   6-3-catalog-db-migration-and-backup-format-hardening: done
   epic-6-retrospective: optional
-  epic-7: in-progress
+  epic-7: done
   7-1-passcode-kdf-upgrade-and-lockout: done
-  7-2-session-and-presentation-state-hygiene: backlog
+  7-2-session-and-presentation-state-hygiene: done
   epic-7-retrospective: optional
   epic-8: in-progress
   8-1-meal-date-correctness-at-midnight: ready-for-dev

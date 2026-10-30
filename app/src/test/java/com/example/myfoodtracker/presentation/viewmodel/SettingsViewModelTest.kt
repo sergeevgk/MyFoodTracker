@@ -37,7 +37,6 @@ class SettingsViewModelTest {
     private val testUser = UserProfile(
         id = "user-1",
         username = "Georgii",
-        passcodeHash = "hash",
         dailyGoal = DailyGoal()
     )
 

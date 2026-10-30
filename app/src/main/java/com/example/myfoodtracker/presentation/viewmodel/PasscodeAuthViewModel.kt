@@ -9,6 +9,7 @@ import com.example.myfoodtracker.domain.repository.UserRepository
 import com.example.myfoodtracker.domain.security.LockoutPolicy
 import com.example.myfoodtracker.domain.security.PasscodeLockoutException
 import com.example.myfoodtracker.domain.usecase.AuthenticateUserUseCase
+import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.domain.usecase.RestoreRememberedSessionUseCase
 
 sealed class PasscodeAuthState {
@@ -23,13 +24,19 @@ sealed class PasscodeAuthState {
         val lockoutRemainingSeconds: Int = 0
     ) : PasscodeAuthState()
     data class Authenticated(val profile: UserProfile) : PasscodeAuthState()
+    /** Remembered session restored on app start: the user must confirm or decline (story 7.2, 3.4-D2). */
+    data class RestoredSession(
+        val profileId: String,
+        val username: String
+    ) : PasscodeAuthState()
 }
 
 class PasscodeAuthViewModel(
     private val userRepository: UserRepository,
     private val authenticateUserUseCase: AuthenticateUserUseCase,
     private val restoreRememberedSessionUseCase: RestoreRememberedSessionUseCase,
-    private val attemptStore: PasscodeAttemptStore
+    private val attemptStore: PasscodeAttemptStore,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _state = MutableLiveData<PasscodeAuthState>(PasscodeAuthState.Loading)
@@ -40,7 +47,12 @@ class PasscodeAuthViewModel(
 
         val rememberedProfile = restoreRememberedSessionUseCase(profiles)
         if (rememberedProfile != null) {
-            _state.value = PasscodeAuthState.Authenticated(rememberedProfile)
+            // Gated restored session: the user explicitly confirms ("Continue as …")
+            // or declines ("Not you?") instead of silently auto-navigating (3.4-D2).
+            _state.value = PasscodeAuthState.RestoredSession(
+                profileId = rememberedProfile.id,
+                username = rememberedProfile.username
+            )
             return
         }
 
@@ -126,6 +138,17 @@ class PasscodeAuthViewModel(
         if (currentState.passcodeError != null) {
             _state.value = currentState.copy(passcodeError = null)
         }
+    }
+
+    /**
+     * "Not you?" decline for a restored session (story 7.2): clears the in-memory
+     * session AND the persisted remembered ID, then re-emits the normal profile
+     * selection without a full logout round-trip. Reuses the existing [LogoutUseCase].
+     */
+    fun declineRestoredSession() {
+        if (_state.value !is PasscodeAuthState.RestoredSession) return
+        logoutUseCase()
+        loadProfiles()
     }
 
     fun clearLockout() {

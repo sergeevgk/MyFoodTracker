@@ -27,7 +27,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun setActiveProfile_storesProfileAndReportsLoggedIn() {
-        val user = UserProfile(id = "user-123", username = "Georgii", passcodeHash = "salt:hash")
+        val user = UserProfile(id = "user-123", username = "Georgii")
         sessionRepository.setActiveProfile(user)
 
         assertEquals(user, sessionRepository.getActiveProfile())
@@ -38,7 +38,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun setActiveProfile_withRememberDeviceTrue_persistsProfileId() {
-        val user = UserProfile(id = "user-123", username = "Georgii", passcodeHash = "salt:hash")
+        val user = UserProfile(id = "user-123", username = "Georgii")
         sessionRepository.setActiveProfile(user, rememberDevice = true)
 
         assertEquals(user, sessionRepository.getActiveProfile())
@@ -49,7 +49,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun setActiveProfile_withRememberDeviceFalse_clearsPersistedProfileId() {
-        val user = UserProfile(id = "user-123", username = "Georgii", passcodeHash = "salt:hash")
+        val user = UserProfile(id = "user-123", username = "Georgii")
         sessionRepository.setActiveProfile(user, rememberDevice = true)
         assertEquals("user-123", sessionRepository.getRememberedProfileId())
 
@@ -60,7 +60,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun clearSession_clearsStoredProfileAndPersistedSession() {
-        val user = UserProfile(id = "user-123", username = "Georgii", passcodeHash = "salt:hash")
+        val user = UserProfile(id = "user-123", username = "Georgii")
         sessionRepository.setActiveProfile(user, rememberDevice = true)
         assertTrue(sessionRepository.isLoggedIn())
         assertEquals("user-123", sessionRepository.getRememberedProfileId())
@@ -76,7 +76,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun forgetRememberedProfile_clearsPersistedIdButKeepsActiveSession() {
-        val user = UserProfile(id = "user-123", username = "Georgii", passcodeHash = "salt:hash")
+        val user = UserProfile(id = "user-123", username = "Georgii")
         sessionRepository.setActiveProfile(user, rememberDevice = true)
         assertEquals("user-123", sessionRepository.getRememberedProfileId())
 
@@ -90,8 +90,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun setActiveProfile_switchesActiveProfileCleanly() {
-        val user1 = UserProfile(id = "user-1", username = "User One", passcodeHash = "salt:1")
-        val user2 = UserProfile(id = "user-2", username = "User Two", passcodeHash = "salt:2")
+        val user1 = UserProfile(id = "user-1", username = "User One")
+        val user2 = UserProfile(id = "user-2", username = "User Two")
 
         sessionRepository.setActiveProfile(user1)
         assertEquals("user-1", sessionRepository.getActiveProfileId())

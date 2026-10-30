@@ -15,7 +15,7 @@ class RestoreRememberedSessionUseCaseTest {
     fun setUp() {
         fakeSessionRepository = FakeSessionRepository()
         restoreRememberedSessionUseCase = RestoreRememberedSessionUseCase(fakeSessionRepository)
-        user = UserProfile(id = "user-1", username = "Georgii", passcodeHash = "salt:hash")
+        user = UserProfile(id = "user-1", username = "Georgii")
     }
 
     @Test

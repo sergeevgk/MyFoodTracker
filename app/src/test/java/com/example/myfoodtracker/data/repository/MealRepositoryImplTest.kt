@@ -21,14 +21,12 @@ class MealRepositoryImplTest {
     private val user1 = UserProfile(
         id = "user-1",
         username = "Alice",
-        passcodeHash = "hash1",
         dailyGoal = DailyGoal()
     )
 
     private val user2 = UserProfile(
         id = "user-2",
         username = "Bob",
-        passcodeHash = "hash2",
         dailyGoal = DailyGoal()
     )
 
