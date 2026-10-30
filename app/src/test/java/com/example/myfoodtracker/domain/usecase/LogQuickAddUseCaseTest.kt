@@ -107,7 +107,7 @@ class LogQuickAddUseCaseTest {
             return entriesByDate[date]?.toList() ?: emptyList()
         }
 
-        override fun addMealEntry(): List<MealEntry> = emptyList()
+        override fun addMealEntry(date: String): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
         override fun restoreMealEntry(entry: MealEntry): List<MealEntry> = emptyList()

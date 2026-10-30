@@ -619,7 +619,7 @@ class ExportLogsUseCaseTest {
         override fun getMealEntriesByDate(date: String): List<MealEntry> =
             throw UnsupportedOperationException("Not used by ExportLogsUseCase")
 
-        override fun addMealEntry(): List<MealEntry> =
+        override fun addMealEntry(date: String): List<MealEntry> =
             throw UnsupportedOperationException("Not used by ExportLogsUseCase")
 
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> =

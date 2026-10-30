@@ -1,5 +1,5 @@
 # generated: 2026-09-06T20:24:40+02:00
-# last_updated: 2026-10-30T17:30:00+01:00
+# last_updated: 2026-10-30T19:21:00+01:00
 # project: MyFoodTracker
 # project_key: NOKEY
 # tracking_system: file-system
@@ -84,8 +84,8 @@ development_status:
   7-2-session-and-presentation-state-hygiene: done
   epic-7-retrospective: optional
   epic-8: in-progress
-  8-1-meal-date-correctness-at-midnight: ready-for-dev
-  8-2-state-survival-and-lifecycle-hardening: backlog
+  8-1-meal-date-correctness-at-midnight: done
+  8-2-state-survival-and-lifecycle-hardening: ready-for-dev
   8-3-dashboard-and-recipe-ux-polish: backlog
   8-4-settings-completion-logout-and-water-export: backlog
   epic-8-retrospective: optional

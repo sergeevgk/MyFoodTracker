@@ -8,7 +8,6 @@ import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -28,15 +27,14 @@ class MealRepositoryImpl(
         return mealDao.getMealsWithFoodsByProfileIdAndDate(profileId, date).map { it.toDomain() }
     }
 
-    override fun addMealEntry(): List<MealEntry> {
+    override fun addMealEntry(date: String): List<MealEntry> {
         val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
-        val currentDate = LocalDate.now().toString()
         val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
         val meal = MealEntryEntity(
             id = UUID.randomUUID().toString(),
             profileId = profileId,
             title = "",
-            date = currentDate,
+            date = date,
             time = currentTime
         )
         mealDao.insertMeal(meal)

@@ -585,7 +585,7 @@ class DashboardViewModelTest {
             return entriesByDate[date] ?: emptyList()
         }
 
-        override fun addMealEntry(): List<MealEntry> = emptyList()
+        override fun addMealEntry(date: String): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> {
             sessionRepository.getActiveProfileId() ?: return emptyList()

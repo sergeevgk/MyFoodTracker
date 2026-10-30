@@ -80,7 +80,7 @@ class RestoreMealEntryUseCaseTest {
         override fun getMealEntriesByDate(date: String): List<MealEntry> =
             stored.values.filter { it.date == date }
 
-        override fun addMealEntry(): List<MealEntry> = emptyList()
+        override fun addMealEntry(date: String): List<MealEntry> = emptyList()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> = emptyList()
         override fun deleteMealEntry(id: String): List<MealEntry> = emptyList()
 

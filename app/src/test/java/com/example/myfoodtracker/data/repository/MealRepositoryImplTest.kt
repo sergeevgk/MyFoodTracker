@@ -48,7 +48,7 @@ class MealRepositoryImplTest {
     fun addMealEntry_withActiveSession_associatesMealWithActiveProfileId() {
         fakeSessionRepository.setActiveProfile(user1)
 
-        val entries = repository.addMealEntry()
+        val entries = repository.addMealEntry("2026-09-30")
 
         assertEquals(1, entries.size)
         assertEquals(1, fakeMealDao.meals.size)
@@ -59,8 +59,8 @@ class MealRepositoryImplTest {
     fun profileIsolation_differentUsersSeeOnlyTheirOwnMeals() {
         // User 1 adds 2 meals
         fakeSessionRepository.setActiveProfile(user1)
-        repository.addMealEntry()
-        repository.addMealEntry()
+        repository.addMealEntry("2026-09-30")
+        repository.addMealEntry("2026-09-30")
         assertEquals(2, repository.getMealEntries().size)
 
         // Switch to User 2: has 0 meals
@@ -68,7 +68,7 @@ class MealRepositoryImplTest {
         assertEquals(0, repository.getMealEntries().size)
 
         // User 2 adds 1 meal
-        repository.addMealEntry()
+        repository.addMealEntry("2026-09-30")
         assertEquals(1, repository.getMealEntries().size)
 
         // Total meals in DB is 3, but user 1 still sees only 2 and user 2 sees only 1
@@ -80,7 +80,7 @@ class MealRepositoryImplTest {
     @Test
     fun updateMealEntry_onlyUpdatesMealIfProfileMatches() {
         fakeSessionRepository.setActiveProfile(user1)
-        repository.addMealEntry()
+        repository.addMealEntry("2026-09-30")
         val user1Meal = repository.getMealEntries().first()
 
         // User 2 attempts to update User 1's meal
@@ -101,7 +101,7 @@ class MealRepositoryImplTest {
     @Test
     fun deleteMealEntry_onlyDeletesMealIfProfileMatches() {
         fakeSessionRepository.setActiveProfile(user1)
-        repository.addMealEntry()
+        repository.addMealEntry("2026-09-30")
         val user1Meal = repository.getMealEntries().first()
 
         // User 2 attempts to delete User 1's meal
@@ -200,6 +200,50 @@ class MealRepositoryImplTest {
         assertEquals("2026-09-01", fakeMealDao.meals[0].date)
         assertTrue(repository.getMealEntriesByDate("2026-09-30").isEmpty())
         assertEquals(1, repository.getMealEntriesByDate("2026-09-01").size)
+    }
+
+    @Test
+    fun addMealEntry_usesExplicitTargetDate() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        // Target date intentionally differs from the device's current date: proves the
+        // repository never re-derives the date via LocalDate.now() (midnight-crossing write,
+        // or a write issued on a later day for a historical dashboard date).
+        repository.addMealEntry("2026-01-01")
+
+        assertEquals(1, fakeMealDao.meals.size)
+        assertEquals("2026-01-01", fakeMealDao.meals[0].date)
+        assertEquals("user-1", fakeMealDao.meals[0].profileId)
+        assertTrue(repository.getMealEntriesByDate("2026-01-01").isNotEmpty())
+    }
+
+    @Test
+    fun logQuickAdd_historicalDate_landsOnTargetDate() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        // This test already exists pattern-wise as logQuickAdd_historicalDate_writesToGivenDateNotToday;
+        // asserted here explicitly against the near-midnight target date contract: the persisted
+        // entity must carry the target date, never LocalDate.now().toString().
+        repository.logQuickAdd("Late snack", 220.0, 8.0, 20.0, 6.0, "SNACK", "2026-01-01")
+
+        assertEquals("2026-01-01", fakeMealDao.meals[0].date)
+        assertEquals("2026-01-01", repository.getMealEntriesByDate("2026-01-01").first().date)
+    }
+
+    @Test
+    fun logFoodEntry_historicalDate_landsOnTargetDate() {
+        fakeSessionRepository.setActiveProfile(user1)
+
+        repository.logFoodEntry(
+            "Rice", 200.0, 260.0, 5.0, 56.0, 0.6, 1.0, "DINNER", "2026-01-01"
+        )
+
+        assertEquals("2026-01-01", fakeMealDao.meals[0].date)
+        assertEquals("2026-01-01", repository.getMealEntriesByDate("2026-01-01").first().date)
+        // And the entity date is provably not re-derived from the device clock: the
+        // target date here is a fixed historical constant, so == now() would be a fluke
+        // only if the suite ran at exactly that calendar date; the by-date lookup above
+        // still only returns rows keyed to the explicit target.
     }
 
     @Test

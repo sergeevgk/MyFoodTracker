@@ -26,9 +26,9 @@ class MealViewModel(
         _mealEntries.value = getMealEntriesUseCase()
     }
 
-    fun addMealEntry() {
+    fun addMealEntry(date: String) {
         val currentSize = _mealEntries.value?.size ?: 0
-        _mealEntries.value = addMealEntryUseCase()
+        _mealEntries.value = addMealEntryUseCase(date)
         _newlyAddedPosition.value = currentSize
     }
 

@@ -290,7 +290,7 @@ class LogRecipeUseCaseTest {
         override fun getMealEntriesByDate(date: String): List<MealEntry> =
             entriesByDate[date]?.toList() ?: emptyList()
 
-        override fun addMealEntry(): List<MealEntry> =
+        override fun addMealEntry(date: String): List<MealEntry> =
             throw UnsupportedOperationException("addMealEntry must not be used for recipe logging")
 
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> =

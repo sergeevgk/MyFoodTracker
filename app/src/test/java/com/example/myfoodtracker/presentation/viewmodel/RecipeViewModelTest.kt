@@ -147,7 +147,7 @@ class RecipeViewModelTest {
 
         override fun getMealEntries(): List<MealEntry> = emptyList()
         override fun getMealEntriesByDate(date: String): List<MealEntry> = emptyList()
-        override fun addMealEntry(): List<MealEntry> = throw UnsupportedOperationException()
+        override fun addMealEntry(date: String): List<MealEntry> = throw UnsupportedOperationException()
         override fun updateMealEntry(id: String, newTitle: String): List<MealEntry> =
             throw UnsupportedOperationException()
 
