@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.myfoodtracker.R
 import com.example.myfoodtracker.data.backup.DatabaseBackupManager
 import com.example.myfoodtracker.data.export.LogExportFileWriter
@@ -143,6 +144,14 @@ class SettingsFragment : Fragment() {
         binding.btnExportSave.setOnClickListener {
             pendingAction = ExportAction.SAVE
             viewModel.export()
+        }
+
+        binding.btnSettingsLogout.setOnClickListener {
+            viewModel.logout()
+            binding.root.announceForAccessibility(getString(R.string.a11y_logged_out))
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
+                findNavController().navigate(R.id.action_settingsFragment_to_passcodeAuthFragment)
+            }
         }
 
         viewModel.uiState.observe(viewLifecycleOwner) { state ->

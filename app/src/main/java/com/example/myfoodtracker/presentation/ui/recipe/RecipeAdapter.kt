@@ -45,7 +45,7 @@ class RecipeAdapter(
                 recipe.totalFatG
             )
             binding.root.contentDescription = context.getString(
-                R.string.a11y_recipe_log_row,
+                R.string.a11y_recipe_detail_row,
                 recipe.name,
                 recipe.ingredientCount,
                 recipe.totalCalories.toInt()

@@ -36,6 +36,11 @@ class WaterRepositoryImpl(
         return getWaterTotalMl(date)
     }
 
+    override fun getAllWaterLogs(): List<WaterLog> {
+        val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+        return waterLogDao.getWaterLogsByProfileId(profileId).map { it.toDomain() }
+    }
+
     // Mapping Helpers
     private fun WaterLogEntity.toDomain(): WaterLog {
         return WaterLog(

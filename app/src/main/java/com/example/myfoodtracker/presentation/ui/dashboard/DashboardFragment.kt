@@ -1,6 +1,7 @@
 package com.example.myfoodtracker.presentation.ui.dashboard
 
 import android.os.Bundle
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -211,6 +212,7 @@ class DashboardFragment : Fragment(),
         }
 
         binding.btnAddWater250.setOnClickListener {
+            binding.btnAddWater250.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             viewModel.logWaterPlus250()
             playWaterTapFeedback()
             val total = viewModel.uiState.value?.waterTotalMl ?: 0

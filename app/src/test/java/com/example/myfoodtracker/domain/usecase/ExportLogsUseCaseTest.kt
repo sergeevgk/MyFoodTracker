@@ -3,7 +3,9 @@ package com.example.myfoodtracker.domain.usecase
 import com.example.myfoodtracker.domain.model.ExportFormat
 import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
+import com.example.myfoodtracker.domain.model.WaterLog
 import com.example.myfoodtracker.domain.repository.MealRepository
+import com.example.myfoodtracker.domain.repository.WaterRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,6 +17,7 @@ import java.util.Locale
 class ExportLogsUseCaseTest {
 
     private lateinit var fakeMealRepository: FakeMealRepository
+    private lateinit var fakeWaterRepository: FakeWaterRepository
     private lateinit var useCase: ExportLogsUseCase
 
     private val from = LocalDate.of(2026, 10, 1)
@@ -23,7 +26,8 @@ class ExportLogsUseCaseTest {
     @Before
     fun setUp() {
         fakeMealRepository = FakeMealRepository()
-        useCase = ExportLogsUseCase(fakeMealRepository)
+        fakeWaterRepository = FakeWaterRepository()
+        useCase = ExportLogsUseCase(fakeMealRepository, fakeWaterRepository)
     }
 
     // --- Header --------------------------------------------------------------------
@@ -576,6 +580,163 @@ class ExportLogsUseCaseTest {
         return runs[1].range.first - runs[0].range.last - 1
     }
 
+
+    // --- Water export (Story 8.4) ---------------------------------------------------
+
+    @Test
+    fun invoke_waterOnlyRange_producesExpectedCsvRowsAndCount() {
+        fakeWaterRepository.logs = listOf(
+            waterLog("w1", "2026-10-04", 250, 100L),
+            waterLog("w2", "2026-10-05", 500, 200L)
+        )
+
+        val payload = useCase(ExportFormat.CSV, from, to)
+
+        assertEquals(2, payload.rowCount)
+        val lines = payload.content.trimEnd().split("\n")
+        assertEquals(3, lines.size) // header + 2 rows
+        assertEquals("Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat", lines[0])
+        assertEquals("2026-10-04,,Water,250,0,0,0,0", lines[1])
+        assertEquals("2026-10-05,,Water,500,0,0,0,0", lines[2])
+    }
+
+    @Test
+    fun invoke_combinedMealAndWater_sortsWaterFirstOnSameDateAndByLoggedAt() {
+        fakeMealRepository.entries = listOf(
+            meal("m1", "2026-10-04", "08:00", "Breakfast", listOf(food("Oatmeal", 50.0, 150.0, 25.0, 3.0, 5.0)))
+        )
+        fakeWaterRepository.logs = listOf(
+            waterLog("w2", "2026-10-04", 300, 2000L),
+            waterLog("w1", "2026-10-04", 250, 1000L)
+        )
+
+        val payload = useCase(ExportFormat.CSV, from, to)
+
+        assertEquals(3, payload.rowCount)
+        val lines = payload.content.trimEnd().split("\n")
+        // Row 1: w1 (loggedAt 1000)
+        assertEquals("2026-10-04,,Water,250,0,0,0,0", lines[1])
+        // Row 2: w2 (loggedAt 2000)
+        assertEquals("2026-10-04,,Water,300,0,0,0,0", lines[2])
+        // Row 3: Oatmeal at 08:00
+        assertEquals("2026-10-04,Breakfast,Oatmeal,50,150,25,3,5", lines[3])
+    }
+
+    @Test
+    fun invoke_waterLogsOutsideRangeExcluded_boundariesIncluded() {
+        fakeWaterRepository.logs = listOf(
+            waterLog("w_before", "2026-09-30", 250),
+            waterLog("w_from", "2026-10-01", 250),
+            waterLog("w_mid", "2026-10-10", 250),
+            waterLog("w_to", "2026-10-21", 250),
+            waterLog("w_after", "2026-10-22", 250)
+        )
+
+        val payload = useCase(ExportFormat.CSV, from, to)
+
+        assertEquals(3, payload.rowCount)
+        val lines = payload.content.trimEnd().split("\n")
+        assertEquals("2026-10-01,,Water,250,0,0,0,0", lines[1])
+        assertEquals("2026-10-10,,Water,250,0,0,0,0", lines[2])
+        assertEquals("2026-10-21,,Water,250,0,0,0,0", lines[3])
+    }
+
+    @Test
+    fun invoke_txtFormatWithWaterAndMeals_columnsRemainAligned() {
+        fakeMealRepository.entries = listOf(
+            meal("m1", "2026-10-04", "12:00", "Lunch", listOf(food("Apple", 100.0, 52.0, 14.0, 0.2, 0.3)))
+        )
+        fakeWaterRepository.logs = listOf(
+            waterLog("w1", "2026-10-04", 250)
+        )
+
+        val payload = useCase(ExportFormat.TXT, from, to)
+
+        val lines = payload.content.trimEnd().split("\n")
+        val header = lines[0]
+        val waterLine = lines[1]
+        val mealLine = lines[2]
+
+        // Water line has empty Meal Slot, so Food Name "Water" starts at header's "Food Name" index
+        assertEquals(header.indexOf("Food Name"), waterLine.indexOf("Water"))
+        assertEquals(header.indexOf("Quantity"), waterLine.indexOf("250"))
+        assertEquals(header.indexOf("Food Name"), mealLine.indexOf("Apple"))
+        assertFalse(waterLine.endsWith(" "))
+    }
+
+    @Test
+    fun invoke_invalidDateRange_doesNotCallWaterRepository() {
+        var threw = false
+        try {
+            useCase(ExportFormat.CSV, to, from)
+        } catch (e: IllegalArgumentException) {
+            threw = true
+            assertEquals(ExportLogsUseCase.INVALID_DATE_RANGE, e.message)
+        }
+        assertTrue(threw)
+        assertEquals(0, fakeWaterRepository.getAllWaterLogsCallCount)
+    }
+
+    @Test
+    fun invoke_combinedMealAndWater_interleavesCorrectlyAcrossDates() {
+        fakeMealRepository.entries = listOf(
+            meal("m1", "2026-10-04", "08:00", "Breakfast", listOf(food("Oatmeal", 50.0, 150.0, 25.0, 3.0, 5.0)))
+        )
+        fakeWaterRepository.logs = listOf(
+            waterLog("w3", "2026-10-05", 300, 3000L),
+            waterLog("w1", "2026-10-03", 250, 1000L)
+        )
+
+        val payload = useCase(ExportFormat.CSV, from, to)
+
+        assertEquals(3, payload.rowCount)
+        val lines = payload.content.trimEnd().split("\n")
+        assertEquals("2026-10-03,,Water,250,0,0,0,0", lines[1])
+        assertEquals("2026-10-04,Breakfast,Oatmeal,50,150,25,3,5", lines[2])
+        assertEquals("2026-10-05,,Water,300,0,0,0,0", lines[3])
+    }
+
+    @Test
+    fun invoke_waterOnlyRange_txt_isReadyWithExactPadding() {
+        fakeWaterRepository.logs = listOf(waterLog("w1", "2026-10-04", 250))
+
+        val payload = useCase(ExportFormat.TXT, from, to)
+
+        assertEquals(1, payload.rowCount)
+        val lines = payload.content.trimEnd().split("\n")
+        assertEquals(2, lines.size)
+        // Date (10) + 2 spaces + empty Meal Slot padded to 9 + 2 spaces, then Food Name.
+        assertTrue(lines[1].startsWith("2026-10-04" + " ".repeat(13) + "Water"))
+        assertFalse(lines[1].endsWith(" "))
+    }
+
+    @Test
+    fun invoke_txtWithWaterAndMeals_noLineHasTrailingSpaces() {
+        fakeMealRepository.entries = listOf(
+            meal("m1", "2026-10-04", "12:00", "Lunch", listOf(food("Apple", 100.0, 52.0, 14.0, 0.2, 0.3)))
+        )
+        fakeWaterRepository.logs = listOf(waterLog("w1", "2026-10-04", 250))
+
+        val payload = useCase(ExportFormat.TXT, from, to)
+
+        payload.content.trimEnd().split("\n").forEach { line ->
+            assertFalse("Trailing space in: '$line'", line.endsWith(" "))
+        }
+    }
+
+    private fun waterLog(
+        id: String,
+        date: String,
+        amountMl: Int,
+        loggedAt: Long = 0L
+    ) = WaterLog(
+        id = id,
+        profileId = "user-1",
+        date = date,
+        amountMl = amountMl,
+        loggedAt = loggedAt
+    )
+
     private fun meal(
         id: String,
         date: String,
@@ -606,6 +767,25 @@ class ExportLogsUseCaseTest {
         protein = protein,
         fiber = 0.0
     )
+
+    private class FakeWaterRepository : WaterRepository {
+        var logs: List<WaterLog> = emptyList()
+        var getAllWaterLogsCallCount: Int = 0
+
+        override fun getAllWaterLogs(): List<WaterLog> {
+            getAllWaterLogsCallCount++
+            return logs
+        }
+
+        override fun getWaterLogs(date: String): List<WaterLog> =
+            throw UnsupportedOperationException("Not used by ExportLogsUseCase")
+
+        override fun getWaterTotalMl(date: String): Int =
+            throw UnsupportedOperationException("Not used by ExportLogsUseCase")
+
+        override fun logWater(amountMl: Int, date: String): Int =
+            throw UnsupportedOperationException("Not used by ExportLogsUseCase")
+    }
 
     private class FakeMealRepository : MealRepository {
         var entries: List<MealEntry> = emptyList()

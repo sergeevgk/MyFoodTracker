@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_card_bg"
+    android:orientation="vertical"
+    android:padding="@dimen/padding_card">
+
+    <TextView
+        android:id="@+id/tv_detail_recipe_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="Chicken Bowl" />
+
+    <ScrollView
+        android:id="@+id/scroll_detail_recipe_ingredients"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small">
+
+        <TextView
+            android:id="@+id/tv_detail_recipe_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            tools:text="Chicken Breast &#183; 150 g &#183; 180 kcal (P 34.5g, C 0.8g, F 3.0g)" />
+
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/tv_detail_recipe_totals"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="2 ingredients &#183; 440 kcal &#183; P 40g &#183; C 58g &#183; F 3g" />
+
+</LinearLayout>

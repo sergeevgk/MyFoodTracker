@@ -138,7 +138,7 @@ val appModule = module {
     factory { LogFoodEntryUseCase(get()) }
     factory { RestoreMealEntryUseCase(get()) }
     factory { LogRecipeUseCase(get(), get()) }
-    factory { ExportLogsUseCase(get()) }
+    factory { ExportLogsUseCase(get(), get()) }
     factory { BackupDatabaseUseCase() }
 
     // Infrastructure
@@ -153,5 +153,5 @@ val appModule = module {
     viewModel { RecipeViewModel(get(), get(), get(), get()) }
     viewModel { RecipeBuilderViewModel(get()) }
     viewModel { FoodSearchViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
 }

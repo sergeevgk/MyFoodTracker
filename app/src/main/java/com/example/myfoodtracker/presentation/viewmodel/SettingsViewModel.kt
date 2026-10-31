@@ -10,6 +10,7 @@ import com.example.myfoodtracker.domain.model.ExportPayload
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
+import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.presentation.ui.settings.model.BackupState
 import com.example.myfoodtracker.presentation.ui.settings.model.DateRange
 import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
@@ -28,7 +29,8 @@ import java.time.LocalDate
 class SettingsViewModel(
     private val exportLogsUseCase: ExportLogsUseCase,
     private val sessionRepository: SessionRepository,
-    private val backupDatabaseUseCase: BackupDatabaseUseCase
+    private val backupDatabaseUseCase: BackupDatabaseUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData<SettingsUiState>()
@@ -60,6 +62,10 @@ class SettingsViewModel(
             username = profile?.username.orEmpty(),
             profileId = profile?.id.orEmpty()
         )
+    }
+
+    fun logout() {
+        logoutUseCase()
     }
 
     fun setFormat(format: ExportFormat) {

@@ -4,7 +4,7 @@
 
 - **D-1: Single-iteration SHA-256 for 4-digit PINs** - PasscodeHasher uses SHA-256 (fast hash) for a 4-digit PIN keyspace (10K combinations). A slow KDF (PBKDF2/Argon2) would improve resistance to offline brute-force if the SQLite DB is extracted. Pre-existing design decision per spec. **RESOLVED** by story 7-1 (2026-10-27) — see "Resolved by" section below.
 - **D-2: No attempt rate limiting / lockout** - No failed-attempt counter, exponential backoff, or temporary lockout after repeated wrong passcodes. Desirable hardening but not specified in any acceptance criteria. **RESOLVED** by story 7-1 (2026-10-27) — see "Resolved by" section below.
-- **D-3: No logout action in settings screen** - AC #6 mentions "dashboard or settings" but no settings screen exists (template no-op). Dashboard logout is implemented. Settings screen is a future concern.
+- **D-3: No logout action in settings screen** - AC #6 mentions "dashboard or settings" but no settings screen exists (template no-op). Dashboard logout is implemented. **RESOLVED** by story 8-4 (2026-10-31) — see "Resolved by" section below.
 - **D-4: Dashboard has no ViewModel (MVVM violation)** - DashboardFragment directly injects SessionRepository and LogoutUseCase. Acceptable for the current placeholder; ViewModel expected when the dashboard gets real functionality in Epic 2.
 - **D-5: Passcode hashes circulate through UI states** - UserProfile domain model includes passcodeHash, which flows into PasscodeAuthState.Content.profiles and the in-memory session. Refactoring to exclude sensitive data from presentation contexts is a broader model change. **RESOLVED** by story 7-2 (2026-10-30) — see "Resolved by" section below.
 
@@ -21,7 +21,7 @@
 
 ## Deferred from: code review of 2-3-quick-water-logging-plus-250ml (2026-09-30)
 
-- **D-1: Instant tactile / haptic feedback on quick-add water button** - Tap does not trigger haptic feedback (`performHapticFeedback(KEYBOARD_TAP)`). Deferred by user decision as post-MVP tactile polish. [DashboardFragment.kt:89]
+- **D-1: Instant tactile / haptic feedback on quick-add water button** - Tap does not trigger haptic feedback (`performHapticFeedback(KEYBOARD_TAP)`). Deferred by user decision as post-MVP tactile polish. [DashboardFragment.kt:89] **RESOLVED** by story 8-3 (2026-10-30) — see "Resolved by" section below.
 
 ## Deferred from: code review of 2-4-quick-add-calorie-and-macro-logging (2026-10-01)
 
@@ -75,8 +75,8 @@
 
 ## Deferred from: code review of 4-1-recipe-builder-and-ingredient-grouping (2026-10-15)
 
-- **4.1-D1: Shared `FoodSearchBottomSheet` shows "Quick Add" button that displays unavailable snackbar in recipe flow** - The shared `FoodSearchBottomSheet` component exposes the "Quick Add" button even when opened from `RecipeBuilderFragment`. Tapping it dismisses the sheet and displays a snackbar. Modifying `FoodSearchBottomSheet` to conditionally hide Quick Add is deferred as a cross-cutting component enhancement. [RecipeBuilderFragment.kt:95-102]
-- **4.1-D2: Recipe card in `RecipeListFragment` has no detail/inspection view for existing recipe ingredients** - Tapping a saved recipe card in the list does not show its ingredient breakdown or quantities (only the macro sum). Recipe inspection/editing is deferred to Story 4.2 / future stories as Story 4.1 is scoped to creation and listing. [RecipeListFragment.kt:34]
+- **4.1-D1: Shared `FoodSearchBottomSheet` shows "Quick Add" button that displays unavailable snackbar in recipe flow** - The shared `FoodSearchBottomSheet` component exposes the "Quick Add" button even when opened from `RecipeBuilderFragment`. Tapping it dismisses the sheet and displays a snackbar. Modifying `FoodSearchBottomSheet` to conditionally hide Quick Add is deferred as a cross-cutting component enhancement. [RecipeBuilderFragment.kt:95-102] **RESOLVED** by story 8-3 (2026-10-30) — see "Resolved by" section below.
+- **4.1-D2: Recipe card in `RecipeListFragment` has no detail/inspection view for existing recipe ingredients** - Tapping a saved recipe card in the list does not show its ingredient breakdown or quantities (only the macro sum). Recipe inspection/editing is deferred to Story 4.2 / future stories as Story 4.1 is scoped to creation and listing. [RecipeListFragment.kt:34] **RESOLVED** by story 8-3 (2026-10-30) — see "Resolved by" section below.
 - **4.1-D3: Preserve builder drafts across screen rotation / configuration changes** - Drafts are currently held in Fragment memory during the build session; saving draft state across process recreation or configuration change is deferred as post-MVP presentation state refinement. [RecipeBuilderFragment.kt:33] **RESOLVED** by story 8-2 (2026-10-30) — see "Resolved by" section below.
 - **4.1-D4: Wrap recipe and ingredient insertion in an atomic `@Transaction`** - `RecipeRepositoryImpl.saveRecipe` calls `insertRecipe` and `insertIngredients` separately without an enclosing Room `@Transaction`. Continues the codebase architectural pattern tracked under 2.4-D1 / 2.5-D1 / 3.2-D1, to be addressed when DAO transactions are unified across repositories. [RecipeRepositoryImpl.kt:23-48] **RESOLVED** by story 6-1 (2026-10-25) — see "Resolved by" section below.
 
@@ -90,9 +90,9 @@
 
 ## Forward notes from: story 5-1-csv-and-txt-log-export (2026-10-21)
 
-- **5.1-F1: Water logs are not part of the log export** - The export header is fixed by FR-12 (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) and has no water column, so `water_logs` rows are not exported. Adding a water section (or a second file) is a product decision for a future story. [domain/usecase/ExportLogsUseCase.kt]
+- **5.1-F1: Water logs are not part of the log export** - The export header is fixed by FR-12 (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) and has no water column, so `water_logs` rows are not exported. **RESOLVED** by story 8-4 (2026-10-31) — see "Resolved by" section below. [domain/usecase/ExportLogsUseCase.kt]
 - **5.1-F2: "Save to file…" payload is held in a Fragment field and is lost on rotation** - While the system document picker is open, the pending `ExportPayload` lives in a `SettingsFragment` field (per the story contract). A configuration change while the picker is open therefore loses the payload; the activity result then reports "Could not save the log file" instead of writing the file. Moving the pending payload into the ViewModel (or `onSaveInstanceState`) would remove this edge case. [presentation/ui/settings/SettingsFragment.kt] **RESOLVED** by story 8-2 (2026-10-30) — see "Resolved by" section below.
-- Note: deferred item `1.2-D3` (logout action in the settings screen) stays **open** — Story 5.1 did not add a logout button; the dashboard logout is unchanged.
+- Note: deferred item `1.2-D3` (logout action in the settings screen) is **RESOLVED** by story 8-4 (2026-10-31).
 
 ## Forward notes from: story 5-2-offline-full-database-backup-and-restore (2026-10-22)
 
@@ -164,9 +164,25 @@
 - **8.2-D4: DiffUtil Item Equality Collisions on Identical Draft Ingredients** - `IngredientDiffCallback` uses `oldItem == newItem` without unique identifiers. Adding duplicate identical ingredients may cause DiffUtil animation anomalies. Pre-existing adapter structure from Story 4.1. [RecipeIngredientAdapter.kt:66]
 - **8.2-D5: Test Fake Duplication Across Unit Test Suites** - `RecordingRecipeRepository` duplicates `FakeRecipeRepository` in `RecipeViewModelTest`. Pre-existing technical debt already tracked in `deferred-work.md` under `8.1-D3`. [RecipeBuilderViewModelTest.kt:164]
 
+## Resolved by: story 8-3-dashboard-and-recipe-ux-polish (2026-10-30)
+
+- **2.3-D1 / D-1: Instant tactile / haptic feedback on quick-add water button** - RESOLVED. `DashboardFragment.kt` now triggers `binding.btnAddWater250.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)` upon tapping the +250ml water button immediately before logging and triggering the water animations. Uses standard framework view haptics requiring no extra permissions.
+- **4.1-D1: Shared FoodSearchBottomSheet shows Quick Add button in recipe flow** - RESOLVED. `FoodSearchBottomSheet` now accepts an optional `showQuickAdd: Boolean = true` parameter (stored under `ARG_SHOW_QUICK_ADD`). When set to false, `btnSearchQuickAdd` visibility is toggled to `View.GONE`. `RecipeBuilderFragment` supplies `showQuickAdd = false`, completely removing the Quick Add affordance and preventing the disabled quick-add snackbar action from being reached.
+- **4.1-D2: Recipe card in RecipeListFragment has no detail/inspection view for existing recipe ingredients** - RESOLVED. Tapping a saved recipe card now opens `RecipeDetailDialogFragment` backed by `RecipeDetailFormatter`. Displays the complete ingredient breakdown (name, quantity, unit, kcal, protein, carbs, fat per ingredient) and summed totals. Includes a Close action and, when an active date is available (`activeDate != null`), an action affordance to proceed to the meal slot confirmation dialog (`LogRecipeDialogFragment`). When viewed without an active date, recipe details remain fully inspectable in read-only mode without logging errors.
 
 
+## Deferred from: code review of 8-3-dashboard-and-recipe-ux-polish (2026-10-31)
+
+- **8.3-D1: Pre-formatted `DialogFragment` argument strings do not re-localize across live locale/configuration changes** - `RecipeListFragment` pre-formats `ingredientsText` and `totalsText` before passing them in the `Bundle` arguments to `LogRecipeDialogFragment` and `RecipeDetailDialogFragment`. If the system locale changes while the dialog is displayed, the restored dialog renders the strings formatted under the previous locale. Pre-existing dialog argument pattern established in Story 4.2. [RecipeListFragment.kt:97-151]
 
 
+## Resolved by: story 8-4-settings-completion-logout-and-water-export (2026-10-31)
+
+- **1.2-D3: No logout action in settings screen** - RESOLVED. `SettingsFragment` now includes an explicit Logout button (`btn_settings_logout`, `@string/action_logout`, `@color/danger_red`, `@dimen/min_touch_target` ≥ 48dp, and a11y description `@string/a11y_settings_logout`) in the Active Profile card. Tapping it calls `SettingsViewModel.logout()` (delegating to `LogoutUseCase`, clearing in-memory session and remembered profile ID), announces `@string/a11y_logged_out`, and navigates to `R.id.action_settingsFragment_to_passcodeAuthFragment` with `app:popUpTo="@id/dashboardFragment"` and `app:popUpToInclusive="true"` so back navigation from the lock screen never returns to authenticated screens. Guarded by `SettingsViewModelTest.logout_clearsActiveSessionAndRememberedProfile` and navigation popUpTo invariants in `nav_graph.xml`.
+- **5.1-F1: Water logs are not part of the log export** - RESOLVED. `ExportLogsUseCase` now consumes `WaterRepository.getAllWaterLogs()`, filtering to the active profile's water logs within the selected `[from, to]` range. Water logs are integrated into the existing single CSV/TXT export artifact under the existing columns (`Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat`) with empty `Meal Slot`, food name `"Water"`, `Quantity` as amount in ml formatted via `formatNumber`, and `"0"` for calories, protein, carbs, and fat. Rows sort deterministically on a date with water first (empty `time`), ordered by `loggedAt` creation timestamp. A range with only water logs produces `ExportState.Ready` instead of `ExportState.Empty`. TXT export keeps all columns aligned without trailing spaces. Guarded by `ExportLogsUseCaseTest`, `SettingsViewModelTest`, and `WaterRepositoryImplTest`.
 
 
+## Deferred from: code review of 8-4-settings-completion-logout-and-water-export (2026-10-31)
+
+- `WaterLogDao.getWaterLogsByProfileId` has no `ORDER BY`; export re-sorts, but equal-`loggedAt` water rows keep DB order.
+- `getAllWaterLogs` loads all history and filters by date range in memory (same as the meal export); consider pushing the range into the DAO if history grows.

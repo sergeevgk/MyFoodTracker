@@ -11,7 +11,10 @@ import com.example.myfoodtracker.domain.model.UserProfile
 import com.example.myfoodtracker.domain.repository.MealRepository
 import com.example.myfoodtracker.domain.repository.SessionRepository
 import com.example.myfoodtracker.domain.usecase.BackupDatabaseUseCase
+import com.example.myfoodtracker.domain.model.WaterLog
+import com.example.myfoodtracker.domain.repository.WaterRepository
 import com.example.myfoodtracker.domain.usecase.ExportLogsUseCase
+import com.example.myfoodtracker.domain.usecase.LogoutUseCase
 import com.example.myfoodtracker.presentation.ui.settings.model.BackupState
 import com.example.myfoodtracker.presentation.ui.settings.model.ExportState
 import com.example.myfoodtracker.presentation.ui.settings.model.RestoreState
@@ -32,8 +35,10 @@ class SettingsViewModelTest {
 
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeMealRepository: FakeMealRepository
+    private lateinit var fakeWaterRepository: FakeWaterRepository
     private lateinit var exportLogsUseCase: ExportLogsUseCase
     private lateinit var backupDatabaseUseCase: BackupDatabaseUseCase
+    private lateinit var logoutUseCase: LogoutUseCase
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = UserProfile(
@@ -48,14 +53,17 @@ class SettingsViewModelTest {
     @Before
     fun setUp() {
         fakeSessionRepository = FakeSessionRepository()
-        fakeSessionRepository.setActiveProfile(testUser)
+        fakeSessionRepository.setActiveProfile(testUser, rememberDevice = true)
         fakeMealRepository = FakeMealRepository()
-        exportLogsUseCase = ExportLogsUseCase(fakeMealRepository)
+        fakeWaterRepository = FakeWaterRepository()
+        exportLogsUseCase = ExportLogsUseCase(fakeMealRepository, fakeWaterRepository)
         backupDatabaseUseCase = BackupDatabaseUseCase()
+        logoutUseCase = LogoutUseCase(fakeSessionRepository)
         viewModel = SettingsViewModel(
             exportLogsUseCase = exportLogsUseCase,
             sessionRepository = fakeSessionRepository,
-            backupDatabaseUseCase = backupDatabaseUseCase
+            backupDatabaseUseCase = backupDatabaseUseCase,
+            logoutUseCase = logoutUseCase
         )
     }
 
@@ -509,6 +517,58 @@ class SettingsViewModelTest {
         }
 
         override fun isLoggedIn(): Boolean = current.get() != null
+    }
+
+
+    // --- Logout & Water Export (Story 8.4) ------------------------------------------
+
+    @Test
+    fun logout_clearsActiveSessionAndRememberedProfile() {
+        assertTrue(fakeSessionRepository.isLoggedIn())
+        assertEquals(testUser, fakeSessionRepository.getActiveProfile())
+        assertEquals(testUser.id, fakeSessionRepository.getRememberedProfileId())
+
+        viewModel.logout()
+
+        org.junit.Assert.assertFalse(fakeSessionRepository.isLoggedIn())
+        assertNull(fakeSessionRepository.getActiveProfile())
+        assertNull(fakeSessionRepository.getRememberedProfileId())
+    }
+
+    @Test
+    fun export_withWaterLogsOnly_emitsReadyState() {
+        fakeMealRepository.entries = emptyList()
+        fakeWaterRepository.logs = listOf(
+            WaterLog(
+                id = "w1",
+                profileId = testUser.id,
+                date = "2026-10-04",
+                amountMl = 250
+            )
+        )
+
+        viewModel.export()
+
+        val state = viewModel.exportState.value
+        assertTrue(state is ExportState.Ready)
+        val ready = state as ExportState.Ready
+        assertEquals(1, ready.payload.rowCount)
+        assertTrue(ready.payload.content.contains("Water,250"))
+    }
+
+    private class FakeWaterRepository : WaterRepository {
+        var logs: List<WaterLog> = emptyList()
+
+        override fun getAllWaterLogs(): List<WaterLog> = logs
+
+        override fun getWaterLogs(date: String): List<WaterLog> =
+            throw UnsupportedOperationException("Not used by the export path")
+
+        override fun getWaterTotalMl(date: String): Int =
+            throw UnsupportedOperationException("Not used by the export path")
+
+        override fun logWater(amountMl: Int, date: String): Int =
+            throw UnsupportedOperationException("Not used by the export path")
     }
 
     private class FakeMealRepository : MealRepository {

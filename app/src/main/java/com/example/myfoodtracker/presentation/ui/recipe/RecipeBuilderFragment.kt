@@ -84,7 +84,7 @@ class RecipeBuilderFragment : Fragment(),
 
         binding.btnAddIngredient.setOnClickListener {
             if (!isAdded) return@setOnClickListener
-            FoodSearchBottomSheet.newInstance(LocalDate.now().toString())
+            FoodSearchBottomSheet.newInstance(LocalDate.now().toString(), showQuickAdd = false)
                 .show(childFragmentManager, "RECIPE_INGREDIENT_SEARCH")
         }
 

@@ -47,6 +47,18 @@
                     android:textSize="13sp"
                     tools:text="Active Profile ID: user-1" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_settings_logout"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:minHeight="@dimen/min_touch_target"
+                    android:text="@string/action_logout"
+                    android:textColor="@color/danger_red"
+                    app:strokeColor="@color/danger_red"
+                    android:contentDescription="@string/a11y_settings_logout" />
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>

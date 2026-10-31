@@ -16,9 +16,10 @@ import com.example.myfoodtracker.presentation.viewmodel.RecipeViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.util.Locale
 
-class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
+class RecipeListFragment : Fragment(),
+    LogRecipeDialogFragment.Listener,
+    RecipeDetailDialogFragment.Listener {
 
     private var _binding: FragmentRecipeListBinding? = null
     private val binding get() = _binding!!
@@ -47,7 +48,7 @@ class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
 
         adapter = RecipeAdapter(
             onDeleteClicked = { recipe -> confirmDelete(recipe) },
-            onRecipeClicked = { recipe -> openLogDialog(recipe) }
+            onRecipeClicked = { recipe -> openRecipeDetailDialog(recipe) }
         )
         binding.rvRecipes.adapter = adapter
 
@@ -90,6 +91,44 @@ class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
             .show()
     }
 
+    private fun openRecipeDetailDialog(recipe: Recipe) {
+        if (!isAdded) return
+        val ingredientTemplate = getString(R.string.recipe_detail_ingredient_line)
+        val ingredientLines = recipe.ingredients.joinToString("\n") { ingredient ->
+            RecipeDetailFormatter.formatIngredientLine(
+                ingredient = ingredient,
+                template = ingredientTemplate
+            )
+        }
+        val totals = RecipeDetailFormatter.formatTotalsSummary(
+            recipe = recipe,
+            template = getString(R.string.recipe_totals_format)
+        )
+        val canLog = !activeDate.isNullOrBlank()
+
+        RecipeDetailDialogFragment.newInstance(
+            recipeId = recipe.id,
+            name = recipe.name,
+            ingredientsText = ingredientLines,
+            totalsText = totals,
+            canLog = canLog
+        ).show(childFragmentManager, TAG_RECIPE_DETAIL)
+    }
+
+    override fun onLogRecipeRequested(recipeId: String) {
+        if (!isAdded) return
+        val recipe = viewModel.recipes.value?.firstOrNull { it.id == recipeId }
+        if (recipe == null) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.log_recipe_error_missing),
+                Snackbar.LENGTH_SHORT
+            ).show()
+            return
+        }
+        openLogDialog(recipe)
+    }
+
     private fun openLogDialog(recipe: Recipe) {
         if (!isAdded) return
         val date = activeDate
@@ -105,7 +144,7 @@ class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
             getString(
                 R.string.log_recipe_ingredient_line,
                 ingredient.foodName,
-                formatQuantity(ingredient.quantityGrams),
+                RecipeDetailFormatter.formatQuantity(ingredient.quantityGrams),
                 ingredient.unit,
                 ingredient.calories
             )
@@ -124,16 +163,6 @@ class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
             ingredientsText = ingredientLines,
             totalsText = totals
         ).show(childFragmentManager, TAG_LOG_RECIPE)
-    }
-
-    /** Display-only rounding. Stored values are never rounded before the write. */
-    private fun formatQuantity(grams: Double): String {
-        val locale = Locale.getDefault()
-        return if (grams % 1.0 == 0.0) {
-            String.format(locale, "%.0f", grams)
-        } else {
-            String.format(locale, "%.1f", grams)
-        }
     }
 
     override fun onLogRecipeConfirmed(recipeId: String, mealSlot: String): String? {
@@ -196,5 +225,6 @@ class RecipeListFragment : Fragment(), LogRecipeDialogFragment.Listener {
         const val EXTRA_LOGGED_INGREDIENT_COUNT = "logged_ingredient_count"
 
         private const val TAG_LOG_RECIPE = "LOG_RECIPE"
+        private const val TAG_RECIPE_DETAIL = "RECIPE_DETAIL"
     }
 }

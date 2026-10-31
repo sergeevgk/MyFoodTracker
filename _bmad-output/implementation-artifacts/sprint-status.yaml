@@ -1,5 +1,5 @@
-# generated: 2026-09-06T20:24:40+02:00
-# last_updated: 2026-10-30T20:38:00+01:00
+﻿# generated: 2026-09-06T20:24:40+02:00
+# last_updated: 2026-10-31T12:28:00+01:00
 # project: MyFoodTracker
 # project_key: NOKEY
 # tracking_system: file-system
@@ -13,8 +13,8 @@
 #   - done: All stories in epic completed
 #
 # Epic Status Transitions:
-#   - backlog → in-progress: Automatically when first story is created (via create-story)
-#   - in-progress → done: Manually when all stories reach 'done' status
+#   - backlog в†’ in-progress: Automatically when first story is created (via create-story)
+#   - in-progress в†’ done: Manually when all stories reach 'done' status
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
@@ -86,6 +86,6 @@ development_status:
   epic-8: in-progress
   8-1-meal-date-correctness-at-midnight: done
   8-2-state-survival-and-lifecycle-hardening: done
-  8-3-dashboard-and-recipe-ux-polish: backlog
-  8-4-settings-completion-logout-and-water-export: backlog
+  8-3-dashboard-and-recipe-ux-polish: done
+  8-4-settings-completion-logout-and-water-export: done
   epic-8-retrospective: optional

@@ -6,4 +6,5 @@ interface WaterRepository {
     fun getWaterLogs(date: String): List<WaterLog>
     fun getWaterTotalMl(date: String): Int
     fun logWater(amountMl: Int, date: String): Int
+    fun getAllWaterLogs(): List<WaterLog>
 }

@@ -5,6 +5,7 @@ import com.example.myfoodtracker.domain.model.ExportPayload
 import com.example.myfoodtracker.domain.model.Food
 import com.example.myfoodtracker.domain.model.MealEntry
 import com.example.myfoodtracker.domain.repository.MealRepository
+import com.example.myfoodtracker.domain.repository.WaterRepository
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -12,28 +13,50 @@ import java.time.LocalDate
 /**
  * Builds the export file content for a date range.
  *
- * Reads through the existing synchronous [MealRepository], which already scopes
- * the result to the active profile (NFR-5) and returns empty for a missing
- * session. No DAO query, no repository method and no entity column is added by
- * this story — the export is a read + filter over the existing meal list.
+ * Reads through the existing synchronous [MealRepository] and [WaterRepository],
+ * which already scope the results to the active profile (NFR-5) and return empty
+ * for a missing session. Water rows come from [WaterRepository.getAllWaterLogs]
+ * (backed by `WaterLogDao.getWaterLogsByProfileId`, added in Story 8.4); no entity
+ * column is added and the schema is unchanged — the export is a read + filter over the existing logs.
  *
  * Pure Kotlin/JVM: no Android imports, no coroutines (AD-1, AD-2).
  */
 class ExportLogsUseCase(
-    private val mealRepository: MealRepository
+    private val mealRepository: MealRepository,
+    private val waterRepository: WaterRepository
 ) {
 
     operator fun invoke(format: ExportFormat, from: LocalDate, to: LocalDate): ExportPayload {
         require(!from.isAfter(to)) { INVALID_DATE_RANGE }
 
-        val rows = mealRepository.getMealEntries()
-            .mapNotNull { meal -> mealDate(meal)?.let { meal to it } }
+        val mealRows = mealRepository.getMealEntries()
+            .mapNotNull { meal -> parseIsoDate(meal.date)?.let { meal to it } }
             .filter { (_, date) -> !date.isBefore(from) && !date.isAfter(to) }
             .flatMap { (meal, date) ->
                 // A meal without foods contributes no row (there is no food name to write).
                 meal.foods.map { food -> ExportRow(meal, food, date) }
             }
-            .sortedWith(ROW_ORDER)
+
+        val waterRows = waterRepository.getAllWaterLogs()
+            .mapNotNull { water -> parseIsoDate(water.date)?.let { water to it } }
+            .filter { (_, date) -> !date.isBefore(from) && !date.isAfter(to) }
+            .map { (water, date) ->
+                ExportRow(
+                    date = water.date,
+                    dateValue = date,
+                    time = "",
+                    loggedAt = water.loggedAt,
+                    slot = WATER_MEAL_SLOT,
+                    foodName = WATER_FOOD_NAME,
+                    weight = water.amountMl.toDouble(),
+                    calories = 0.0,
+                    protein = 0.0,
+                    carbs = 0.0,
+                    fat = 0.0
+                )
+            }
+
+        val rows = (mealRows + waterRows).sortedWith(ROW_ORDER)
 
         val content = when (format) {
             ExportFormat.CSV -> renderCsv(rows)
@@ -54,6 +77,7 @@ class ExportLogsUseCase(
         val date: String,
         val dateValue: LocalDate,
         val time: String,
+        val loggedAt: Long = 0L,
         val slot: String,
         val foodName: String,
         val weight: Double,
@@ -66,6 +90,7 @@ class ExportLogsUseCase(
             date = meal.date,
             dateValue = dateValue,
             time = meal.time,
+            loggedAt = 0L,
             slot = meal.title,
             foodName = food.name,
             weight = food.weight,
@@ -109,14 +134,15 @@ class ExportLogsUseCase(
     // --- Ordering ------------------------------------------------------------------
 
     /**
-     * Ascending by (date, time, food name). The stored time is an "HH:mm" string,
-     * so lexicographic order is chronological. [sortedWith] is a stable sort, so
-     * rows with equal keys keep their database order.
+     * Ascending by (date, time, food name, loggedAt). The stored time is an "HH:mm" string
+     * for meals and "" for water, so water rows group deterministically at the top of that date.
+     * Multiple water logs on the same date stay in chronological creation order (loggedAt).
      */
     private val ROW_ORDER: Comparator<ExportRow> =
         compareBy<ExportRow> { it.dateValue }
             .thenBy { it.time }
             .thenBy { it.foodName }
+            .thenBy { it.loggedAt }
 
     // --- Rendering -----------------------------------------------------------------
 
@@ -190,14 +216,17 @@ class ExportLogsUseCase(
             .replace('\n', ' ')
             .replace('\t', ' ')
 
-    /** Parses the stored `meals.date` ("YYYY-MM-DD"); a malformed date is ignored. */
-    private fun mealDate(meal: MealEntry): LocalDate? = try {
-        LocalDate.parse(meal.date)
+    /** Parses the stored date ("YYYY-MM-DD"); a malformed date is ignored. */
+    private fun parseIsoDate(raw: String): LocalDate? = try {
+        LocalDate.parse(raw)
     } catch (e: Exception) {
         null
     }
 
     companion object {
+        const val WATER_FOOD_NAME = "Water"
+        const val WATER_MEAL_SLOT = ""
+
         const val INVALID_DATE_RANGE = "Invalid date range"
 
         const val CSV_HEADER_LINE = "Date,Meal Slot,Food Name,Quantity,Calories,Protein,Carbs,Fat"

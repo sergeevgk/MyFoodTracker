@@ -59,5 +59,13 @@ class GetWaterTotalUseCaseTest {
             amountsByDate.getOrPut(date) { mutableListOf() }.add(amountMl)
             return getWaterTotalMl(date)
         }
+
+        override fun getAllWaterLogs(): List<WaterLog> {
+            return amountsByDate.flatMap { (date, amounts) ->
+                amounts.mapIndexed { index, amount ->
+                    WaterLog(id = "water-$date-$index", profileId = "user-1", date = date, amountMl = amount)
+                }
+            }
+        }
     }
 }

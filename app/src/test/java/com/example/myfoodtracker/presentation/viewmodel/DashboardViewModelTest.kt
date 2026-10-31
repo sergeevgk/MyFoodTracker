@@ -689,5 +689,17 @@ class DashboardViewModelTest {
             amountsByDate.getOrPut("$profileId|$date") { mutableListOf() }.add(amountMl)
             return getWaterTotalMl(date)
         }
+
+        override fun getAllWaterLogs(): List<WaterLog> {
+            val profileId = sessionRepository.getActiveProfileId() ?: return emptyList()
+            return amountsByDate.entries
+                .filter { it.key.startsWith("$profileId|") }
+                .flatMap { entry ->
+                    val date = entry.key.removePrefix("$profileId|")
+                    entry.value.mapIndexed { index, amount ->
+                        WaterLog(id = "water-$date-$index", profileId = profileId, date = date, amountMl = amount)
+                    }
+                }
+        }
     }
 }

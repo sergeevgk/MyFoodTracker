@@ -73,6 +73,9 @@ class FoodSearchBottomSheet : BottomSheetDialogFragment(),
                 .show(childFragmentManager, "CREATE_CUSTOM_FOOD")
         }
 
+        val showQuickAdd = arguments?.getBoolean(ARG_SHOW_QUICK_ADD, true) ?: true
+        binding.btnSearchQuickAdd.visibility = if (showQuickAdd) View.VISIBLE else View.GONE
+
         binding.btnSearchQuickAdd.setOnClickListener {
             hideKeyboard()
             getListener()?.onQuickAddRequested()
@@ -155,10 +158,14 @@ class FoodSearchBottomSheet : BottomSheetDialogFragment(),
 
     companion object {
         private const val ARG_ACTIVE_DATE = "active_date"
+        private const val ARG_SHOW_QUICK_ADD = "show_quick_add"
 
-        fun newInstance(activeDate: String): FoodSearchBottomSheet {
+        fun newInstance(activeDate: String, showQuickAdd: Boolean = true): FoodSearchBottomSheet {
             return FoodSearchBottomSheet().apply {
-                arguments = Bundle().apply { putString(ARG_ACTIVE_DATE, activeDate) }
+                arguments = Bundle().apply {
+                    putString(ARG_ACTIVE_DATE, activeDate)
+                    putBoolean(ARG_SHOW_QUICK_ADD, showQuickAdd)
+                }
             }
         }
     }
